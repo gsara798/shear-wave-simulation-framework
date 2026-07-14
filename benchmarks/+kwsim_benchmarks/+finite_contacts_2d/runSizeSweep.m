@@ -70,7 +70,6 @@ function cfg = defaultPointConfig()
 
 cfg = kwsim.two_d.defaultConfig();
 
-% Retained temporarily while legacy configuration metadata is migrated.
 cfg.scenario = "compact_contact_size_sweep_point";
 cfg.seed = 1002;
 

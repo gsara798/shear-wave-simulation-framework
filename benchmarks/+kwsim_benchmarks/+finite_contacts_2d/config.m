@@ -13,7 +13,6 @@ end
 
 cfg = kwsim.two_d.defaultConfig();
 
-% Retained temporarily while legacy configuration metadata is migrated.
 cfg.scenario = "finite_contacts_" + regime;
 cfg.seed = 1002;
 

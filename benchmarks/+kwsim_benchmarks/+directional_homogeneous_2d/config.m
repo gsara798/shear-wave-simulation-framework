@@ -8,7 +8,6 @@ function cfg = config()
 
 cfg = kwsim.two_d.defaultConfig();
 
-% Retained temporarily while legacy stage metadata is migrated.
 cfg.scenario = "directional_homogeneous_2d";
 
 cfg = kwsim.sources.configureSingleContact( ...

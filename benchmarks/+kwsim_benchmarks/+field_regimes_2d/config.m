@@ -16,7 +16,6 @@ end
 
 cfg = kwsim.two_d.defaultConfig();
 
-% Retained temporarily while legacy configuration metadata is migrated.
 cfg.scenario = "field_regimes_" + regime;
 
 % This benchmark seed passed the same stationarity gates applied to user
