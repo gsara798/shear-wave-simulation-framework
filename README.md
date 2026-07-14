@@ -1,3 +1,9 @@
+> **Important**
+>
+> This repository is **not a replacement for the k-Wave toolbox**. It provides
+> a reproducible simulation framework, experiment organization, validation
+> procedures, and analysis tools built on top of **k-Wave 1.4.1**.
+
 # Reproducible k-Wave shear-wave simulations
 
 This repository provides a documented MATLAB interface for reproducible
@@ -179,3 +185,28 @@ This project is distributed under the [Apache License 2.0](LICENSE).
 
 Bug reports, validation cases, documentation improvements, and numerical tests
 are welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## Dependency: k-Wave Toolbox
+
+This repository builds upon the open-source **k-Wave MATLAB Toolbox** for
+time-domain acoustic and elastic-wave simulations.
+
+The k-Wave toolbox is developed and maintained by:
+
+> Bradley E. Treeby and Ben T. Cox
+
+Please cite the original k-Wave publications when using this repository in
+research.
+
+### k-Wave
+
+Treeby BE, Cox BT.
+*k-Wave: MATLAB toolbox for the simulation and reconstruction of photoacoustic wave fields.*
+Journal of Biomedical Optics, 15(2), 021314, 2010.
+
+Treeby BE, Jaros J, Rendell AP, Cox BT.
+*Modeling nonlinear ultrasound propagation in heterogeneous media with power law absorption using a k-space pseudospectral method.*
+JASA, 131(6), 4324–4336, 2012.
+
+Official website:
+https://www.k-wave.org
