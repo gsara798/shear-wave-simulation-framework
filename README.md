@@ -164,3 +164,18 @@ cfg.output.save_time_series = true;
 New outputs belong under `outputs/`, which is excluded by `.gitignore`.
 Large historical MAT files under `archive/` are also kept local; the archived
 MATLAB scripts remain versioned as implementation evidence.
+
+## Citation
+
+If you use this repository in research, please cite both this software and the
+k-Wave toolbox. Repository citation metadata are provided in
+[`CITATION.cff`](CITATION.cff).
+
+## License
+
+This project is distributed under the [Apache License 2.0](LICENSE).
+
+## Contributing
+
+Bug reports, validation cases, documentation improvements, and numerical tests
+are welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
