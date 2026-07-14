@@ -1,0 +1,252 @@
+% EXP ID: REQ-SIM-K001
+% Author:   Gilmer A. Flores Barrera
+% Date:   2026-02-19
+% Description:
+% 	Version inicial: para introduction - 
+%   Simulation Oestreicher: Sphere oscillating on homogeneous phantom 
+%   w/ reflections, free boundary (air)
+
+clc; clear; close all;
+
+% Path with k-wave library (functions) 
+addpath("C:\Users\gflor10\OneDrive - University of Rochester\" + ...
+    "Desktop\University of Rochester\Research\Simulations\k-Wave");
+
+%Path with vol3d.m
+addpath("C:\Users\gflor10\OneDrive - University of Rochester\" + ...
+    "Desktop\University of Rochester\Research\OCE experiments\OCE_codes");
+
+format compact;
+set(0,'DefaultFigureVisible','on');   % key line
+set(0,'defaultAxesFontSize',20);
+set(0,'defaultAxesFontName','Cambria')
+% set(groot, 'defaultAxesTickLabelInterpreter','tex'); 
+% set(groot, 'defaultLegendInterpreter','tex');
+% set(0,'defaulttextInterpreter','tex');
+
+% -----------------------------
+% DataCast: try GPU, fallback to CPU
+% -----------------------------
+USE_GPU = true;
+if USE_GPU
+    DATA_CAST = 'gpuArray-single';
+else
+    DATA_CAST = 'single';
+end
+
+%% Create the computational grid
+Nx = 100;           % number of grid points in the x direction
+Ny = 100;           % number of grid points in the y direction
+dx = 1e-3;          % grid spacing in x [m]
+dy = 1e-3;          % grid spacing in y [m]
+kgrid = kWaveGrid(Nx, dx, Ny, dy);
+
+%% Define medium properties
+medium.sound_speed_compression = 1540 * ones(Nx, Ny);   % [m/s] realistic compressional speed
+medium.sound_speed_shear = 3 * ones(Nx, Ny);            % [m/s] for gelatin-like shear
+medium.density = 1000 * ones(Nx, Ny);                   % [kg/m^3]
+
+% % Add boundary
+ boundary.thickness = 0;
+% boundary.density = 1.2;
+% boundary.sws = 0.1;
+% boundary.pws= 30;
+% 
+% %AIR/Rigid Boundary
+% medium.density(:,1:boundary.thickness) = boundary.density;
+% medium.density(:,end-boundary.thickness:end) = boundary.density;
+% medium.density(1:boundary.thickness,:) = boundary.density;
+% medium.density(end-boundary.thickness:end,:) = boundary.density;
+% 
+% medium.sound_speed_shear(:, 1:boundary.thickness) = boundary.sws;
+% medium.sound_speed_shear(:,end-boundary.thickness:end) = boundary.sws;
+% medium.sound_speed_shear(1:boundary.thickness,:) = boundary.sws;
+% medium.sound_speed_shear(end-boundary.thickness:end,:) = boundary.sws;
+% 
+% medium.sound_speed_compression(:, 1:boundary.thickness) = boundary.pws;
+% medium.sound_speed_compression(:,end-boundary.thickness:end) = boundary.pws;
+% medium.sound_speed_compression(1:boundary.thickness,:) = boundary.pws;
+% medium.sound_speed_compression(end-boundary.thickness:end,:) = boundary.pws;
+
+%TX
+% medium.density(1:boundary.thickness,40:60) = 12; 
+% medium.sound_speed_shear(1:boundary.thickness,40:60) = 1000; 
+% medium.sound_speed_compression(1:boundary.thickness,40:60) = 1500;
+
+
+% Attenuation
+medium.alpha_coeff_compression = 0.05;    % [dB/(MHz^2 cm)]
+medium.alpha_coeff_shear = 100;           % [dB/(MHz^2 cm)]
+% medium.alpha_power_shear = 1.3;
+
+%% Time array (safe dt based on c_max)
+t_end = 0.1;  % [s] to allow steady-state observation
+c_max = max([max(medium.sound_speed_compression(:)), max(medium.sound_speed_shear(:))]);
+cfl = 0.3;
+kgrid.makeTime(c_max, cfl, t_end);
+
+%% Define source
+cx1 = Nx/2; 
+cy1 = Ny-6;
+radius = 5;
+plot_disc = 'true';
+disc1 = makeDisc(Nx, Ny, cx1, cy1, radius, plot_disc);
+source.u_mask = disc1;
+
+source_freq = 500; % [Hz]
+source_mag = 1e-6;
+source_signal = source_mag * sin(2 * pi * source_freq * kgrid.t_array);
+source.ux= source_signal;
+
+% source_points = find(source.u_mask);
+% num_sources = length(source_points);
+% source.ux = zeros(length(kgrid.t_array), num_sources);
+% for i = 1:num_sources
+%     source.ux(:, i) = source_signal;
+% end
+%% Define sensor ROI like a Linear Transducer image (rectangular ROI)
+% --- ROI settings (in GRID POINTS) ---
+roi_lat_pts   = 40;   % lateral width (# points)
+roi_depth_pts = 40;   % axial depth (# points)
+depth_offset  = 0;    % additional offset (points) to go deeper if needed
+
+% --- "TX" location at top, centered on sphere axis ---
+tx_x = round(cx1);                                % lateral center
+tx_y = boundary.thickness + 1;                    % just below air boundary (top)
+
+% --- ROI indices (x = lateral, y = depth/axial in your grid) ---
+x0 = tx_x - floor(roi_lat_pts/2);
+x1r = x0 + roi_lat_pts - 1;
+
+y0 = tx_y + depth_offset;                         % start depth
+y1 = y0 + roi_depth_pts - 1;
+
+% Clamp to stay inside the *phantom* (avoid air boundary zones)
+x0 = max(x0, boundary.thickness + 1);
+x1r = min(x1r, Nx - boundary.thickness);
+
+y0 = max(y0, boundary.thickness + 1);
+y1 = min(y1, Ny - boundary.thickness);
+
+x_idx = x0:x1r;                                   % lateral
+y_idx = y0:y1;                                    % axial (depth)
+
+% Build mask
+sensor.mask = zeros(Nx, Ny);
+sensor.mask(x_idx, y_idx) = 1;
+sensor.record = {'u', 'u_split_field'};
+
+%% Run simulation
+input_args = {'PMLAlpha', 2, 'PlotPML', false, 'PMLInside', false, ...
+              'DisplayMask', 'off', 'PlotSim', true, 'DataCast', DATA_CAST};
+
+try
+    sensor_data = pstdElastic2D(kgrid, medium, source, sensor, input_args{:});
+    E=MException('req_sim_k001','%s',pwd);
+catch E
+    % GPU fallback (common if CUDA/toolbox mismatch)
+    if USE_GPU
+        warning(E.identifier,'%s', E.message);
+        input_args{end} = 'single';
+        sensor_data = pstdElastic2D(kgrid, medium, source, sensor, input_args{:});
+    else
+        rethrow(ME);
+    end
+end
+
+%% Gather outputs (handles both gpuArray + cpu)
+if USE_GPU
+    ux_s = gather(reshape(sensor_data.ux_split_s, numel(x_idx), numel(y_idx), []));
+    ux_p = gather(reshape(sensor_data.ux_split_p, numel(x_idx), numel(y_idx), []));
+    ux_total = gather(reshape(sensor_data.ux, numel(x_idx), numel(y_idx), []));
+else
+    ux_s = sensor_data.ux_split_s;
+    ux_p = sensor_data.ux_split_p;
+    ux_total = sensor_data.ux;
+end
+
+dinf.dx = dx;
+dinf.dy = dy;
+dinf.dt = kgrid.dt;
+
+ %% Visualization
+% figure
+% xx = dinf.dx * (0:size(ux_total,1)-1);
+% yy = dinf.dy * (0:size(ux_total,2)-1);
+% for ii = 1:500:60000
+%     im = real(squeeze(ux_total(:,:,ii)));  % amplitude of shear wave
+%     imagesc(yy(10:end),xx, im);
+%     xlabel('x (m)'); ylabel('y (m)');
+%     axis image;
+%     clim(6e-5*[-1 1]);
+%     title(['Frame ' num2str(ii)]);
+%     grid on;
+%     colormap('jet');
+%     colorbar;
+%     drawnow
+%     pause(0.1)
+% end
+
+ %%
+
+ Nt = size(ux_total,3);
+Nt_target = min(1000, Nt);
+
+t_idx = round(linspace(1, Nt, Nt_target));   % uniform sampling indices (length ~1000)
+t_idx = unique(t_idx, 'stable');             % just in case rounding duplicates
+
+ux_s     = ux_s(:,:,t_idx);
+ux_p     = ux_p(:,:,t_idx);
+ux_total = ux_total(:,:,t_idx);
+
+% Update time info
+t_ds = kgrid.t_array(t_idx);
+dinf.dt = mean(diff(t_ds));   % effective dt after downsampling
+% Optional: save
+filename = ['req_sim_k001_' num2str(source_freq) 'Hz'];
+save(filename, "ux_total", "ux_p", "ux_s", "dinf", "source_freq", '-v7.3');
+
+%%
+energy_t = zeros(1, size(ux_s,3));
+for ii = 1:size(ux_s,3)
+    frame = ux_s(:,:,ii);
+    energy_t(ii) = sum(frame(:).^2);  % proportional to elastic energy
+end
+
+% 2. Difference between consecutive frames
+diff_energy = zeros(1, size(ux_s,3)-1);
+for ii = 1:(size(ux_s,3)-1)
+    diff = ux_s(:,:,ii+1) - ux_s(:,:,ii);
+    diff_energy(ii) = sum(diff(:).^2);
+end
+
+%% Optional: energy plots saved to disk (still no pop-up)
+energy_t = zeros(1, size(ux_total,2));  % depends on sensor geometry
+for ii = 1:size(ux_total,2)
+    frame = ux_total(:,ii);
+    energy_t(ii) = sum(frame(:).^2);
+end
+
+fig1 = figure('Visible','on');
+plot(energy_t, 'LineWidth', 2);
+xlabel('Time [s]'); ylabel('Total Energy (proxy)');
+title('Recorded field energy vs time'); grid on;
+exportgraphics(fig1, filename + "_energy.png", 'Resolution', 200);
+close(fig1);
+
+figure
+xx = dinf.dx * (0:size(ux_s,1)-1);
+yy = dinf.dy * (0:size(ux_s,2)-1);
+for ii = 1:1000:2500001
+    im = real(squeeze(ux_total(:,:,ii)));  % amplitude of shear wave
+    imagesc(yy(1:end),xx, im);
+    xlabel('x (m)'); ylabel('y (m)');
+    axis image;
+    clim([-1 1]);
+    title(['Frame ' num2str(ii)]);
+    grid on;
+    colormap('jet');
+    colorbar;
+    drawnow
+    pause(0.1)
+end

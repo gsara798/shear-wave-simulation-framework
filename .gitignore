@@ -1,0 +1,8 @@
+.DS_Store
+*.asv
+outputs/*
+!outputs/.gitkeep
+
+# Historical simulation data are retained locally for reference, but generated
+# MAT files are not source code and can exceed GitHub's per-file size limit.
+archive/**/*.mat
