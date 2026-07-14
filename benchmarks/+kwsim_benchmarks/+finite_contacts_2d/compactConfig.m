@@ -3,24 +3,39 @@ function cfg = compactConfig(regime)
 
 arguments
     regime (1,1) string {mustBeMember(regime, ...
-        ["directional", "partially_diffuse", "diffuse"])} = "directional"
+        ["directional", "partially_diffuse", "diffuse"])} = ...
+        "directional"
 end
 
-cfg = kwsim_benchmarks.field_regimes_2d.compactConfig(regime);
-cfg.scenario = "compact_finite_contacts_" + regime;
-cfg.source.contact_model = "finite_segment";
-cfg.source.contact_sampling = "sparse_patch";
-cfg.source.contact_profile = "raised_cosine";
-cfg.source.contact_node_spacing_points = 4;
-cfg.source.contact_radius_m = 2e-3;
+cfg = kwsim_benchmarks.finite_contacts_2d.config(regime);
+
+cfg.grid.Nx = 48;
+cfg.grid.Nz = 48;
+cfg.solver.pml_size_points = 8;
+cfg.source.perimeter_margin_m = 2e-3;
+cfg.sensor.source_buffer_m = 1e-3;
+cfg.sensor.boundary_margin_m = 3e-3;
+cfg.time.settling_cycles = 1;
+cfg.output.directory = "";
 
 switch regime
     case "directional"
-        cfg.source.vibrator_count = 4;
+        vibrator_count = 4;
+
     case "partially_diffuse"
-        cfg.source.vibrator_count = 8;
+        vibrator_count = 8;
+
     case "diffuse"
-        cfg.source.vibrator_count = 8;
+        vibrator_count = 8;
 end
+
+cfg = kwsim.sources.configureVibratorBank( ...
+    cfg, regime, vibrator_count);
+
+cfg = kwsim.sources.configureFiniteContact( ...
+    cfg, ...
+    ContactRadiusM=2e-3, ...
+    NodeSpacingPoints=4, ...
+    Profile="raised_cosine");
 
 end

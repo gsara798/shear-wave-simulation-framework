@@ -66,5 +66,30 @@ sweep.acceptance_scope = ...
 end
 
 function cfg = defaultPointConfig()
-cfg = kwsim_benchmarks.field_regimes_2d.compactConfig("directional");
+%DEFAULTPOINTCONFIG Compact point-contact reference for the size sweep.
+
+cfg = kwsim.two_d.defaultConfig();
+
+% Retained temporarily while legacy configuration metadata is migrated.
+cfg.stage = 3;
+cfg.scenario = "compact_contact_size_sweep_point";
+cfg.seed = 1002;
+
+cfg.grid.Nx = 48;
+cfg.grid.Nz = 48;
+cfg.solver.pml_size_points = 8;
+
+cfg.source.perimeter_margin_m = 2e-3;
+cfg.sensor.source_buffer_m = 1e-3;
+cfg.sensor.boundary_margin_m = 3e-3;
+
+cfg.time.settling_cycles = 1;
+cfg.output.directory = "";
+
+cfg = kwsim.sources.configureVibratorBank( ...
+    cfg, "directional", 1);
+
+cfg = kwsim.sources.configurePointContact( ...
+    cfg, ContactRadiusM=1e-3);
+
 end

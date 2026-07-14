@@ -1,40 +1,47 @@
 function cfg = config(regime)
-%CONFIG Configuration with finite external vibrator contacts.
+%CONFIG Reference configuration with finite external vibrator contacts.
 %
-% cfg = kwsim_benchmarks.finite_contacts_2d.config("directional")
-%
-% A physical vibrator is a tangential perimeter segment sampled every two
-% grid points. Every active node receives its own labelled solver channel,
-% while all nodes in the segment share vibrator phase and polarization. A
-% raised-cosine profile reduces edge discontinuities. The point-contact reference is provided by the field-regimes benchmark.
+% Each physical vibrator is a tangential perimeter segment. Its active
+% nodes share phase and polarization but receive independently weighted
+% solver channels.
 
 arguments
     regime (1,1) string {mustBeMember(regime, ...
-        ["directional", "partially_diffuse", "diffuse"])} = "directional"
+        ["directional", "partially_diffuse", "diffuse"])} = ...
+        "directional"
 end
 
-cfg = kwsim_benchmarks.field_regimes_2d.config(regime);
+cfg = kwsim.two_d.defaultConfig();
+
+% Retained temporarily while legacy configuration metadata is migrated.
+cfg.stage = 3;
 cfg.scenario = "finite_contacts_" + regime;
-cfg.source.contact_model = "finite_segment";
-cfg.source.contact_sampling = "sparse_patch"; % Backward-compatible alias.
-cfg.source.contact_profile = "raised_cosine";
-% Three active nodes span 4 mm and remain 2 mm apart on the reference grid.
-% A 1.5 mm separation was explicitly rejected after non-stationary diffuse
-% fields; this spacing is therefore a validated numerical constraint.
-cfg.source.contact_node_spacing_points = 4;
-cfg.source.contact_radius_m = 2e-3;
+cfg.seed = 1002;
 
 switch regime
     case "directional"
-        cfg.source.vibrator_count = 8;
+        vibrator_count = 8;
+
     case "partially_diffuse"
-        cfg.source.vibrator_count = 16;
+        vibrator_count = 16;
+
     case "diffuse"
-        cfg.source.vibrator_count = 16;
-        % Finite diffuse contacts converge more slowly than point contacts.
-        % A measured sweep from three to six settling cycles decreased the
-        % final-cycle change monotonically from 1.337% to 0.929%.
+        vibrator_count = 16;
+
+        % Finite diffuse contacts require additional settling.
         cfg.time.settling_cycles = 6;
 end
+
+cfg = kwsim.sources.configureVibratorBank( ...
+    cfg, regime, vibrator_count);
+
+cfg = kwsim.sources.configureFiniteContact( ...
+    cfg, ...
+    ContactRadiusM=2e-3, ...
+    NodeSpacingPoints=4, ...
+    Profile="raised_cosine");
+
+cfg.source.ramp_cycles = 3;
+cfg.sensor.boundary_margin_m = 4e-3;
 
 end

@@ -89,29 +89,25 @@ cfg.stage = 3;
 cfg.scenario = "vibrator_bank_unit_fixture_" + regime;
 cfg.seed = 1002;
 
-cfg.source.layout = "vibrator_bank";
-cfg.source.regime = regime;
-cfg.source.contact_model = "point";
-cfg.source.contact_sampling = "point";
-cfg.source.target_angle_deg = 0;
-cfg.source.coherent_power_fraction = 0.5;
-cfg.source.ramp_cycles = 3;
-
-cfg.sensor.boundary_margin_m = 4e-3;
-
 switch regime
     case "directional"
-        cfg.source.vibrator_count = 12;
-        cfg.source.coherent_power_fraction = 1;
+        vibrator_count = 12;
 
     case "partially_diffuse"
-        cfg.source.vibrator_count = 24;
+        vibrator_count = 24;
 
     case "diffuse"
-        cfg.source.vibrator_count = 24;
-        cfg.source.coherent_power_fraction = 0;
+        vibrator_count = 24;
         cfg.time.settling_cycles = 3;
 end
+
+cfg = kwsim.sources.configureVibratorBank( ...
+    cfg, regime, vibrator_count);
+
+cfg = kwsim.sources.configurePointContact(cfg);
+
+cfg.source.ramp_cycles = 3;
+cfg.sensor.boundary_margin_m = 4e-3;
 
 end
 
