@@ -1,7 +1,7 @@
 function material = makeAttenuationMaterial(material_id, options)
-%MAKEATTENUATIONMATERIAL Define Stage 4 P/S attenuation for one material.
+%MAKEATTENUATIONMATERIAL Define P/S attenuation laws for one material.
 %
-% material = kwsim.two_d.makeAttenuationMaterial(material_id)
+% material = kwsim.materials.makeAttenuationMaterial(material_id)
 %
 % Alpha values are amplitude attenuation coefficients in dB/cm. Reference
 % frequencies are in Hz. Separate shear and compressional laws are retained

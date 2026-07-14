@@ -34,10 +34,10 @@ for name = required
     end
 end
 
-validation = kwsim_benchmarks.field_regimes_2d.run( ...
-    configurations);
+[results, reports] = ...
+    kwsim_benchmarks.support.runRegimeSuite(configurations);
 
-validation.benchmark = "finite_contacts_2d";
-validation.contact_model = "finite_segment";
+validation = kwsim_benchmarks.finite_contacts_2d.evaluate( ...
+    results, reports, configurations);
 
 end

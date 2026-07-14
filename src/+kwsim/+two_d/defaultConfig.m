@@ -96,7 +96,7 @@ cfg.output.overwrite = false;
 cfg.attenuation = struct();
 cfg.attenuation.enabled = false;
 cfg.attenuation.model = "monofrequency_power_law";
-cfg.attenuation.materials = kwsim.two_d.makeAttenuationMaterial(1);
+cfg.attenuation.materials = kwsim.materials.makeAttenuationMaterial(1);
 
 % Thresholds are part of the result contract, so every reported pass/fail
 % can be reconstructed from the saved configuration.

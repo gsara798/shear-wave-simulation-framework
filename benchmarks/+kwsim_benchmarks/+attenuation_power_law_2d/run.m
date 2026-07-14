@@ -1,8 +1,9 @@
-function sweep = runFrequencySweep(base_cfg, frequencies_hz, ...
+function sweep = run(base_cfg, frequencies_hz, ...
         output_directory, options)
-%RUNFREQUENCYSWEEP Run independent attenuated/lossless Stage 4 simulations.
+%RUN Execute independent matched attenuated/lossless simulations.
 %
-% sweep = kwsim.two_d.runFrequencySweep(cfg, frequencies_hz, output_directory)
+% sweep = kwsim_benchmarks.attenuation_power_law_2d.run( ...
+%     cfg, frequencies_hz, output_directory)
 %
 % No field contains more than one frequency. For each f0 this function
 % clones the requested configuration, runs a matched lossless reference,
@@ -10,7 +11,8 @@ function sweep = runFrequencySweep(base_cfg, frequencies_hz, ...
 % fits the requested power law across the independent results.
 
 arguments
-    base_cfg struct = kwsim.two_d.stage4Config()
+    base_cfg struct = ...
+        kwsim_benchmarks.attenuation_power_law_2d.config()
     frequencies_hz (1,:) double = [300, 400, 500]
     output_directory {mustBeTextScalar} = ""
     options.Overwrite (1,1) logical = false
@@ -24,7 +26,7 @@ if numel(frequencies_hz) < 3 || any(~isfinite(frequencies_hz)) || ...
 end
 if ~base_cfg.attenuation.enabled
     error('kwsim:AttenuationDisabled', ...
-        'The Stage 4 base configuration must enable attenuation.');
+        'The benchmark base configuration must enable attenuation.');
 end
 
 strict = logical(base_cfg.diagnostics.fail_on_invalid);
@@ -33,7 +35,6 @@ pair_cells = cell(numel(frequencies_hz), 1);
 for index = 1:numel(frequencies_hz)
     f0_hz = frequencies_hz(index);
     attenuated_cfg = base_cfg;
-    attenuated_cfg.stage = 4;
     attenuated_cfg.source.f0_hz = f0_hz;
     attenuated_cfg.scenario = base_cfg.scenario + sprintf('_%g_hz', f0_hz);
     attenuated_cfg.output.directory = "";
@@ -46,8 +47,10 @@ for index = 1:numel(frequencies_hz)
 
     [lossless, lossless_report] = kwsim.two_d.run(lossless_cfg);
     [attenuated, attenuated_report] = kwsim.two_d.run(attenuated_cfg);
-    pair_cells{index} = kwsim.validation.evaluateStage4Pair( ...
-        attenuated, attenuated_report, lossless, lossless_report);
+    pair_cells{index} = ...
+        kwsim_benchmarks.attenuation_power_law_2d.evaluatePair( ...
+            attenuated, attenuated_report, ...
+            lossless, lossless_report);
 
     if strlength(string(output_directory)) > 0
         frequency_directory = fullfile(string(output_directory), ...
@@ -62,15 +65,24 @@ for index = 1:numel(frequencies_hz)
 end
 
 pairs = vertcat(pair_cells{:});
-sweep = kwsim.validation.evaluateStage4Sweep(pairs, base_cfg);
+sweep = kwsim_benchmarks.attenuation_power_law_2d.evaluate( ...
+    pairs, base_cfg);
+
+sweep.reproducibility = struct( ...
+    'seed', double(base_cfg.seed), ...
+    'frequencies_hz', frequencies_hz(:), ...
+    'matched_lossless_reference', true, ...
+    'frequency_ordering', "ascending");
 if strlength(string(output_directory)) > 0
-    kwsim.diagnostics.saveStage4Sweep(sweep, output_directory, ...
+    kwsim_benchmarks.attenuation_power_law_2d.saveResults( ...
+        sweep, output_directory, ...
         Overwrite=options.Overwrite);
 end
 if strict && ~sweep.valid
     failed_names = strjoin([sweep.checks(~[sweep.checks.pass]).name], ', ');
-    error('kwsim:Stage4ValidationFailed', ...
-        'Stage 4 sweep was saved but failed diagnostics: %s', failed_names);
+    error('kwsim:AttenuationPowerLawValidationFailed', ...
+        ['Attenuation power-law sweep was saved but failed ', ...
+         'diagnostics: %s'], failed_names);
 end
 
 end

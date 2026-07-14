@@ -1,5 +1,5 @@
 function validation = evaluate(results, reports, configurations)
-%EVALUATE Evaluate the point-contact field-regimes benchmark.
+%EVALUATE Evaluate the finite-contact field-regimes benchmark.
 
 arguments
     results struct
@@ -8,6 +8,8 @@ arguments
 end
 
 validation = kwsim_benchmarks.support.evaluateRegimeSuite( ...
-    results, reports, configurations, "field_regimes_2d");
+    results, reports, configurations, "finite_contacts_2d");
+
+validation.contact_model = "finite_segment";
 
 end

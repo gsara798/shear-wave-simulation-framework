@@ -28,15 +28,8 @@ for name = required
     end
 end
 
-results = struct();
-reports = struct();
-for name = required
-    cfg = configurations.(name);
-    cfg.output.directory = "";
-    cfg.output.save_time_series = false;
-    cfg.diagnostics.fail_on_invalid = false;
-    [results.(name), reports.(name)] = kwsim.two_d.run(cfg);
-end
+[results, reports] = ...
+    kwsim_benchmarks.support.runRegimeSuite(configurations);
 
 validation = kwsim_benchmarks.field_regimes_2d.evaluate( ...
     results, reports, configurations);

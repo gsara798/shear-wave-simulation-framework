@@ -1,5 +1,5 @@
-function sweep = evaluateStage4Sweep(pairs, base_cfg)
-%EVALUATESTAGE4SWEEP Recover the cross-run attenuation power-law exponent.
+function sweep = evaluate(pairs, base_cfg)
+%EVALUATE Recover the cross-run attenuation power-law exponent.
 
 arguments
     pairs struct
@@ -46,7 +46,7 @@ addCheck("power_law_exponent_absolute_error", isfinite(exponent_error) && ...
     base_cfg.diagnostics.maximum_power_law_exponent_absolute_error);
 
 sweep = struct();
-sweep.stage = 4;
+sweep.benchmark = "attenuation_power_law_2d";
 sweep.valid = all([checks.pass]);
 sweep.checks = checks;
 sweep.frequencies_hz = frequencies_hz;

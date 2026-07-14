@@ -1,5 +1,5 @@
-function [fig, output_file] = plotStage4Sweep(sweep, output_file)
-%PLOTSTAGE4SWEEP Summarize target recovery across monofrequency runs.
+function [fig, output_file] = plotResults(sweep, output_file)
+%PLOTRESULTS Summarize target recovery across monofrequency runs.
 
 arguments
     sweep struct
@@ -55,7 +55,7 @@ title(ax, sprintf('Spatial fit at %.1f Hz (R^2 = %.4f)', ...
     pair.frequency_hz, fit.r_squared));
 
 heading = title(layout, { ...
-    'Stage 4: monofrequency power-law attenuation validation'; ...
+    'Monofrequency power-law attenuation validation'; ...
     sprintf('|y_{estimated} - y_{target}| = %.4f; valid = %d', ...
         sweep.power_y_absolute_error, sweep.valid)});
 kwsim.viz.applyFigureStyle(fig, style);

@@ -1,5 +1,5 @@
-function paths = saveStage4Sweep(sweep, output_directory, options)
-%SAVESTAGE4SWEEP Save Stage 4 results, readable checks, and figures.
+function paths = saveResults(sweep, output_directory, options)
+%SAVERESULTS Save benchmark results, readable checks, and figures.
 
 arguments
     sweep struct
@@ -13,22 +13,22 @@ if ~isfolder(output_directory)
 end
 paths = struct();
 paths.mat_file = fullfile(output_directory, "sweep_index.mat");
-paths.summary_file = fullfile(output_directory, "stage4_summary.txt");
-paths.figure_file = fullfile(output_directory, "stage4_power_law.png");
+paths.summary_file = fullfile(output_directory, "attenuation_power_law_summary.txt");
+paths.figure_file = fullfile(output_directory, "attenuation_power_law.png");
 if ~options.Overwrite && any(isfile([paths.mat_file, paths.summary_file, ...
         paths.figure_file]))
     error('kwsim:OutputExists', ...
-        'Refusing to overwrite existing Stage 4 sweep artifacts.');
+        'Refusing to overwrite existing attenuation benchmark artifacts.');
 end
 
 save(paths.mat_file, 'sweep', '-v7.3');
 fid = fopen(paths.summary_file, 'w');
 if fid < 0
     error('kwsim:SummaryWriteFailed', ...
-        'Could not create Stage 4 summary: %s', paths.summary_file);
+        'Could not create attenuation benchmark summary: %s', paths.summary_file);
 end
 cleanup = onCleanup(@() fclose(fid));
-fprintf(fid, 'KWSIM STAGE 4 POWER-LAW ATTENUATION VALIDATION\n');
+fprintf(fid, 'KWSIM POWER-LAW ATTENUATION BENCHMARK\n');
 fprintf(fid, '%s\n\n', sweep.summary);
 fprintf(fid, '%-42s %-6s %-14s %-14s\n', ...
     'Check', 'Pass', 'Value', 'Threshold');
@@ -46,7 +46,9 @@ for pair = sweep.pairs.'
 end
 clear cleanup;
 
-[fig, ~] = kwsim.viz.plotStage4Sweep(sweep, paths.figure_file);
+[fig, ~] = ...
+    kwsim_benchmarks.attenuation_power_law_2d.plotResults( ...
+        sweep, paths.figure_file);
 close(fig);
 paths.pair_figures = strings(numel(sweep.pairs), 1);
 for index = 1:numel(sweep.pairs)
@@ -57,7 +59,9 @@ for index = 1:numel(sweep.pairs)
         mkdir(frequency_directory);
     end
     pair_file = fullfile(frequency_directory, "attenuation_diagnostics.png");
-    [fig, ~] = kwsim.viz.plotStage4Pair(pair, pair_file);
+    [fig, ~] = ...
+        kwsim_benchmarks.attenuation_power_law_2d.plotPair( ...
+            pair, pair_file);
     close(fig);
     paths.pair_figures(index) = pair_file;
 end

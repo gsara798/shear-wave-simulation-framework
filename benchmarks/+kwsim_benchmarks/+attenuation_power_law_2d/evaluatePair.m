@@ -1,6 +1,6 @@
-function pair = evaluateStage4Pair(attenuated, attenuated_report, ...
+function pair = evaluatePair(attenuated, attenuated_report, ...
         lossless, lossless_report)
-%EVALUATESTAGE4PAIR Diagnose one matched attenuated/lossless frequency pair.
+%EVALUATEPAIR Diagnose one matched attenuated/lossless frequency pair.
 
 arguments
     attenuated struct
@@ -17,7 +17,7 @@ end
 material_ids = unique(attenuated.truth.material_id_zx);
 if numel(material_ids) ~= 1
     error('kwsim:UnsupportedAttenuationBenchmark', ...
-        'Stage 4 attenuation recovery currently requires a homogeneous medium.');
+        'Attenuation recovery currently requires a homogeneous medium.');
 end
 
 estimate = kwsim.analysis.estimateAttenuation(attenuated, lossless);
@@ -52,7 +52,7 @@ addCheck("attenuated_speed_relative_difference", ...
     cfg.diagnostics.maximum_attenuated_speed_relative_difference);
 
 pair = struct();
-pair.stage = 4;
+pair.benchmark = "attenuation_power_law_2d";
 pair.frequency_hz = attenuated.axes.f0_hz;
 pair.valid = all([checks.pass]);
 pair.checks = checks;
