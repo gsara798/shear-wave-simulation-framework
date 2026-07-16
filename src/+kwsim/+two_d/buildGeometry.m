@@ -5,7 +5,7 @@ function [maps, metadata] = buildGeometry(cfg)
 %
 % Inputs use physical [x,z] coordinates in metres. Outputs use k-Wave's
 % internal [Nx,Nz] orientation and are converted to public [Nz,Nx] maps only
-% by the run adapter. Stage 2 supports circles; unknown object types fail
+% by the run adapter. The 2D geometry rasterizer supports circles; unknown object types fail
 % explicitly instead of being silently ignored.
 
 arguments

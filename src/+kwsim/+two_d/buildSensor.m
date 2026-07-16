@@ -1,5 +1,5 @@
 function [sensor, metadata] = buildSensor(cfg)
-%BUILDSENSOR Build the rectangular Stage 1 analysis sensor.
+%BUILDSENSOR Build the rectangular 2D analysis sensor.
 %
 % The binary mask is required by k-Wave's split-field recording. It excludes
 % a source buffer and a small boundary margin. The PML is outside the user

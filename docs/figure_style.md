@@ -1,7 +1,7 @@
 # Figure style and scientific notation
 
-All project-generated figures use `kwsim.common.figureTemplate` followed by
-`kwsim.common.applyFigureStyle`. The shared defaults are Times New Roman,
+All project-generated figures use `kwsim.viz.figureTemplate` followed by
+`kwsim.viz.applyFigureStyle`. The shared defaults are Times New Roman,
 12 pt axes/labels/panel titles, an optional 14 pt figure title, 11 pt legends,
 and 300 dpi export.
 

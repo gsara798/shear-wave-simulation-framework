@@ -1,0 +1,39 @@
+%RUN_DIRECTIONAL_HOMOGENEOUS_VALIDATION
+% Execute repeatability, grid, and domain-size comparisons.
+
+example_directory = fileparts(mfilename('fullpath'));
+
+project_root = fileparts( ...
+    fileparts(example_directory));
+
+addpath(fullfile(project_root, 'src'));
+addpath(fullfile(project_root, 'benchmarks'));
+
+cfg = ...
+    kwsim_benchmarks.directional_homogeneous_2d.compactConfig();
+
+validation = ...
+    kwsim_benchmarks.directional_homogeneous_2d.validate(cfg);
+
+fprintf('%s\n', validation.summary);
+
+output_directory = fullfile( ...
+    project_root, ...
+    'outputs', ...
+    'directional_homogeneous_2d_validation');
+
+if ~isfolder(output_directory)
+    mkdir(output_directory);
+end
+
+save( ...
+    fullfile(output_directory, 'validation.mat'), ...
+    'validation', ...
+    '-v7.3');
+
+if ~validation.valid
+    error( ...
+        'kwsim:DirectionalHomogeneousValidationFailed', ...
+        ['One or more directional homogeneous cross-run ', ...
+         'checks failed.']);
+end

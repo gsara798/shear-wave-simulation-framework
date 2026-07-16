@@ -30,14 +30,14 @@ disp(report.summary);
 To save the self-contained MAT result and diagnostic figures:
 
 ```matlab
-kwsim.common.saveRun(result, report, 'outputs/my_run');
+kwsim.io.saveRun(result, report, 'outputs/my_run');
 ```
 
 To inspect the measured axial displacement field interactively, including
 amplitude, phase, P/S separation, and the phase-speed fit:
 
 ```matlab
-kwsim.diagnostics.plotAxialField(result, report);
+kwsim.viz.plotAxialField(result, report);
 ```
 
 Pass `Quantity="velocity"` as a name-value option to visualize axial particle
@@ -46,33 +46,33 @@ velocity instead of displacement.
 Axial and lateral motion can be compared with shared amplitude scales using:
 
 ```matlab
-kwsim.diagnostics.plotMotionComponents(result, report);
+kwsim.viz.plotMotionComponents(result, report);
 ```
 
 All diagnostic figures use the reusable template returned by
-`kwsim.common.figureTemplate`: Times New Roman, 12 pt axes/labels/titles,
+`kwsim.viz.figureTemplate`: Times New Roman, 12 pt axes/labels/titles,
 14 pt figure titles, and 300 dpi export. Apply it to a new completed figure
-with `kwsim.common.applyFigureStyle(fig)`. The notation rules are documented
+with `kwsim.viz.applyFigureStyle(fig)`. The notation rules are documented
 in `docs/figure_style.md`.
 
 The complete reference example is
-`examples/two_d/run_stage1_directional.m`. The compact cross-run reliability
-suite is `examples/two_d/run_stage1_validation.m`.
+`examples/two_d/run_directional_homogeneous_benchmark.m`. The compact cross-run reliability
+suite is `examples/two_d/run_directional_homogeneous_validation.m`.
 
-The Stage 2 reference is `examples/two_d/run_stage2_circular_inclusion.m`.
+The circular-inclusion reference is `examples/two_d/run_circular_inclusion_benchmark.m`.
 It validates a contrast circle against homogeneous and zero-contrast runs
 before saving material maps and field-comparison figures.
 
-The Stage 3 reference is `examples/two_d/run_stage3_field_regimes.m`. It runs
+The field-regimes reference is `examples/two_d/run_field_regimes_benchmark.m`. It runs
 the three source regimes independently, verifies angular concentration and
 entropy, and saves a common field/source/spectrum comparison. Definitions and
-source-model limitations are in `docs/stage3_field_regimes.md`.
+source-model limitations are documented in `benchmarks/+kwsim_benchmarks/+field_regimes_2d/README.md`.
 
-Stage 3B adds validated finite perimeter contacts while retaining point
+The finite-contacts benchmark adds validated finite perimeter contacts while retaining point
 contacts. The reference uses a 4 mm raised-cosine segment sampled at three
-non-adjacent nodes. Run `examples/two_d/run_stage3b_finite_contacts.m`; the
+non-adjacent nodes. Run `examples/two_d/run_finite_contacts_benchmark.m`; the
 validated range and rejected dense discretizations are documented in
-`docs/stage3b_finite_contacts.md`.
+`docs/finite_contacts_2d.md`.
 
 ## Coordinate and field contract
 
@@ -113,19 +113,19 @@ near the left boundary. Its main propagation is lateral, making the imposed
 motion transverse and shear-dominant.
 
 k-Wave 1.4.1 becomes unstable when identical Dirichlet velocity is imposed on
-adjacent elastic grid points for a long continuous-wave run. Stage 1 therefore
+adjacent elastic grid points for a long continuous-wave run. The directional homogeneous benchmark therefore
 represents the approximately 2 mm contact using nodes spaced by two grid
 points. This is a
 documented solver limitation and is guarded by finite-field, P/S, speed, and
 stationarity diagnostics. The additive source used by the archive is not used.
 
-Stage 3 uses labelled point contacts around the perimeter. Every contact has
+The field-regimes benchmark uses labelled point contacts around the perimeter. Every contact has
 its own phase and transverse vector polarization. Directional comparisons
 hold the total prescribed RMS-squared velocity drive constant as contact count
 changes; this quantity is not described as mechanical power because contact
 stress is unknown.
 
-For finite Stage 3B contacts, physical-vibrator IDs are stored separately from
+For finite contacts, physical-vibrator IDs are stored separately from
 solver-channel labels. This permits spatially weighted finite segments while
 preserving the requested total drive. In 2D their outgoing wavefronts are
 circular/cylindrical; spherical propagation requires 3D.
@@ -144,7 +144,7 @@ Every run performs:
 
 The cross-run suite additionally checks exact repetition, a 25% finer grid,
 and a physically larger downstream domain as the PML-reflection reference.
-See `docs/stage1_reliability.md` for definitions and thresholds.
+See `docs/directional_homogeneous_2d_reliability.md` for definitions and thresholds.
 
 ## Tests
 

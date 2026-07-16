@@ -1,5 +1,5 @@
 function [source, metadata] = buildVibratorBankSource(cfg, kgrid)
-%BUILDVIBRATORBANKSOURCE Build labelled vector sources for a Stage 3 run.
+%BUILDVIBRATORBANKSOURCE Build labelled vector sources for a 2D vibrator bank.
 %
 % [source, metadata] = kwsim.two_d.buildVibratorBankSource(cfg, kgrid)
 %

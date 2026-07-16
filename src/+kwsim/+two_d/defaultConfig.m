@@ -1,5 +1,5 @@
 function cfg = defaultConfig()
-%DEFAULTCONFIG Configuration for the Stage 1 directional 2D benchmark.
+%DEFAULTCONFIG Baseline configuration for reusable 2D elastic simulations.
 %
 % All physical values use SI units. Public fields use x for the lateral
 % coordinate and z for depth. k-Wave calls its second 2D coordinate y; that
@@ -7,7 +7,6 @@ function cfg = defaultConfig()
 
 cfg = struct();
 cfg.schema_version = "3.0";
-cfg.stage = 1;
 cfg.scenario = "homogeneous_directional";
 cfg.seed = 1001;
 
@@ -20,7 +19,7 @@ cfg.grid.dz_m = 0.5e-3;
 cfg.grid.cfl = 0.20;
 cfg.grid.minimum_shear_ppw = 8;
 
-% Stage 1 is intentionally lossless. Attenuation is introduced in Stage 4.
+% The baseline configuration is lossless; attenuation is enabled explicitly.
 cfg.medium = struct();
 cfg.medium.cs_m_s = 2.0;
 cfg.medium.rho_kg_m3 = 1000;
@@ -29,7 +28,7 @@ cfg.medium.reduced_cp_factor = 10;
 cfg.medium.physical_cp_m_s = 1540;
 
 % Geometry objects are applied in array order over this homogeneous
-% background. Stage 1 contains no objects; Stage 2 adds a circular object
+% background. The baseline contains no objects; benchmarks may add geometry
 % without changing the solver-facing API.
 object_template = struct('type', "", 'name', "", ...
     'center_m_xz', [NaN, NaN], 'radius_m', NaN, ...
@@ -45,7 +44,7 @@ cfg.geometry.require_objects_inside_sensor_roi = true;
 cfg.source = struct();
 % Source layout is independent of the project stage. This allows later
 % physics stages to reuse the validated single-contact benchmark without
-% being forced to construct a Stage 3 perimeter bank.
+% being forced to construct a perimeter vibrator bank.
 cfg.source.layout = "single_contact";
 cfg.source.side = "left";
 cfg.source.f0_hz = 500;
@@ -54,7 +53,7 @@ cfg.source.velocity_amplitude_m_s = 1e-6;
 cfg.source.contact_radius_m = 1e-3;
 cfg.source.contact_model = "finite_segment";
 cfg.source.contact_sampling = "sparse_patch";
-cfg.source.contact_profile = "raised_cosine";
+cfg.source.contact_profile = "uniform";
 cfg.source.contact_node_spacing_points = 2;
 cfg.source.ramp_cycles = 3;
 cfg.source.phase_rad = 0;
@@ -89,14 +88,14 @@ cfg.output.save_time_series = false;
 cfg.output.directory = "";
 cfg.output.overwrite = false;
 
-% pstdElastic2D implements f^2 Kelvin-Voigt absorption. Stage 4 reproduces
+% pstdElastic2D implements f^2 Kelvin-Voigt absorption. The attenuation benchmark reproduces
 % an arbitrary target power law across independent monofrequency runs by
 % recalibrating this coefficient at each source frequency. Disabled means
 % the absorption fields are omitted entirely from the solver medium.
 cfg.attenuation = struct();
 cfg.attenuation.enabled = false;
 cfg.attenuation.model = "monofrequency_power_law";
-cfg.attenuation.materials = kwsim.two_d.makeAttenuationMaterial(1);
+cfg.attenuation.materials = kwsim.materials.makeAttenuationMaterial(1);
 
 % Thresholds are part of the result contract, so every reported pass/fail
 % can be reconstructed from the saved configuration.
@@ -121,7 +120,7 @@ cfg.diagnostics.minimum_diffuse_angular_entropy = 0.75;
 cfg.diagnostics.minimum_partial_metric_margin = 0.10;
 cfg.diagnostics.maximum_drive_power_relative_error = 0.01;
 % pstdElastic2D Dirichlet contacts became non-stationary below this spacing
-% in Stage 3B sweeps. Point contacts are exempt because they own one node.
+% in finite-contact sweeps. Point contacts are exempt because they own one node.
 cfg.diagnostics.minimum_finite_contact_node_spacing_points = 4;
 cfg.diagnostics.maximum_contact_span_relative_error = 0.05;
 cfg.diagnostics.maximum_contact_profile_symmetry_error = 1e-12;

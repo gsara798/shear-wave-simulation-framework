@@ -13,7 +13,7 @@ arguments
 end
 
 [cfg, preflight] = kwsim.two_d.validateConfig(requested_cfg);
-kwave_root = kwsim.common.locateKWave(cfg.solver.kwave_path);
+kwave_root = kwsim.io.locateKWave(cfg.solver.kwave_path);
 rng(cfg.seed, 'twister');
 
 [kgrid, cfg] = kwsim.two_d.buildGrid(cfg);
@@ -22,7 +22,7 @@ if lower(string(cfg.source.layout)) == "vibrator_bank"
     [source, source_metadata] = ...
         kwsim.two_d.buildVibratorBankSource(cfg, kgrid);
 else
-    [source, source_metadata] = kwsim.two_d.buildDirectionalSource(cfg, kgrid);
+    [source, source_metadata] = kwsim.two_d.buildSingleContactSource(cfg, kgrid);
 end
 [sensor, sensor_metadata] = kwsim.two_d.buildSensor(cfg);
 
@@ -46,10 +46,10 @@ raw.uy_split_p = toHost(sensor_data.uy_split_p);
 raw.t_record_s = double(kgrid.t_array(sensor.record_start_index:end));
 
 f0 = cfg.source.f0_hz;
-fit_lateral_s = kwsim.diagnostics.fitHarmonic(raw.ux_split_s, raw.t_record_s, f0);
-fit_lateral_p = kwsim.diagnostics.fitHarmonic(raw.ux_split_p, raw.t_record_s, f0);
-fit_axial_s = kwsim.diagnostics.fitHarmonic(raw.uy_split_s, raw.t_record_s, f0);
-fit_axial_p = kwsim.diagnostics.fitHarmonic(raw.uy_split_p, raw.t_record_s, f0);
+fit_lateral_s = kwsim.signal.fitHarmonic(raw.ux_split_s, raw.t_record_s, f0);
+fit_lateral_p = kwsim.signal.fitHarmonic(raw.ux_split_p, raw.t_record_s, f0);
+fit_axial_s = kwsim.signal.fitHarmonic(raw.uy_split_s, raw.t_record_s, f0);
+fit_axial_p = kwsim.signal.fitHarmonic(raw.uy_split_p, raw.t_record_s, f0);
 
 nx_roi = numel(sensor_metadata.x_indices);
 nz_roi = numel(sensor_metadata.z_indices);
@@ -76,7 +76,7 @@ displacement.units = "m";
 displacement.phasor_convention = velocity.phasor_convention;
 
 analysis_start_s = raw.t_record_s(1);
-source_metadata.diagnostics = kwsim.diagnostics.sourceMetrics( ...
+source_metadata.diagnostics = kwsim.analysis.sourceMetrics( ...
     source_metadata, analysis_start_s);
 
 truth = struct();
@@ -114,7 +114,7 @@ result.source = source_metadata;
 result.sensor = sensor_metadata;
 result.fields = struct('velocity', velocity, 'displacement', displacement);
 result.runtime_s = runtime_s;
-result.provenance = kwsim.common.provenance(cfg, kwave_root);
+result.provenance = kwsim.io.provenance(cfg, kwave_root);
 
 if cfg.output.save_time_series
     result.time_series = struct();
@@ -126,20 +126,20 @@ else
         'reason', "Disabled by output.save_time_series to control file size.");
 end
 
-report = kwsim.diagnostics.evaluateRun(result, raw, preflight);
+report = kwsim.validation.evaluateRun(result, raw, preflight);
 result.valid = report.valid;
 result.diagnostics = report;
 
 if strlength(string(cfg.output.directory)) > 0
-    kwsim.common.saveRun(result, report, cfg.output.directory, ...
+    kwsim.io.saveRun(result, report, cfg.output.directory, ...
         'Overwrite', logical(cfg.output.overwrite));
 end
 
 if ~report.valid && cfg.diagnostics.fail_on_invalid
     failed_names = strjoin([report.checks(~[report.checks.pass]).name], ', ');
     error('kwsim:DiagnosticsFailed', ...
-        'Simulation completed but failed Stage %d diagnostics: %s', ...
-        cfg.stage, failed_names);
+        'Simulation completed but failed diagnostics: %s', ...
+        failed_names);
 end
 
 end

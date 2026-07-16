@@ -4,6 +4,7 @@ function results = run_all_tests()
 tests_dir = fileparts(mfilename('fullpath'));
 project_root = fileparts(tests_dir);
 addpath(fullfile(project_root, 'src'));
+addpath(fullfile(project_root, 'benchmarks'));
 results = runtests(tests_dir, 'IncludeSubfolders', true);
 disp(table(results));
 assertSuccess(results);
