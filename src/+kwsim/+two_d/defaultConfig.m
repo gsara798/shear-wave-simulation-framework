@@ -84,9 +84,22 @@ cfg.solver.plot_simulation = false;
 cfg.solver.kwave_path = "";
 
 cfg.output = struct();
-cfg.output.save_time_series = false;
-cfg.output.directory = "";
+
+% Output organization
+cfg.output.enabled = false;
+cfg.output.directory = "outputs";
+cfg.output.run_name = "";
+cfg.output.append_timestamp = true;
 cfg.output.overwrite = false;
+
+% Saved products
+cfg.output.save_result = true;
+cfg.output.save_summary = true;
+cfg.output.save_config_mat = true;
+cfg.output.save_config_json = true;
+cfg.output.save_time_series = false;
+cfg.output.save_figures = true;
+cfg.output.save_matlab_figures = true;
 
 % pstdElastic2D implements f^2 Kelvin-Voigt absorption. The attenuation benchmark reproduces
 % an arbitrary target power law across independent monofrequency runs by
