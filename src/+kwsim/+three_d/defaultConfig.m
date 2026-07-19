@@ -96,9 +96,22 @@ cfg.execution.maximum_memory_bytes = 8e9;
 cfg.execution.fail_on_memory_limit = true;
 
 cfg.output = struct();
-cfg.output.save_time_series = false;
-cfg.output.directory = "";
+
+% Output organization
+cfg.output.enabled = false;
+cfg.output.directory = "outputs";
+cfg.output.run_name = "";
+cfg.output.append_timestamp = true;
 cfg.output.overwrite = false;
+
+% Saved products
+cfg.output.save_result = true;
+cfg.output.save_summary = true;
+cfg.output.save_config_mat = true;
+cfg.output.save_config_json = true;
+cfg.output.save_time_series = false;
+cfg.output.save_figures = true;
+cfg.output.save_matlab_figures = true;
 
 % Temporal reduction from simulated time series to complex fields at f0.
 cfg.analysis = struct();
