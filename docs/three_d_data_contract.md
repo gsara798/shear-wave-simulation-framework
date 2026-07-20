@@ -52,7 +52,7 @@ Rasterization into solver-order arrays is performed only by
 
 ## Result fields
 
-The public result contract will include:
+The public result contract includes:
 
 - `result.axes.x_m`
 - `result.axes.y_m`
@@ -81,6 +81,67 @@ Both vectors are stored explicitly:
 
 They must be nonzero, normalized during validation, and mutually orthogonal for
 the baseline shear-wave configuration.
+
+## Multi-source bank convention
+
+A resolved vibrator bank stores one structure per physical contact under:
+
+```matlab
+result.config_resolved.source.vibrators
+```
+
+Each vibrator contains:
+
+```text
+node_linear_indices
+center_index_xyz
+center_m_xyz
+nominal_propagation_xyz
+polarization_xyz
+phase_rad
+velocity_amplitude_m_s
+contact_node_count
+```
+
+All solver-source component matrices use shape:
+
+```text
+[NsourcePoints, Nt]
+```
+
+Their row order corresponds exactly to the column-major ordering returned by:
+
+```matlab
+find(source.u_mask)
+```
+
+This correspondence must remain valid for `ux`, `uy`, and `uz`.
+
+The current bank policies are:
+
+```text
+phase_policy        = random_uniform
+amplitude_policy    = equal_total_rms
+polarization_policy = project_axial_transverse
+```
+
+`equal_total_rms` normalizes the node-weighted RMS-squared prescribed velocity
+of the complete bank to the single-contact reference. It is a controlled drive
+quantity and is not interpreted as mechanical power because source stress is
+not prescribed.
+
+The acquisition plane is a central `x-z` plane at a resolved `y` index. The REQ
+export contains this two-dimensional plane, while the solver and harmonic fields
+remain fully three-dimensional.
+
+The implemented `partial_diffuse_8` bank is a single-face development geometry.
+Its eight contacts lie on the left `x` face and point toward the domain
+interior. Multi-face partially diffuse and diffuse geometries are future
+source-bank configurations.
+
+See
+[`three_d_wavefield_regimes.md`](three_d_wavefield_regimes.md)
+for the planned directional-to-diffuse field taxonomy.
 
 ## Grid resolution
 
