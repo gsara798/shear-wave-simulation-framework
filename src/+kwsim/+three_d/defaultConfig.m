@@ -110,6 +110,10 @@ cfg.output.save_summary = true;
 cfg.output.save_config_mat = true;
 cfg.output.save_config_json = true;
 cfg.output.save_time_series = false;
+
+% Export a lightweight 2D complex field for external REQ validation.
+cfg.output.save_req_validation_sample = false;
+
 cfg.output.save_figures = true;
 cfg.output.save_matlab_figures = true;
 
@@ -118,6 +122,14 @@ cfg.analysis = struct();
 cfg.analysis.harmonic_method = "least_squares";
 cfg.analysis.temporal_window = "none";
 cfg.analysis.remove_mean = true;
+
+% Parameters used only to assess whether an exported field is large
+% enough for the external REQ validation pipeline.
+cfg.req_validation = struct();
+cfg.req_validation.quantity = "displacement";
+cfg.req_validation.cs_guess_m_s = 3.0;
+cfg.req_validation.window_wavelengths = 2.0;
+cfg.req_validation.minimum_placements_per_axis = 5;
 
 cfg.attenuation = struct();
 cfg.attenuation.enabled = false;

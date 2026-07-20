@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+Usage:
+  ./scripts/kwsim-run CONFIG.json
+  ./scripts/kwsim-run CONFIG.json --dry-run
+
+Options:
+  --dry-run    Validate and resolve the configuration without running k-Wave.
+  -h, --help   Show this message.
+
+Environment:
+  MATLAB_BIN   Optional path to the MATLAB executable.
+EOF
+}
+
+CONFIG_FILE=""
+DRY_RUN=0
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --dry-run)
+            DRY_RUN=1
+            ;;
+
+        -h|--help)
+            usage
+            exit 0
+            ;;
+
+        -*)
+            echo "Unknown option: $1" >&2
+            usage >&2
+            exit 2
+            ;;
+
+        *)
+            if [[ -n "$CONFIG_FILE" ]]; then
+                echo "Only one configuration file may be supplied." >&2
+                exit 2
+            fi
+
+            CONFIG_FILE="$1"
+            ;;
+    esac
+
+    shift
+done
+
+if [[ -z "$CONFIG_FILE" ]]; then
+    usage >&2
+    exit 2
+fi
+
+SCRIPT_DIRECTORY="$(
+    cd "$(dirname "${BASH_SOURCE[0]}")"
+    pwd
+)"
+
+REPOSITORY_ROOT="$(
+    cd "$SCRIPT_DIRECTORY/.."
+    pwd
+)"
+
+CONFIG_FILE="$(
+    python3 - "$CONFIG_FILE" <<'PY'
+import os
+import sys
+
+print(os.path.abspath(sys.argv[1]))
+PY
+)"
+
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo "Configuration file does not exist: $CONFIG_FILE" >&2
+    exit 2
+fi
+
+MATLAB_BIN="${MATLAB_BIN:-/Applications/MATLAB_R2025a.app/bin/matlab}"
+
+if [[ ! -x "$MATLAB_BIN" ]]; then
+    echo "MATLAB executable was not found: $MATLAB_BIN" >&2
+    echo "Set MATLAB_BIN to the correct executable path." >&2
+    exit 2
+fi
+
+export KWSIM_CONFIG="$CONFIG_FILE"
+export KWSIM_DRY_RUN="$DRY_RUN"
+
+cd "$REPOSITORY_ROOT"
+
+"$MATLAB_BIN" -batch \
+'addpath(fullfile(pwd,"src")); dry_run=strcmp(getenv("KWSIM_DRY_RUN"),"1"); kwsim.cli.runConfig(getenv("KWSIM_CONFIG"),DryRun=dry_run);'

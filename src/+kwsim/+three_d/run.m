@@ -74,6 +74,53 @@ for component_index = 1:size(component_map, 1)
     end
 end
 
+%% Build dimension-independent velocity and displacement contracts
+
+harmonic_velocity.x_total_zyx = ...
+    harmonic_velocity.x_shear_zyx + ...
+    harmonic_velocity.x_compression_zyx;
+
+harmonic_velocity.y_total_zyx = ...
+    harmonic_velocity.y_shear_zyx + ...
+    harmonic_velocity.y_compression_zyx;
+
+harmonic_velocity.z_total_zyx = ...
+    harmonic_velocity.z_shear_zyx + ...
+    harmonic_velocity.z_compression_zyx;
+
+harmonic_velocity.units = "m/s";
+harmonic_velocity.phasor_convention = ...
+    "v(t) = real{V exp(i 2*pi*f*t)}";
+
+harmonic_displacement = struct();
+
+spatial_field_names = {
+    "x_shear_zyx"
+    "x_compression_zyx"
+    "x_total_zyx"
+    "y_shear_zyx"
+    "y_compression_zyx"
+    "y_total_zyx"
+    "z_shear_zyx"
+    "z_compression_zyx"
+    "z_total_zyx"
+};
+
+angular_frequency_rad_s = ...
+    2*pi*cfg.source.f0_hz;
+
+for field_index = 1:numel(spatial_field_names)
+    field_name = spatial_field_names{field_index};
+
+    harmonic_displacement.(field_name) = ...
+        harmonic_velocity.(field_name) / ...
+        (1i * angular_frequency_rad_s);
+end
+
+harmonic_displacement.units = "m";
+harmonic_displacement.phasor_convention = ...
+    "u(t) = real{U exp(i 2*pi*f*t)}";
+
 %% Crop and orient truth maps to the public sensor ROI
 
 x_indices = cfg.sensor.x_indices;
@@ -131,9 +178,18 @@ result.axes.temporal_units = "s";
 result.axes.spatial_units = "m";
 
 result.fields = struct();
+
+% Preferred dimension-independent containers.
+result.fields.velocity = harmonic_velocity;
+result.fields.displacement = harmonic_displacement;
+
+% Compatibility aliases for existing 3D validation and visualization code.
 result.fields.harmonic_velocity = harmonic_velocity;
+result.fields.harmonic_displacement = harmonic_displacement;
+
 result.fields.phasor_convention = ...
-    "u(t) = real{U exp(i 2*pi*f*t)}";
+    harmonic_displacement.phasor_convention;
+
 result.fields.frequency_hz = cfg.source.f0_hz;
 result.fields.spatial_orientation = "[Nz,Ny,Nx]";
 
