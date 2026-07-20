@@ -41,7 +41,7 @@ assertWritable(mat_path, options.Overwrite);
 assertWritable(text_path, options.Overwrite);
 
 validation_report = report;
-save(mat_path, "validation_report");
+save(mat_path, "validation_report", "-v7.3");
 
 writeReportText(report, text_path);
 

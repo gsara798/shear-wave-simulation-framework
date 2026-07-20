@@ -19,7 +19,6 @@ if isempty(base_cfg.geometry.objects)
 end
 
 base_cfg.diagnostics.fail_on_invalid = false;
-base_cfg.output.directory = "";
 base_cfg.output.save_time_series = false;
 [resolved_base, ~] = kwsim.two_d.validateConfig(base_cfg);
 constant_cp_m_s = resolved_base.medium.cp_m_s;
