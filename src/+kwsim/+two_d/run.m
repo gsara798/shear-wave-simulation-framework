@@ -103,6 +103,7 @@ truth.orientation = "[Nz,Nx]";
 
 result = struct();
 result.schema_version = cfg.schema_version;
+result.dimension = 2;
 result.config_requested = requested_cfg;
 result.config_resolved = cfg;
 result.axes = struct('x_m', sensor_metadata.x_m, 'z_m', sensor_metadata.z_m, ...
@@ -129,11 +130,6 @@ end
 report = kwsim.validation.evaluateRun(result, raw, preflight);
 result.valid = report.valid;
 result.diagnostics = report;
-
-if strlength(string(cfg.output.directory)) > 0
-    kwsim.io.saveRun(result, report, cfg.output.directory, ...
-        'Overwrite', logical(cfg.output.overwrite));
-end
 
 if ~report.valid && cfg.diagnostics.fail_on_invalid
     failed_names = strjoin([report.checks(~[report.checks.pass]).name], ', ');

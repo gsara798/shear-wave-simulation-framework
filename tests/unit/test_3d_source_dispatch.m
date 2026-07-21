@@ -1,0 +1,226 @@
+function tests = test_3d_source_dispatch
+%TEST_3D_SOURCE_DISPATCH Test the 3D source dispatcher.
+
+tests = functiontests(localfunctions);
+
+end
+
+
+function setupOnce(~)
+
+repository_root = fileparts(fileparts(fileparts( ...
+    mfilename("fullpath"))));
+
+addpath(fullfile(repository_root, "src"));
+
+end
+
+
+function testSingleContactMatchesDirectBuilder(testCase)
+
+[cfg, kgrid] = syntheticResolvedSingleContact();
+
+[source_direct, metadata_direct] = ...
+    kwsim.three_d.buildSingleContactSource( ...
+        cfg, ...
+        kgrid);
+
+[source_dispatch, metadata_dispatch] = ...
+    kwsim.three_d.buildSource( ...
+        cfg, ...
+        kgrid);
+
+verifyEqual(testCase, ...
+    source_dispatch.u_mask, ...
+    source_direct.u_mask);
+
+verifyEqual(testCase, ...
+    source_dispatch.ux, ...
+    source_direct.ux);
+
+verifyEqual(testCase, ...
+    source_dispatch.uy, ...
+    source_direct.uy);
+
+verifyEqual(testCase, ...
+    source_dispatch.uz, ...
+    source_direct.uz);
+
+verifyEqual(testCase, ...
+    string(source_dispatch.u_mode), ...
+    string(source_direct.u_mode));
+
+verifyEqual(testCase, ...
+    metadata_dispatch.layout, ...
+    "single_contact");
+
+verifyEqual(testCase, ...
+    metadata_dispatch.center_index_xyz, ...
+    metadata_direct.center_index_xyz);
+
+end
+
+
+function testVibratorBankDispatches(testCase)
+
+[cfg, kgrid] = syntheticResolvedVibratorBank();
+
+[source_direct, metadata_direct] = ...
+    kwsim.three_d.buildVibratorBankSource( ...
+        cfg, ...
+        kgrid);
+
+[source_dispatch, metadata_dispatch] = ...
+    kwsim.three_d.buildSource( ...
+        cfg, ...
+        kgrid);
+
+verifyEqual(testCase, ...
+    source_dispatch.u_mask, ...
+    source_direct.u_mask);
+
+verifyEqual(testCase, ...
+    source_dispatch.ux, ...
+    source_direct.ux);
+
+verifyEqual(testCase, ...
+    source_dispatch.uy, ...
+    source_direct.uy);
+
+verifyEqual(testCase, ...
+    source_dispatch.uz, ...
+    source_direct.uz);
+
+verifyEqual(testCase, ...
+    metadata_dispatch.layout, ...
+    "vibrator_bank");
+
+verifyEqual(testCase, ...
+    metadata_dispatch.vibrator_count, ...
+    metadata_direct.vibrator_count);
+
+end
+
+
+function testUnknownLayoutRejected(testCase)
+
+[cfg, kgrid] = syntheticResolvedSingleContact();
+
+cfg.source.layout = ...
+    "unknown_source";
+
+verifyError(testCase, ...
+    @() kwsim.three_d.buildSource(cfg, kgrid), ...
+    "kwsim:Unsupported3DSourceLayout");
+
+end
+
+
+function [cfg, kgrid] = syntheticResolvedSingleContact()
+
+cfg = kwsim.three_d.defaultConfig();
+
+cfg.grid.Nx = 8;
+cfg.grid.Ny = 9;
+cfg.grid.Nz = 10;
+
+cfg.source.layout = ...
+    "single_contact";
+
+cfg.source.center_index_xyz = ...
+    [2, 5, 6];
+
+cfg.source.center_m_xyz = ...
+    [0.5e-3, 2.0e-3, 2.5e-3];
+
+cfg.source.contact_mask_yz = ...
+    false(cfg.grid.Ny, cfg.grid.Nz);
+
+cfg.source.contact_mask_yz(5, 6) = true;
+cfg.source.contact_mask_yz(3, 6) = true;
+cfg.source.contact_mask_yz(7, 6) = true;
+cfg.source.contact_mask_yz(5, 4) = true;
+cfg.source.contact_mask_yz(5, 8) = true;
+
+cfg.source.realized_radius_y_m = ...
+    1.0e-3;
+
+cfg.source.realized_radius_z_m = ...
+    1.0e-3;
+
+kgrid = syntheticTimeGrid(cfg);
+
+end
+
+
+function [cfg, kgrid] = syntheticResolvedVibratorBank()
+
+[cfg, kgrid] = ...
+    syntheticResolvedSingleContact();
+
+cfg.source.layout = ...
+    "vibrator_bank";
+
+cfg.source.phase_policy = ...
+    "explicit";
+
+cfg.source.amplitude_policy = ...
+    "explicit";
+
+mask_xyz = false( ...
+    cfg.grid.Nx, ...
+    cfg.grid.Ny, ...
+    cfg.grid.Nz);
+
+mask_xyz(2, 3, 4) = true;
+mask_xyz(2, 5, 4) = true;
+
+node_indices = ...
+    find(mask_xyz);
+
+vibrator = struct();
+
+vibrator.name = ...
+    "synthetic_vibrator_1";
+
+vibrator.node_linear_indices = ...
+    node_indices;
+
+vibrator.center_index_xyz = ...
+    [2, 4, 4];
+
+vibrator.center_m_xyz = ...
+    [0.5e-3, 1.5e-3, 1.5e-3];
+
+vibrator.polarization_xyz = ...
+    [0, 0, 1];
+
+vibrator.nominal_propagation_xyz = ...
+    [1, 0, 0];
+
+vibrator.phase_rad = ...
+    0;
+
+vibrator.velocity_amplitude_m_s = ...
+    cfg.source.velocity_amplitude_m_s;
+
+cfg.source.vibrators = ...
+    vibrator;
+
+end
+
+
+function kgrid = syntheticTimeGrid(cfg)
+
+kgrid = struct();
+
+sampling_frequency_hz = ...
+    50e3;
+
+duration_s = ...
+    12 / cfg.source.f0_hz;
+
+kgrid.t_array = ...
+    0:(1/sampling_frequency_hz):duration_s;
+
+end

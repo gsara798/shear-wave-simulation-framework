@@ -1,39 +1,124 @@
-function paths = saveResults(validation, output_directory)
-%SAVERESULTS Save circular-inclusion benchmark cross-run results and readable checks.
+function paths = saveResults( ...
+    validation, destination, options)
+%SAVERESULTS Save circular-inclusion cross-run validation artifacts.
 %
-% The MAT file contains all three simulations. The text file exposes every
-% acceptance value and threshold without requiring MATLAB to inspect it.
+% destination may be:
+%   - the standardized paths structure returned by saveSimulationResult
+%   - a directory path
+%
+% When standardized paths are supplied, files are written into paths.data.
 
 arguments
     validation struct
-    output_directory {mustBeTextScalar}
+    destination
+    options.Overwrite (1,1) logical = false
 end
 
-output_directory = string(output_directory);
-if ~isfolder(output_directory)
-    mkdir(output_directory);
+data_directory = resolveDataDirectory(destination);
+
+if ~isfolder(data_directory)
+    mkdir(data_directory);
 end
 
-mat_file = fullfile(output_directory, "validation.mat");
-save(mat_file, 'validation', '-v7.3');
+mat_file = fullfile( ...
+    data_directory, ...
+    "validation.mat");
 
-summary_file = fullfile(output_directory, "validation_summary.txt");
-fid = fopen(summary_file, 'w');
-if fid < 0
-    error('kwsim:SummaryWriteFailed', ...
-        'Could not create circular-inclusion benchmark validation summary: %s', summary_file);
+summary_file = fullfile( ...
+    data_directory, ...
+    "validation_summary.txt");
+
+assertWritable(mat_file, options.Overwrite);
+assertWritable(summary_file, options.Overwrite);
+
+% validation contains all benchmark simulations, reports, configurations,
+% metrics, and cross-run checks. Use v7.3 because the solver results may be
+% large.
+save(mat_file, "validation", "-v7.3");
+
+writeSummary(validation, summary_file);
+
+paths = struct();
+
+% Preserve the legacy field names.
+paths.mat_file = string(mat_file);
+paths.summary_file = string(summary_file);
+
+% Also expose names consistent with the generic IO helpers.
+paths.mat = string(mat_file);
+paths.summary = string(summary_file);
+
 end
-cleanup = onCleanup(@() fclose(fid));
-fprintf(fid, 'KWSIM CIRCULAR-INCLUSION 2D BENCHMARK\n');
-fprintf(fid, '%s\n\n', validation.summary);
-fprintf(fid, '%-40s %-6s %-14s %-14s\n', ...
-    'Check', 'Pass', 'Value', 'Threshold');
+
+
+function data_directory = resolveDataDirectory(destination)
+
+if isstruct(destination)
+    if ~isfield(destination, "data")
+        error("kwsim:InvalidOutputPaths", ...
+            "Output paths structure is missing the data field.");
+    end
+
+    data_directory = string(destination.data);
+else
+    data_directory = string(destination);
+end
+
+end
+
+
+function writeSummary(validation, path)
+
+file_id = fopen(path, "w");
+
+if file_id < 0
+    error("kwsim:SummaryWriteFailed", ...
+        ["Could not create circular-inclusion benchmark " ...
+         "validation summary: %s"], ...
+        path);
+end
+
+cleanup = onCleanup(@() fclose(file_id));
+
+fprintf(file_id, ...
+    "KWSIM CIRCULAR-INCLUSION 2D BENCHMARK\n");
+
+fprintf(file_id, ...
+    "=====================================\n\n");
+
+fprintf(file_id, ...
+    "%s\n\n", ...
+    char(string(validation.summary)));
+
+fprintf(file_id, ...
+    "Overall valid: %d\n\n", ...
+    logical(validation.valid));
+
+fprintf(file_id, ...
+    "%-40s %-6s %-14s %-14s\n", ...
+    "Check", ...
+    "Pass", ...
+    "Value", ...
+    "Threshold");
+
 for check = validation.checks.'
-    fprintf(fid, '%-40s %-6d %-14.6g %-14.6g\n', ...
-        check.name, check.pass, check.value, check.threshold);
+    fprintf(file_id, ...
+        "%-40s %-6d %-14.6g %-14.6g\n", ...
+        char(string(check.name)), ...
+        logical(check.pass), ...
+        double(check.value), ...
+        double(check.threshold));
 end
-clear cleanup;
 
-paths = struct('mat_file', mat_file, 'summary_file', summary_file);
+end
+
+
+function assertWritable(path, overwrite)
+
+if isfile(path) && ~overwrite
+    error("kwsim:OutputFileExists", ...
+        "Output file already exists: %s", ...
+        path);
+end
 
 end

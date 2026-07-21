@@ -74,6 +74,46 @@ non-adjacent nodes. Run `examples/two_d/run_finite_contacts_benchmark.m`; the
 validated range and rejected dense discretizations are documented in
 `docs/finite_contacts_2d.md`.
 
+## Three-dimensional configured runs
+
+The 3D implementation currently supports:
+
+- a homogeneous directional single-contact field;
+- a homogeneous eight-contact multi-source development field;
+- full 3D harmonic P/S decomposition;
+- central `x-z` acquisition-plane export;
+- REQ readiness assessment and standardized validation output.
+
+Run the directional REQ-validation case with:
+
+```bash
+./scripts/kwsim-run \
+  configs/three_d/homogeneous_directional_req_validation.json
+```
+
+Run the current eight-source multi-source case with:
+
+```bash
+./scripts/kwsim-run \
+  configs/three_d/homogeneous_partial_diffuse8_req_validation.json
+```
+
+Use `--dry-run` to resolve the configuration and execute the memory preflight
+without invoking k-Wave:
+
+```bash
+./scripts/kwsim-run \
+  configs/three_d/homogeneous_partial_diffuse8_req_validation.json \
+  --dry-run
+```
+
+The current `partial_diffuse_8` bank places eight contacts on the same left
+boundary face. It provides a reproducible multi-source 3D development case, but
+it is not a fully diffuse or angularly isotropic 3D field.
+
+The planned directional-to-diffuse source continuum is documented in
+[`docs/three_d_wavefield_regimes.md`](docs/three_d_wavefield_regimes.md).
+
 ## Coordinate and field contract
 
 - `x`: lateral coordinate, increasing across columns in public maps.
