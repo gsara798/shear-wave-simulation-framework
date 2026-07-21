@@ -281,6 +281,9 @@ switch source_layout
             "Unsupported source layout after validation.");
 end
 
+cfg.source.geometry_metrics = ...
+    kwsim.analysis.summarizeSourceGeometry3D(cfg);
+
 %% Resolve the cuboidal analysis sensor
 
 positiveScalar(cfg.sensor.source_buffer_m, ...
@@ -426,6 +429,9 @@ preflight.source.realized_radius_y_m = ...
     cfg.source.realized_radius_y_m;
 preflight.source.realized_radius_z_m = ...
     cfg.source.realized_radius_z_m;
+
+preflight.source.geometry_metrics = ...
+    cfg.source.geometry_metrics;
 
 preflight.sensor = struct();
 preflight.sensor.size_xyz = cfg.derived.sensor_size_xyz;
