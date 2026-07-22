@@ -399,6 +399,13 @@ end
 cfg.analysis.harmonic_method = harmonic_method;
 cfg.analysis.temporal_window = temporal_window;
 
+%% Final resolved material geometry
+
+% Keep normalized object axes, resolved material properties, and geometry
+% summaries in the configuration returned to callers.
+cfg = ...
+    kwsim.three_d.resolveMaterialGeometryConfig(cfg);
+
 %% Memory preflight
 
 memory = kwsim.three_d.estimateMemory(cfg);
