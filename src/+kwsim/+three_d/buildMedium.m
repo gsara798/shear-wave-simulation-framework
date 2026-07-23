@@ -1,48 +1,43 @@
 function [medium, truth] = buildMedium(cfg)
-%BUILDMEDIUM Build the homogeneous medium for pstdElastic3D.
+%BUILDMEDIUM Build homogeneous or heterogeneous 3D elastic material maps.
 %
-% The initial 3D foundation supports a homogeneous, lossless medium.
-% k-Wave receives scalar properties to reduce memory use. Full internal
-% truth maps are returned in [Nx,Ny,Nz] orientation for diagnostics and
-% later conversion to the public [Nz,Ny,Nx] contract.
+% Solver arrays use internal orientation [Nx,Ny,Nz]. Full truth maps are
+% returned in the same orientation and are converted to public [Nz,Ny,Nx]
+% by kwsim.three_d.run.
 
 arguments
     cfg struct
 end
 
-grid_size = [
-    cfg.grid.Nx, ...
-    cfg.grid.Ny, ...
-    cfg.grid.Nz
-];
+truth = ...
+    kwsim.three_d.buildMaterialMaps(cfg);
 
 medium = struct();
-medium.sound_speed_compression = cfg.medium.cp_m_s;
-medium.sound_speed_shear = cfg.medium.cs_m_s;
-medium.density = cfg.medium.rho_kg_m3;
 
-if cfg.attenuation.enabled
-    error("kwsim:ThreeDAttenuationNotImplemented", ...
-        "3D attenuation is not implemented in the homogeneous foundation.");
+if truth.homogeneous
+    medium.sound_speed_compression = ...
+        double(truth.cp_m_s_xyz(1));
+
+    medium.sound_speed_shear = ...
+        double(truth.cs_m_s_xyz(1));
+
+    medium.density = ...
+        double(truth.rho_kg_m3_xyz(1));
+else
+    medium.sound_speed_compression = ...
+        truth.cp_m_s_xyz;
+
+    medium.sound_speed_shear = ...
+        truth.cs_m_s_xyz;
+
+    medium.density = ...
+        truth.rho_kg_m3_xyz;
 end
 
-truth = struct();
-truth.cp_m_s_xyz = ...
-    cfg.medium.cp_m_s * ones(grid_size, 'single');
-
-truth.cs_m_s_xyz = ...
-    cfg.medium.cs_m_s * ones(grid_size, 'single');
-
-truth.rho_kg_m3_xyz = ...
-    cfg.medium.rho_kg_m3 * ones(grid_size, 'single');
-
-truth.material_id_xyz = ...
-    ones(grid_size, 'uint16');
-
-truth.orientation = "[Nx,Ny,Nz]";
-truth.homogeneous = true;
-truth.attenuation = struct( ...
-    'enabled', false, ...
-    'model', string(cfg.attenuation.model));
+if cfg.attenuation.enabled
+    error( ...
+        "kwsim:ThreeDAttenuationNotImplemented", ...
+        "3D material attenuation is not implemented yet.");
+end
 
 end

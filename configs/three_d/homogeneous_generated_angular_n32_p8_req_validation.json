@@ -1,0 +1,88 @@
+{
+  "dimension": 3,
+  "scenario": "homogeneous_generated_angular_n32_p8",
+  "seed": 1001,
+  "grid": {
+    "Nx": 48,
+    "Ny": 32,
+    "Nz": 48,
+    "dx_m": 0.0005,
+    "dy_m": 0.0005,
+    "dz_m": 0.0005
+  },
+  "medium": {
+    "cs_m_s": 2.0,
+    "rho_kg_m3": 1000,
+    "cp_mode": "reduced",
+    "reduced_cp_factor": 10
+  },
+  "source": {
+    "side": "multiface",
+    "f0_hz": 500,
+    "velocity_amplitude_m_s": 1e-06,
+    "contact_radius_m": 0.001,
+    "ramp_cycles": 1,
+    "boundary_margin_m": 0.002,
+    "layout": "vibrator_bank",
+    "regime": "partial_3d",
+    "bank_name": "generated_angular",
+    "vibrator_count": 32,
+    "phase_policy": "random_uniform",
+    "amplitude_policy": "equal_total_rms",
+    "polarization_policy": "project_axial_transverse",
+    "minimum_in_plane_sources": 8,
+    "minimum_out_of_plane_sources": 24,
+    "minimum_unique_faces": 6,
+    "minimum_out_of_plane_component": 0.2,
+    "angular_candidate_count": 400,
+    "maximum_mapping_error_deg": 8,
+    "geometry_seed": 3208,
+    "exact_in_plane_sources": 8,
+    "minimum_effective_angular_dimension": 2.7,
+    "maximum_directional_bias": 0.25,
+    "minimum_third_angular_eigenvalue": 0.2,
+    "minimum_axis_separation_deg": 0,
+    "placement_policy": "angular_random_search"
+  },
+  "time": {
+    "settling_cycles": 1,
+    "analysis_cycles": 2,
+    "end_time_s": 0.014
+  },
+  "sensor": {
+    "source_buffer_m": 0.002,
+    "boundary_margin_m": 0.0015
+  },
+  "solver": {
+    "pml_size_points": [
+      8,
+      8,
+      8
+    ],
+    "plot_simulation": false
+  },
+  "req_validation": {
+    "quantity": "displacement",
+    "cs_guess_m_s": 3.0,
+    "window_wavelengths": 2.0,
+    "minimum_placements_per_axis": 5
+  },
+  "output": {
+    "enabled": true,
+    "directory": "outputs",
+    "run_name": "req_validation_homogeneous_generated_angular_n32_p8",
+    "append_timestamp": true,
+    "overwrite": false,
+    "save_result": true,
+    "save_summary": true,
+    "save_config_mat": true,
+    "save_config_json": true,
+    "save_time_series": false,
+    "save_req_validation_sample": true,
+    "save_figures": true,
+    "save_matlab_figures": true
+  },
+  "diagnostics": {
+    "fail_on_invalid": true
+  }
+}

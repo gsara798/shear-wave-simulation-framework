@@ -124,10 +124,44 @@ if ~any(source_layout == valid_source_layouts)
         "source.layout must be single_contact or vibrator_bank.");
 end
 
-if lower(string(cfg.source.side)) ~= "left"
-    error( ...
-        "kwsim:Invalid3DConfig", ...
-        "The current 3D source layouts require source.side=left.");
+source_side = ...
+    lower(string(cfg.source.side));
+
+if source_layout == "single_contact"
+    if source_side ~= "left"
+        error( ...
+            "kwsim:Invalid3DConfig", ...
+            "The single-contact 3D source requires source.side=left.");
+    end
+else
+    bank_name = ...
+        lower(string(cfg.source.bank_name));
+
+    switch bank_name
+        case "partial_diffuse_8"
+            required_side = ...
+                "left";
+
+        case "partial_3d_n8_p2"
+            required_side = ...
+                "multiface";
+
+        case "generated_angular"
+            required_side = ...
+                "multiface";
+
+        otherwise
+            required_side = ...
+                source_side;
+    end
+
+    if source_side ~= required_side
+        error( ...
+            "kwsim:Invalid3DConfig", ...
+            "Source bank '%s' requires source.side=%s.", ...
+            bank_name, ...
+            required_side);
+    end
 end
 
 if lower(string(cfg.source.contact_model)) ~= "finite_disk"
@@ -251,6 +285,9 @@ switch source_layout
             "Unsupported source layout after validation.");
 end
 
+cfg.source.geometry_metrics = ...
+    kwsim.analysis.summarizeSourceGeometry3D(cfg);
+
 %% Resolve the cuboidal analysis sensor
 
 positiveScalar(cfg.sensor.source_buffer_m, ...
@@ -258,33 +295,25 @@ positiveScalar(cfg.sensor.source_buffer_m, ...
 positiveScalar(cfg.sensor.boundary_margin_m, ...
     "sensor.boundary_margin_m");
 
-boundary_x = ...
-    round(cfg.sensor.boundary_margin_m / cfg.grid.dx_m);
-boundary_y = ...
-    round(cfg.sensor.boundary_margin_m / cfg.grid.dy_m);
-boundary_z = ...
-    round(cfg.sensor.boundary_margin_m / cfg.grid.dz_m);
+sensor_indices = ...
+    kwsim.three_d.resolveSensorIndices( ...
+        cfg, ...
+        source_x);
 
-source_buffer_x = ...
-    round(cfg.sensor.source_buffer_m / cfg.grid.dx_m);
+cfg.sensor.x_indices = ...
+    sensor_indices.x_indices;
 
-x_start = source_x + source_buffer_x + 1;
-x_end = cfg.grid.Nx - boundary_x;
+cfg.sensor.y_indices = ...
+    sensor_indices.y_indices;
 
-y_start = 1 + boundary_y;
-y_end = cfg.grid.Ny - boundary_y;
+cfg.sensor.z_indices = ...
+    sensor_indices.z_indices;
 
-z_start = 1 + boundary_z;
-z_end = cfg.grid.Nz - boundary_z;
+cfg.sensor.acquisition_y_index_full = ...
+    sensor_indices.acquisition_y_index_full;
 
-if x_start > x_end || y_start > y_end || z_start > z_end
-    error("kwsim:Invalid3DConfig", ...
-        "The 3D sensor ROI is empty; enlarge the grid or reduce margins.");
-end
-
-cfg.sensor.x_indices = x_start:x_end;
-cfg.sensor.y_indices = y_start:y_end;
-cfg.sensor.z_indices = z_start:z_end;
+actual_source_buffer_m = ...
+    sensor_indices.minimum_source_clearance_m;
 
 cfg.derived.sensor_size_xyz = [
     numel(cfg.sensor.x_indices), ...
@@ -292,15 +321,8 @@ cfg.derived.sensor_size_xyz = [
     numel(cfg.sensor.z_indices)
 ];
 
-cfg.derived.sensor_points = prod(cfg.derived.sensor_size_xyz);
-
-actual_source_buffer_m = ...
-    (x_start - source_x) * cfg.grid.dx_m;
-
-if actual_source_buffer_m < cfg.sensor.source_buffer_m
-    error("kwsim:Invalid3DConfig", ...
-        "The realized source-to-sensor buffer is smaller than requested.");
-end
+cfg.derived.sensor_points = ...
+    prod(cfg.derived.sensor_size_xyz);
 
 %% Solver configuration
 
@@ -377,6 +399,13 @@ end
 cfg.analysis.harmonic_method = harmonic_method;
 cfg.analysis.temporal_window = temporal_window;
 
+%% Final resolved material geometry
+
+% Keep normalized object axes, resolved material properties, and geometry
+% summaries in the configuration returned to callers.
+cfg = ...
+    kwsim.three_d.resolveMaterialGeometryConfig(cfg);
+
 %% Memory preflight
 
 memory = kwsim.three_d.estimateMemory(cfg);
@@ -411,6 +440,9 @@ preflight.source.realized_radius_y_m = ...
     cfg.source.realized_radius_y_m;
 preflight.source.realized_radius_z_m = ...
     cfg.source.realized_radius_z_m;
+
+preflight.source.geometry_metrics = ...
+    cfg.source.geometry_metrics;
 
 preflight.sensor = struct();
 preflight.sensor.size_xyz = cfg.derived.sensor_size_xyz;

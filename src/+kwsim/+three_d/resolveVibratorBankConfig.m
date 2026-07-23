@@ -15,6 +15,18 @@ end
 bank_name = ...
     lower(string(cfg.source.bank_name));
 
+if bank_name == "generated_angular"
+    [cfg, source_x] = ...
+        kwsim.three_d.resolveGeneratedAngularBankConfig(cfg);
+    return
+end
+
+if bank_name == "partial_3d_n8_p2"
+    [cfg, source_x] = ...
+        kwsim.three_d.resolvePartial3DN8P2Config(cfg);
+    return
+end
+
 if bank_name ~= "partial_diffuse_8"
     error( ...
         "kwsim:Unsupported3DSourceBank", ...
