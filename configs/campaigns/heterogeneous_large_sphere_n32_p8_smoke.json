@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0",
+  "campaign_name": "heterogeneous_large_sphere_n32_p8_smoke",
+  "base_config": "configs/three_d/heterogeneous_large_sphere_n32_p8_req_validation.json",
+  "output": {
+    "directory": "outputs/campaigns"
+  },
+  "sweep": [
+    {
+      "path": "geometry.objects",
+      "values": [
+        {
+          "type": "sphere",
+          "name": "large_2p5ms_sphere",
+          "center_m_xyz": [
+            0.02375,
+            0.017750000000000002,
+            0.02375
+          ],
+          "axis_xyz": [
+            0,
+            0,
+            1
+          ],
+          "radius_m": 0.012,
+          "length_m": 0,
+          "material_id": 2,
+          "cs_m_s": 2.5,
+          "cp_m_s": 25.0,
+          "rho_kg_m3": 1000
+        },
+        {
+          "type": "sphere",
+          "name": "large_4ms_sphere",
+          "center_m_xyz": [
+            0.02375,
+            0.017750000000000002,
+            0.02375
+          ],
+          "axis_xyz": [
+            0,
+            0,
+            1
+          ],
+          "radius_m": 0.012,
+          "length_m": 0,
+          "material_id": 2,
+          "cs_m_s": 4.0,
+          "cp_m_s": 40.0,
+          "rho_kg_m3": 1000
+        }
+      ]
+    }
+  ]
+}
