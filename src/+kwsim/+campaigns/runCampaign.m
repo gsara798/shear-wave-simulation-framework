@@ -57,6 +57,7 @@ ensureDirectory(campaign_directory);
 report = buildReport( ...
     expansion, campaign_directory, records);
 writeCampaignSummary(report);
+kwsim.campaigns.writeCampaignRunsCsv(report, runs);
 
 for index = 1:expansion.run_count
     run = runs(index);
@@ -78,6 +79,7 @@ for index = 1:expansion.run_count
         report = buildReport( ...
             expansion, campaign_directory, records);
         writeCampaignSummary(report);
+kwsim.campaigns.writeCampaignRunsCsv(report, runs);
         continue
     end
 
@@ -90,6 +92,7 @@ for index = 1:expansion.run_count
         report = buildReport( ...
             expansion, campaign_directory, records);
         writeCampaignSummary(report);
+kwsim.campaigns.writeCampaignRunsCsv(report, runs);
 
         if ~options.ContinueOnError
             error(records(index).error_identifier, ...
@@ -102,6 +105,7 @@ for index = 1:expansion.run_count
     report = buildReport( ...
         expansion, campaign_directory, records);
     writeCampaignSummary(report);
+kwsim.campaigns.writeCampaignRunsCsv(report, runs);
 
     config = configureRunOutput( ...
         run.config, ...
@@ -141,6 +145,7 @@ for index = 1:expansion.run_count
     report = buildReport( ...
         expansion, campaign_directory, records);
     writeCampaignSummary(report);
+kwsim.campaigns.writeCampaignRunsCsv(report, runs);
 
     if records(index).status == "failed" && ...
             ~options.ContinueOnError
@@ -152,6 +157,7 @@ end
 report = buildReport( ...
     expansion, campaign_directory, records);
 writeCampaignSummary(report);
+kwsim.campaigns.writeCampaignRunsCsv(report, runs);
 
 end
 
