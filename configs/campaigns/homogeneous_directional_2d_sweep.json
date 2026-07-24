@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "campaign_name": "homogeneous_directional_2d_sweep",
+  "base_config": "configs/two_d/homogeneous_directional_cli.json",
+  "output": {
+    "directory": "outputs/campaigns"
+  },
+  "sweep": [
+    {
+      "path": "medium.cs_m_s",
+      "values": [2.0, 2.5, 3.0]
+    },
+    {
+      "path": "source.f0_hz",
+      "values": [400, 500]
+    },
+    {
+      "path": "seed",
+      "values": [1001, 1002]
+    }
+  ]
+}
