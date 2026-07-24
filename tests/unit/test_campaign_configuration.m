@@ -209,6 +209,84 @@ clear cleanup
 end
 
 
+
+function testAcceptsIndexedSweepPath(testCase)
+
+campaign = makeHeterogeneousCampaign(testCase);
+campaign.sweep.path = "geometry.objects[1].cs_m_s";
+
+campaign_file = writeTemporaryJson(campaign);
+cleanup = onCleanup(@() deleteIfPresent(campaign_file));
+
+[loaded, metadata] = ...
+    kwsim.campaigns.loadCampaignJson(campaign_file);
+
+verifyEqual(testCase, ...
+    loaded.sweep.path, ...
+    "geometry.objects[1].cs_m_s");
+
+verifyEqual(testCase, ...
+    metadata.expanded_run_count, ...
+    2);
+
+clear cleanup
+
+end
+
+
+function testRejectsOutOfRangeIndexedSweepPath(testCase)
+
+campaign = makeHeterogeneousCampaign(testCase);
+campaign.sweep.path = "geometry.objects[2].cs_m_s";
+
+campaign_file = writeTemporaryJson(campaign);
+cleanup = onCleanup(@() deleteIfPresent(campaign_file));
+
+verifyError(testCase, ...
+    @() kwsim.campaigns.loadCampaignJson(campaign_file), ...
+    "kwsim:UnknownCampaignSweepPath");
+
+clear cleanup
+
+end
+
+
+function testRejectsZeroIndexedSweepPath(testCase)
+
+campaign = makeHeterogeneousCampaign(testCase);
+campaign.sweep.path = "geometry.objects[0].cs_m_s";
+
+campaign_file = writeTemporaryJson(campaign);
+cleanup = onCleanup(@() deleteIfPresent(campaign_file));
+
+verifyError(testCase, ...
+    @() kwsim.campaigns.loadCampaignJson(campaign_file), ...
+    "kwsim:UnknownCampaignSweepPath");
+
+clear cleanup
+
+end
+
+
+function campaign = makeHeterogeneousCampaign(testCase)
+
+campaign = struct();
+campaign.schema_version = "1.0";
+campaign.campaign_name = "heterogeneous_unit_test";
+campaign.base_config = fullfile( ...
+    testCase.TestData.repository_root, ...
+    "configs", ...
+    "three_d", ...
+    "heterogeneous_large_sphere_n32_p8_req_validation.json");
+campaign.output = struct( ...
+    "directory", "outputs/campaigns");
+campaign.sweep = struct( ...
+    "path", "geometry.objects[1].cs_m_s", ...
+    "values", [2.5, 4.0]);
+
+end
+
+
 function campaign = makeValidCampaign(testCase)
 
 campaign = struct();

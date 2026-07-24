@@ -46,8 +46,7 @@ Non-empty ordered array of sweep definitions.
 
 Each definition contains:
 
-- `path`: dot-separated path to an existing field in the resolved base
-  configuration.
+- `path`: path to an existing field in the resolved base configuration.
 - `values`: non-empty JSON array of replacement values.
 
 The Cartesian expansion follows the declared parameter order. The last
@@ -59,6 +58,50 @@ unit.
 
 Paths under `output` cannot be swept. Campaign execution owns the output
 directory, run name, timestamp policy, and overwrite policy.
+
+## Sweep path syntax
+
+Campaign paths use dot notation for nested fields.
+
+Examples:
+
+```text
+medium.cs_m_s
+source.f0_hz
+req_validation.cs_guess_m_s
+```
+
+A path may also select one element of an existing array using a one-based index
+in square brackets.
+
+Examples:
+
+```text
+geometry.objects[1].cs_m_s
+geometry.objects[1].radius_m
+geometry.objects[2].center_m_xyz
+```
+
+Indexed paths follow these rules:
+
+- indices are one-based;
+- the selected array element must already exist in the base configuration;
+- indexed paths do not create new array elements;
+- index `0`, negative indices, non-integer indices, and out-of-range indices
+  are invalid;
+- all non-indexed path components must identify existing structure fields.
+
+For example:
+
+```json
+{
+  "path": "geometry.objects[1].cs_m_s",
+  "values": [2.5, 4.0]
+}
+```
+
+changes only the shear-wave speed of the first object while preserving its
+geometry, material identifier, density, compression speed, and other fields.
 
 ## Optional fields
 
@@ -96,6 +139,8 @@ The hash is calculated from the canonical single-run definition after applying
 the sweep overrides and before injecting campaign-controlled output paths.
 Therefore, relocating a campaign does not change run identity.
 
+The last declared sweep parameter varies fastest.
+
 ## Validation
 
 Campaign dry-run must:
@@ -111,12 +156,104 @@ Campaign dry-run must:
 A campaign is not executable if any expanded configuration fails dry-run
 validation.
 
+## Execution and resume
+
+Campaign execution delegates every expanded run to `kwsim.cli.runConfig`.
+
+Each run is written to:
+
+```text
+<output.directory>/<campaign_name>/<run_id>/
+```
+
+Campaign-controlled single-run output settings are:
+
+```text
+output.enabled = true
+output.directory = <campaign directory>
+output.run_name = <run_id>
+output.append_timestamp = false
+output.overwrite = false
+```
+
+A completed run contains a `campaign_run.json` completion marker with the
+expected configuration hash.
+
+When resume is enabled:
+
+- a matching completed run is skipped;
+- a directory without a valid completion marker is treated as incomplete;
+- an incomplete or identity-mismatched directory is never overwritten;
+- failed or blocked runs are recorded in the campaign summary;
+- execution may continue after a failed run when `ContinueOnError=true`.
+
+The campaign runner writes:
+
+```text
+<output.directory>/<campaign_name>/campaign_summary.json
+```
+
+The summary records campaign status, run identifiers, hashes, output
+directories, completed runs, resumed runs, failures, blocked runs, and pending
+runs.
+
+## Material-property sweeps
+
+A campaign changes only the explicitly addressed value.
+
+For heterogeneous 3D simulations, a compact inclusion sweep can use:
+
+```json
+{
+  "path": "geometry.objects[1].cs_m_s",
+  "values": [2.5, 4.0]
+}
+```
+
+Other object properties remain fixed by the base configuration.
+
+In particular, `cp_m_s` is not changed automatically by the campaign layer.
+Its behavior is determined by the single-run material configuration and the
+3D material resolver:
+
+- if an object defines `cp_m_s`, that value is preserved while `cs_m_s` is
+  swept;
+- if an object omits `cp_m_s`, the material resolver derives it according to
+  the existing single-run material-resolution rules.
+
+Campaigns do not introduce calculated relationships such as
+`cp_m_s = 10 * cs_m_s`.
+
+## Backward compatibility
+
+Contract v1 preserves all existing single-run behavior.
+
+Campaign support does not change:
+
+- existing simulation JSON files;
+- configured CLI commands;
+- 2D or 3D solvers;
+- source or material builders;
+- physical validation;
+- output formats for individual runs;
+- existing tests outside the campaign package.
+
+A campaign is only an orchestration layer around validated single-run
+configurations.
+
 ## Scope exclusions in v1
 
 Contract v1 does not include:
 
 - sweeping between 2D and 3D;
 - calculated parameter expressions;
+- dependent or coupled sweep parameters;
+- filtered Cartesian combinations;
 - parallel or cluster execution;
+- MATLAB `parfor`;
+- SLURM;
 - adaptive or optimization-driven sampling;
-- changes to solver or physical validation behavior.
+- automatic ML feature extraction;
+- train/test splitting;
+- new solver physics;
+- changes to physical validation behavior.

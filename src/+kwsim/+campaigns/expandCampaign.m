@@ -49,7 +49,7 @@ for ordinal = 1:run_count
             parameter.values, ...
             value_indices(parameter_index));
 
-        config = setPathValue( ...
+        config = kwsim.campaigns.setPathValue( ...
             config, ...
             parameter.path, ...
             selected_value);
@@ -122,38 +122,6 @@ end
 
 end
 
-
-function config = setPathValue(config, path_value, replacement)
-
-parts = split(string(path_value), ".");
-config = setNestedValue( ...
-    config, ...
-    parts, ...
-    1, ...
-    replacement);
-
-end
-
-
-function value = setNestedValue(value, parts, index, replacement)
-
-field_name = char(parts(index));
-
-if index == numel(parts)
-    value.(field_name) = replacement;
-    return
-end
-
-nested = value.(field_name);
-nested = setNestedValue( ...
-    nested, ...
-    parts, ...
-    index + 1, ...
-    replacement);
-
-value.(field_name) = nested;
-
-end
 
 
 function hash_text = sha256Text(text)

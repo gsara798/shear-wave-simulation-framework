@@ -236,29 +236,9 @@ end
 
 function validateSweepPath(base_config, path_value)
 
-parts = split(path_value, ".");
-
-if any(strlength(parts) == 0)
-    error("kwsim:UnknownCampaignSweepPath", ...
-        "Unknown sweep path '%s'.", ...
-        path_value);
-end
-
-current = base_config;
-
-for index = 1:numel(parts)
-    field_name = char(parts(index));
-
-    if ~isstruct(current) || ...
-            ~isscalar(current) || ...
-            ~isfield(current, field_name)
-        error("kwsim:UnknownCampaignSweepPath", ...
-            "Unknown sweep path '%s'.", ...
-            path_value);
-    end
-
-    current = current.(field_name);
-end
+kwsim.campaigns.getPathValue( ...
+    base_config, ...
+    path_value);
 
 end
 
