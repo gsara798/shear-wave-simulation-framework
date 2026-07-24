@@ -21,6 +21,8 @@ The framework currently includes:
 - full 3D harmonic-field analysis and P/S diagnostics;
 - central x-z plane export for external REQ validation;
 - timestamped outputs with requested and resolved configurations;
+- deterministic, resumable simulation campaigns and Cartesian parameter sweeps;
+- campaign-level JSON summaries and CSV run indices;
 - structured numerical and physical validation reports.
 
 Historical scripts under `archive/` are retained as implementation evidence and
@@ -116,6 +118,173 @@ These three commands have been verified through the configured dry-run path.
 
 A dry run resolves and validates the configuration without executing the solver
 or creating outputs.
+
+## Reproducible simulation campaigns
+
+The campaign system expands one validated base configuration into a
+deterministic Cartesian parameter sweep. Every expanded configuration is
+validated before solver execution, and completed runs can be resumed safely
+without repeating computation.
+
+Campaigns are appropriate for:
+
+- material-property sweeps;
+- frequency and seed sweeps;
+- source-regime comparisons;
+- convergence and sensitivity studies;
+- heterogeneous inclusion studies;
+- REQ validation and Adaptive REQ dataset generation.
+
+Example campaign files include:
+
+```text
+configs/campaigns/homogeneous_directional_2d_sweep.json
+configs/campaigns/homogeneous_partial_3d_n8_p2_smoke.json
+configs/campaigns/homogeneous_generated_angular_n32_p8_smoke.json
+configs/campaigns/heterogeneous_large_sphere_n32_p8_smoke.json
+```
+
+A campaign contains one existing base configuration and an ordered list of
+parameters to sweep. Multiple sweep parameters are expanded as a deterministic
+Cartesian product, with the last declared parameter varying fastest.
+
+Standard nested paths are supported:
+
+```text
+medium.cs_m_s
+source.f0_hz
+req_validation.cs_guess_m_s
+seed
+```
+
+Indexed paths can address one existing array element:
+
+```text
+geometry.objects[1].cs_m_s
+geometry.objects[1].radius_m
+source.vibrators[5].weight
+```
+
+Indices are one-based and must refer to elements already present in the base
+configuration.
+
+Expand a campaign without executing simulations:
+
+```matlab
+addpath("src");
+
+[runs, expansion] = kwsim.campaigns.expandCampaign( ...
+    "configs/campaigns/homogeneous_partial_3d_n8_p2_smoke.json");
+
+disp(expansion.run_count);
+disp(string({runs.run_id})');
+```
+
+Validate every expanded configuration through the normal configured dry-run
+path:
+
+```matlab
+[~, validation] = kwsim.campaigns.validateCampaign( ...
+    "configs/campaigns/homogeneous_partial_3d_n8_p2_smoke.json");
+
+disp(validation.summary);
+assert(validation.valid);
+```
+
+Campaign validation completes before solver execution begins. If any expanded
+configuration is invalid, execution is aborted before campaign simulation
+outputs are created.
+
+Execute or resume a campaign:
+
+```matlab
+report = kwsim.campaigns.runCampaign( ...
+    "configs/campaigns/homogeneous_partial_3d_n8_p2_smoke.json", ...
+    Resume=true, ...
+    ContinueOnError=true);
+
+disp(report.summary);
+```
+
+Each expanded run receives a deterministic identifier:
+
+```text
+run_000001_<hash>
+```
+
+The identifier contains the expansion ordinal and a SHA-256-derived
+configuration hash. The hash is computed before campaign-controlled output
+paths are injected, so relocating a campaign does not change run identity.
+
+With `Resume=true`, a previously completed run with a matching hash is reported
+as:
+
+```text
+skipped_completed
+```
+
+and the solver is not executed again. Existing directories without a valid
+matching completion marker are reported as:
+
+```text
+blocked_existing
+```
+
+and are never overwritten automatically.
+
+Campaign outputs are organized as:
+
+```text
+outputs/campaigns/<campaign_name>/
+├── campaign_summary.json
+├── campaign_runs.csv
+├── run_000001_<hash>/
+├── run_000002_<hash>/
+└── ...
+```
+
+Each run directory contains the standard configured-run artifacts enabled by
+the base configuration, such as:
+
+```text
+config/resolved_config.json
+data/result.mat
+data/summary.mat
+data/validation_report.mat
+data/validation_summary.txt
+data/req_validation_sample.mat
+figures/
+manifest.txt
+campaign_run.json
+```
+
+`campaign_summary.json` records campaign execution state, including completed,
+resumed, failed, blocked, pending, and running counts.
+
+`campaign_runs.csv` provides one row per expanded simulation. It includes:
+
+- deterministic run identity and execution status;
+- scenario, dimension, seed, and frequency;
+- background and first-inclusion material properties when available;
+- solver runtime and structured validation metrics;
+- REQ readiness and source-geometry metrics;
+- paths to the resolved configuration, validation report, and REQ sample;
+- error identifiers and messages for failed or blocked runs.
+
+When reading the table in MATLAB, specify the comma delimiter explicitly:
+
+```matlab
+T = readtable( ...
+    "outputs/campaigns/<campaign_name>/campaign_runs.csv", ...
+    Delimiter=",", ...
+    TextType="string");
+```
+
+For the complete campaign contract, indexed-path rules, material behavior,
+state model, resume logic, failure recovery, output artifacts, examples, and
+Adaptive REQ workflow, see:
+
+[Reproducible Simulation Campaigns](docs/user_guide/campaigns.md)
 
 ## MATLAB interface
 
