@@ -1,0 +1,466 @@
+function [cfg, report] = validateConfig(cfg)
+%VALIDATECONFIG Validate and resolve a synthetic wavefield configuration.
+%
+% Usage:
+%   requested = swsynth.defaultConfig();
+%   [cfg, report] = swsynth.validateConfig(requested);
+%
+% The returned configuration is resolved and safe for downstream utilities.
+
+arguments
+    cfg (1,1) struct
+end
+
+defaults = swsynth.defaultConfig();
+cfg = mergeKnownFields(defaults, cfg, "cfg");
+
+validateScalarString(cfg.schema_version, "schema_version");
+validateScalarString(cfg.scenario, "scenario");
+
+validatePositiveInteger(cfg.seed, "seed", true);
+
+validatePositiveFinite(cfg.domain.Lx_m, "domain.Lx_m");
+validatePositiveFinite(cfg.domain.Lz_m, "domain.Lz_m");
+validatePositiveFinite(cfg.domain.dx_m, "domain.dx_m");
+validatePositiveFinite(cfg.domain.dz_m, "domain.dz_m");
+validateFiniteScalar(cfg.domain.observation_y_m, "domain.observation_y_m");
+
+if cfg.domain.dx_m > cfg.domain.Lx_m
+    error("swsynth:InvalidDomain", ...
+        "domain.dx_m must not exceed domain.Lx_m.");
+end
+
+if cfg.domain.dz_m > cfg.domain.Lz_m
+    error("swsynth:InvalidDomain", ...
+        "domain.dz_m must not exceed domain.Lz_m.");
+end
+
+validatePositiveFinite( ...
+    cfg.medium.background_cs_m_s, ...
+    "medium.background_cs_m_s");
+
+cfg.medium.combine_mode = normalizedChoice( ...
+    cfg.medium.combine_mode, ...
+    ["overlay", "blend", "max", "min"], ...
+    "medium.combine_mode");
+
+if ~iscell(cfg.medium.objects)
+    error("swsynth:InvalidMediumObjects", ...
+        "medium.objects must be a cell array of object structs.");
+end
+
+for i = 1:numel(cfg.medium.objects)
+    cfg.medium.objects{i} = validateMediumObject( ...
+        cfg.medium.objects{i}, i);
+end
+
+validatePositiveFinite( ...
+    cfg.wavefield.frequency_hz, ...
+    "wavefield.frequency_hz");
+
+cfg.wavefield.observed_component = normalizedChoice( ...
+    cfg.wavefield.observed_component, ...
+    ["axial"], ...
+    "wavefield.observed_component");
+
+cfg.propagation.model = normalizedChoice( ...
+    cfg.propagation.model, ...
+    ["spherical_wave", "plane_wave"], ...
+    "propagation.model");
+
+validatePositiveInteger( ...
+    cfg.directions.count, ...
+    "directions.count", ...
+    false);
+
+cfg.directions.space = normalizedChoice( ...
+    cfg.directions.space, ...
+    ["two_dimensional", "three_dimensional"], ...
+    "directions.space");
+
+cfg.directions.sampling_method = normalizedChoice( ...
+    cfg.directions.sampling_method, ...
+    ["random", "fibonacci"], ...
+    "directions.sampling_method");
+
+cfg.directions.require_in_plane = logicalScalar( ...
+    cfg.directions.require_in_plane, ...
+    "directions.require_in_plane");
+
+cfg.directions.support.type = normalizedChoice( ...
+    cfg.directions.support.type, ...
+    ["full_circle", "full_sphere", "angular_ranges", "cone", "band"], ...
+    "directions.support.type");
+
+cfg.directions.support.axis_xyz = unitVector( ...
+    cfg.directions.support.axis_xyz, ...
+    "directions.support.axis_xyz");
+
+validateRange( ...
+    cfg.directions.support.half_angle_deg, ...
+    0, 180, ...
+    "directions.support.half_angle_deg");
+
+validateRange( ...
+    cfg.directions.support.band_half_width_deg, ...
+    0, 90, ...
+    "directions.support.band_half_width_deg");
+
+cfg.directions.support.phi_range_rad = validateAscendingPair( ...
+    cfg.directions.support.phi_range_rad, ...
+    "directions.support.phi_range_rad");
+
+cfg.directions.support.theta_range_rad = validateAscendingPair( ...
+    cfg.directions.support.theta_range_rad, ...
+    "directions.support.theta_range_rad");
+
+if cfg.directions.support.theta_range_rad(1) < 0 || ...
+        cfg.directions.support.theta_range_rad(2) > pi
+    error("swsynth:InvalidThetaRange", ...
+        "directions.support.theta_range_rad must lie within [0, pi].");
+end
+
+cfg.directions.support.angle_range_2d_rad = validateAscendingPair( ...
+    cfg.directions.support.angle_range_2d_rad, ...
+    "directions.support.angle_range_2d_rad");
+
+if cfg.directions.space == "two_dimensional" && ...
+        cfg.directions.support.type == "full_sphere"
+    cfg.directions.support.type = "full_circle";
+end
+
+if cfg.directions.space == "three_dimensional" && ...
+        cfg.directions.support.type == "full_circle"
+    cfg.directions.support.type = "full_sphere";
+end
+
+if isempty(cfg.sources.radius_range_m)
+    cfg.sources.radius_range_m = [ ...
+        0.9 * cfg.domain.Lx_m, ...
+        1.0 * cfg.domain.Lx_m];
+else
+    cfg.sources.radius_range_m = validateAscendingPair( ...
+        cfg.sources.radius_range_m, ...
+        "sources.radius_range_m");
+end
+
+if any(cfg.sources.radius_range_m <= 0)
+    error("swsynth:InvalidSourceRadius", ...
+        "sources.radius_range_m values must be positive.");
+end
+
+cfg.sources.phase_policy = normalizedChoice( ...
+    cfg.sources.phase_policy, ...
+    ["random_uniform"], ...
+    "sources.phase_policy");
+
+validateNonnegativeFinite( ...
+    cfg.sources.amplitude_jitter_fraction, ...
+    "sources.amplitude_jitter_fraction");
+
+cfg.polarization.model = normalizedChoice( ...
+    cfg.polarization.model, ...
+    ["transverse_random", "in_plane_sv"], ...
+    "polarization.model");
+
+if cfg.directions.space == "two_dimensional"
+    cfg.polarization.model = "in_plane_sv";
+end
+
+validateNonnegativeFinite( ...
+    cfg.amplitude.geometric_decay_exponent, ...
+    "amplitude.geometric_decay_exponent");
+
+if ~(isnumeric(cfg.noise.snr_db) && isscalar(cfg.noise.snr_db) && ...
+        (isfinite(cfg.noise.snr_db) || isinf(cfg.noise.snr_db)))
+    error("swsynth:InvalidSnr", ...
+        "noise.snr_db must be a finite scalar or Inf.");
+end
+
+cfg.execution.use_parallel = logicalScalar( ...
+    cfg.execution.use_parallel, ...
+    "execution.use_parallel");
+
+if cfg.propagation.model == "plane_wave" && ...
+        ~isempty(cfg.medium.objects)
+    error("swsynth:PlaneWaveRequiresHomogeneousMedium", ...
+        "plane_wave currently requires medium.objects to be empty.");
+end
+
+Nx = round(cfg.domain.Lx_m / cfg.domain.dx_m) + 1;
+Nz = round(cfg.domain.Lz_m / cfg.domain.dz_m) + 1;
+
+report = struct();
+report.valid = true;
+report.schema_version = cfg.schema_version;
+report.grid_size_zx = [Nz, Nx];
+report.output_convention = "U(z,x)";
+report.direction_count = cfg.directions.count;
+report.direction_space = cfg.directions.space;
+report.propagation_model = cfg.propagation.model;
+report.medium_object_count = numel(cfg.medium.objects);
+
+end
+
+function out = mergeKnownFields(defaults, requested, path)
+
+out = defaults;
+
+requestedNames = fieldnames(requested);
+defaultNames = fieldnames(defaults);
+
+unknown = setdiff(requestedNames, defaultNames);
+if ~isempty(unknown)
+    error("swsynth:UnknownConfigField", ...
+        "Unknown configuration field %s.%s.", ...
+        path, unknown{1});
+end
+
+for i = 1:numel(requestedNames)
+    name = requestedNames{i};
+    value = requested.(name);
+
+    if isstruct(defaults.(name))
+        if ~isstruct(value) || ~isscalar(value)
+            error("swsynth:InvalidConfigSection", ...
+                "%s.%s must be a scalar struct.", path, name);
+        end
+
+        out.(name) = mergeKnownFields( ...
+            defaults.(name), ...
+            value, ...
+            path + "." + name);
+    else
+        out.(name) = value;
+    end
+end
+
+end
+
+function object = validateMediumObject(object, index)
+
+if ~isstruct(object) || ~isscalar(object)
+    error("swsynth:InvalidMediumObject", ...
+        "medium.objects{%d} must be a scalar struct.", index);
+end
+
+if ~isfield(object, "type")
+    error("swsynth:MissingMediumObjectField", ...
+        "medium.objects{%d}.type is required.", index);
+end
+
+if ~isfield(object, "cs_m_s")
+    error("swsynth:MissingMediumObjectField", ...
+        "medium.objects{%d}.cs_m_s is required.", index);
+end
+
+object.type = normalizedChoice( ...
+    object.type, ...
+    ["circle", "s_curve", "bilayer", "custom"], ...
+    sprintf("medium.objects{%d}.type", index));
+
+validatePositiveFinite( ...
+    object.cs_m_s, ...
+    sprintf("medium.objects{%d}.cs_m_s", index));
+
+if ~isfield(object, "edge_sigma_m")
+    object.edge_sigma_m = 0;
+end
+
+validateNonnegativeFinite( ...
+    object.edge_sigma_m, ...
+    sprintf("medium.objects{%d}.edge_sigma_m", index));
+
+switch object.type
+    case "circle"
+        requireFields(object, ["center_xz_m", "radius_m"], index);
+        object.center_xz_m = numericPair( ...
+            object.center_xz_m, ...
+            sprintf("medium.objects{%d}.center_xz_m", index));
+        validatePositiveFinite( ...
+            object.radius_m, ...
+            sprintf("medium.objects{%d}.radius_m", index));
+
+    case "s_curve"
+        requireFields(object, ...
+            ["center_xz_m", "amplitude_m", "wavelength_m", "thickness_m"], ...
+            index);
+        object.center_xz_m = numericPair( ...
+            object.center_xz_m, ...
+            sprintf("medium.objects{%d}.center_xz_m", index));
+        validateFiniteScalar( ...
+            object.amplitude_m, ...
+            sprintf("medium.objects{%d}.amplitude_m", index));
+        validatePositiveFinite( ...
+            object.wavelength_m, ...
+            sprintf("medium.objects{%d}.wavelength_m", index));
+        validatePositiveFinite( ...
+            object.thickness_m, ...
+            sprintf("medium.objects{%d}.thickness_m", index));
+
+    case "bilayer"
+        requireFields(object, ["normal_angle_rad", "offset_m"], index);
+        validateFiniteScalar( ...
+            object.normal_angle_rad, ...
+            sprintf("medium.objects{%d}.normal_angle_rad", index));
+        validateFiniteScalar( ...
+            object.offset_m, ...
+            sprintf("medium.objects{%d}.offset_m", index));
+
+    case "custom"
+        requireFields(object, "mask_zx", index);
+        if ~(islogical(object.mask_zx) || isnumeric(object.mask_zx))
+            error("swsynth:InvalidCustomMask", ...
+                "medium.objects{%d}.mask_zx must be numeric or logical.", ...
+                index);
+        end
+end
+
+end
+
+function requireFields(object, names, index)
+
+names = string(names);
+
+for i = 1:numel(names)
+    if ~isfield(object, names(i))
+        error("swsynth:MissingMediumObjectField", ...
+            "medium.objects{%d}.%s is required.", ...
+            index, names(i));
+    end
+end
+
+end
+
+function value = normalizedChoice(value, allowed, name)
+
+validateScalarString(value, name);
+value = lower(strtrim(string(value)));
+
+if ~ismember(value, allowed)
+    error("swsynth:InvalidChoice", ...
+        "%s must be one of: %s.", ...
+        name, strjoin(allowed, ", "));
+end
+
+end
+
+function value = unitVector(value, name)
+
+if ~(isnumeric(value) && isvector(value) && numel(value) == 3 && ...
+        all(isfinite(value)))
+    error("swsynth:InvalidVector", ...
+        "%s must be a finite numeric three-vector.", name);
+end
+
+value = double(value(:).');
+magnitude = norm(value);
+
+if magnitude <= eps
+    error("swsynth:InvalidVector", ...
+        "%s must be nonzero.", name);
+end
+
+value = value / magnitude;
+
+end
+
+function value = numericPair(value, name)
+
+if ~(isnumeric(value) && isvector(value) && numel(value) == 2 && ...
+        all(isfinite(value)))
+    error("swsynth:InvalidPair", ...
+        "%s must be a finite numeric pair.", name);
+end
+
+value = double(value(:).');
+
+end
+
+function value = validateAscendingPair(value, name)
+
+value = numericPair(value, name);
+
+if value(2) < value(1)
+    error("swsynth:InvalidPairOrder", ...
+        "%s must be ascending.", name);
+end
+
+end
+
+function value = logicalScalar(value, name)
+
+if ~(islogical(value) || ...
+        (isnumeric(value) && isscalar(value) && ismember(value, [0, 1])))
+    error("swsynth:InvalidLogical", ...
+        "%s must be a logical scalar.", name);
+end
+
+value = logical(value);
+
+end
+
+function validateScalarString(value, name)
+
+if ~((isstring(value) && isscalar(value)) || ischar(value))
+    error("swsynth:InvalidString", ...
+        "%s must be a character vector or scalar string.", name);
+end
+
+end
+
+function validatePositiveFinite(value, name)
+
+if ~(isnumeric(value) && isscalar(value) && ...
+        isfinite(value) && value > 0)
+    error("swsynth:InvalidPositiveScalar", ...
+        "%s must be a positive finite scalar.", name);
+end
+
+end
+
+function validateNonnegativeFinite(value, name)
+
+if ~(isnumeric(value) && isscalar(value) && ...
+        isfinite(value) && value >= 0)
+    error("swsynth:InvalidNonnegativeScalar", ...
+        "%s must be a nonnegative finite scalar.", name);
+end
+
+end
+
+function validateFiniteScalar(value, name)
+
+if ~(isnumeric(value) && isscalar(value) && isfinite(value))
+    error("swsynth:InvalidFiniteScalar", ...
+        "%s must be a finite scalar.", name);
+end
+
+end
+
+function validatePositiveInteger(value, name, allowZero)
+
+minimum = 1;
+if allowZero
+    minimum = 0;
+end
+
+if ~(isnumeric(value) && isscalar(value) && isfinite(value) && ...
+        value >= minimum && value == round(value))
+    error("swsynth:InvalidInteger", ...
+        "%s must be an integer greater than or equal to %d.", ...
+        name, minimum);
+end
+
+end
+
+function validateRange(value, lowerBound, upperBound, name)
+
+if ~(isnumeric(value) && isscalar(value) && isfinite(value) && ...
+        value >= lowerBound && value <= upperBound)
+    error("swsynth:InvalidRange", ...
+        "%s must lie within [%g, %g].", ...
+        name, lowerBound, upperBound);
+end
+
+end
