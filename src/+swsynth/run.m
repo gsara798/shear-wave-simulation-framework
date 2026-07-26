@@ -48,5 +48,6 @@ result.truth.material_id_zx = maps.material_id_zx;
 result.truth.valid_mask_zx = true(size(maps.cs_map_zx));
 
 result.output_convention = "U(z,x), maps(z,x)";
+result.sample = swsynth.buildWavefieldSample(result);
 
 end
