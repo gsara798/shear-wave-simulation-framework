@@ -41,6 +41,8 @@ outcome.report = struct();
 outcome.paths = struct();
 outcome.validation_paths = struct();
 outcome.figure_paths = struct();
+outcome.wavefield_sample = struct();
+outcome.wavefield_sample_path = "";
 outcome.req_validation_sample = struct();
 outcome.req_validation_sample_path = "";
 outcome.req_readiness = struct();
@@ -109,6 +111,25 @@ end
 result.valid = report.valid;
 result.diagnostics = report;
 
+%% Build optional generic wavefield artifact
+
+wavefield_sample = struct();
+wavefield_sample_path = "";
+
+wavefield_sample_requested = ...
+    outputFlag( ...
+        result.config_resolved, ...
+        "save_wavefield_sample", ...
+        false);
+
+if wavefield_sample_requested
+    wavefield_sample = ...
+        kwsim.samples.buildWavefieldSample( ...
+            result, ...
+            Quantity=resolveWavefieldSampleQuantity( ...
+                result.config_resolved));
+end
+
 %% Save standardized outputs
 
 paths = struct();
@@ -131,6 +152,22 @@ if outputFlag( ...
                 result.config_resolved, ...
                 "overwrite", ...
                 false));
+
+    if wavefield_sample_requested && ...
+            isfield(wavefield_sample, "schema_name")
+
+        wavefield_sample_path = ...
+            kwsim.samples.saveWavefieldSample( ...
+                wavefield_sample, ...
+                paths, ...
+                Overwrite=outputFlag( ...
+                    result.config_resolved, ...
+                    "overwrite", ...
+                    false));
+
+        fprintf("Wavefield sample:\n%s\n", ...
+            wavefield_sample_path);
+    end
 
     if req_validation_requested && ...
             isfield( ...
@@ -184,6 +221,8 @@ outcome.report = report;
 outcome.paths = paths;
 outcome.validation_paths = validation_paths;
 outcome.figure_paths = figure_paths;
+outcome.wavefield_sample = wavefield_sample;
+outcome.wavefield_sample_path = wavefield_sample_path;
 outcome.req_validation_sample = req_validation_sample;
 outcome.req_validation_sample_path = ...
     req_validation_sample_path;
@@ -205,6 +244,23 @@ if ~report.valid && fail_on_invalid
 end
 
 fprintf("\nConfigured simulation completed successfully.\n");
+
+end
+
+
+function quantity = resolveWavefieldSampleQuantity(cfg)
+
+quantity = "displacement";
+
+if isfield(cfg, "wavefield_sample") && ...
+        isfield(cfg.wavefield_sample, "quantity")
+    quantity = lower(string(cfg.wavefield_sample.quantity));
+end
+
+if ~ismember(quantity, ["displacement", "velocity"])
+    error("kwsim:InvalidWavefieldSampleQuantity", ...
+        "wavefield_sample.quantity must be displacement or velocity.");
+end
 
 end
 
