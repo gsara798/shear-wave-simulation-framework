@@ -26,16 +26,19 @@ for token_index = 1:numel(tokens)
             unknownPath(path_value);
         end
 
-        value = value(element_index);
+        if iscell(value)
+            value = value{element_index};
+        else
+            value = value(element_index);
+        end
     end
 end
 
 end
 
-
 function unknownPath(path_value)
 
-error("kwsim:UnknownCampaignSweepPath", ...
+error("simcampaigns:UnknownCampaignSweepPath", ...
     "Unknown sweep path '%s'.", path_value);
 
 end

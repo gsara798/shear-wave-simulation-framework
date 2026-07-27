@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.1",
+  "backend": "swsynth",
+  "campaign_name": "swsynth_heterogeneous_circle_smoke",
+  "base_config": "configs/swsynth/heterogeneous_circle_campaign_base.json",
+  "output": {
+    "directory": "outputs/campaigns"
+  },
+  "sweep": [
+    {
+      "path": "medium.objects[1].cs_m_s",
+      "values": [2.5, 4.0]
+    },
+    {
+      "path": "wavefield.frequency_hz",
+      "values": [400, 500]
+    },
+    {
+      "path": "seed",
+      "values": [2001, 2002]
+    }
+  ]
+}

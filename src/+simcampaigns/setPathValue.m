@@ -18,7 +18,6 @@ value = setNestedValue( ...
 
 end
 
-
 function value = setNestedValue( ...
         value, tokens, token_index, replacement, path_value)
 
@@ -39,15 +38,36 @@ if element_index > 0
         unknownPath(path_value);
     end
 
-    if is_last
-        nested(element_index) = replacement;
+    if iscell(nested)
+        if is_last
+            nested{element_index} = replacement;
+        else
+            child = nested{element_index};
+
+            child = setNestedValue( ...
+                child, ...
+                tokens, ...
+                token_index + 1, ...
+                replacement, ...
+                path_value);
+
+            nested{element_index} = child;
+        end
     else
-        nested(element_index) = setNestedValue( ...
-            nested(element_index), ...
-            tokens, ...
-            token_index + 1, ...
-            replacement, ...
-            path_value);
+        if is_last
+            nested(element_index) = replacement;
+        else
+            child = nested(element_index);
+
+            child = setNestedValue( ...
+                child, ...
+                tokens, ...
+                token_index + 1, ...
+                replacement, ...
+                path_value);
+
+            nested(element_index) = child;
+        end
     end
 
     value.(field_name) = nested;
@@ -70,10 +90,9 @@ value.(field_name) = nested;
 
 end
 
-
 function unknownPath(path_value)
 
-error("kwsim:UnknownCampaignSweepPath", ...
+error("simcampaigns:UnknownCampaignSweepPath", ...
     "Unknown sweep path '%s'.", path_value);
 
 end
