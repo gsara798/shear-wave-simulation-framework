@@ -51,11 +51,14 @@ sample.coordinates.observation_y_m = ...
 sample.wavefield = struct();
 sample.wavefield.data_zx = result.wavefield.U_zx;
 sample.wavefield.component = result.wavefield.component;
+sample.wavefield.quantity = "displacement";
 sample.wavefield.frequency_hz = result.wavefield.frequency_hz;
 sample.wavefield.angular_frequency_rad_s = ...
     2*pi*result.wavefield.frequency_hz;
 sample.wavefield.is_complex = result.wavefield.is_complex;
 sample.wavefield.units = "arbitrary_displacement";
+sample.wavefield.phasor_convention = ...
+    "u(t) = real{U exp(i 2*pi*f*t)}";
 sample.wavefield.output_convention = "data_zx(z,x)";
 
 sample.truth = struct();
