@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.1",
+  "backend": "swsynth",
+  "campaign_name": "swsynth_homogeneous_smoke",
+  "base_config": "configs/swsynth/homogeneous_campaign_base.json",
+  "output": {
+    "directory": "outputs/campaigns"
+  },
+  "sweep": [
+    {
+      "path": "medium.background_cs_m_s",
+      "values": [2.0, 3.0]
+    },
+    {
+      "path": "seed",
+      "values": [1001, 1002]
+    }
+  ]
+}
