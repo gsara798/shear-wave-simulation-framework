@@ -151,8 +151,14 @@ cfg.output.save_config_mat = true;
 cfg.output.save_config_json = true;
 cfg.output.save_time_series = false;
 
-% Export a lightweight 2D complex field for external REQ validation.
+% Export a backend-neutral 2D complex field for downstream estimators.
+cfg.output.save_wavefield_sample = false;
+
+% Export the legacy lightweight field for external REQ validation.
 cfg.output.save_req_validation_sample = false;
+
+cfg.wavefield_sample = struct();
+cfg.wavefield_sample.quantity = "displacement";
 
 cfg.output.save_figures = true;
 cfg.output.save_matlab_figures = true;
