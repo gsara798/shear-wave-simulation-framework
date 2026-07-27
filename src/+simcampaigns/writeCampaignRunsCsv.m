@@ -20,6 +20,9 @@ seed = NaN(run_count, 1);
 frequency_hz = NaN(run_count, 1);
 background_cs_m_s = NaN(run_count, 1);
 medium_object_count = NaN(run_count, 1);
+primary_object_type = strings(run_count, 1);
+primary_object_cs_m_s = NaN(run_count, 1);
+primary_object_radius_m = NaN(run_count, 1);
 direction_count = NaN(run_count, 1);
 propagation_model = strings(run_count, 1);
 valid = NaN(run_count, 1);
@@ -93,6 +96,19 @@ for index = 1:run_count
             if isfield(config.medium, "objects")
                 medium_object_count(index) = ...
                     numel(config.medium.objects);
+
+                if medium_object_count(index) > 0
+                    object = firstObject(config.medium.objects);
+
+                    primary_object_type(index) = ...
+                        textField(object, "type");
+
+                    primary_object_cs_m_s(index) = ...
+                        numericField(object, "cs_m_s");
+
+                    primary_object_radius_m(index) = ...
+                        numericField(object, "radius_m");
+                end
             end
         end
 
@@ -143,6 +159,9 @@ campaign_runs = table( ...
     frequency_hz, ...
     background_cs_m_s, ...
     medium_object_count, ...
+    primary_object_type, ...
+    primary_object_cs_m_s, ...
+    primary_object_radius_m, ...
     direction_count, ...
     propagation_model, ...
     valid, ...
@@ -181,6 +200,19 @@ if ~moved
 end
 
 end
+
+function object = firstObject(objects)
+
+if iscell(objects)
+    object = objects{1};
+elseif isstruct(objects)
+    object = objects(1);
+else
+    object = struct();
+end
+
+end
+
 
 function value = numericField(value_struct, field_name)
 
