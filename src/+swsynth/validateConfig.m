@@ -44,10 +44,7 @@ cfg.medium.combine_mode = normalizedChoice( ...
     ["overlay", "blend", "max", "min"], ...
     "medium.combine_mode");
 
-if ~iscell(cfg.medium.objects)
-    error("swsynth:InvalidMediumObjects", ...
-        "medium.objects must be a cell array of object structs.");
-end
+cfg.medium.objects = normalizeMediumObjects(cfg.medium.objects);
 
 for i = 1:numel(cfg.medium.objects)
     cfg.medium.objects{i} = validateMediumObject( ...
@@ -67,6 +64,20 @@ cfg.propagation.model = normalizedChoice( ...
     cfg.propagation.model, ...
     ["spherical_wave", "plane_wave"], ...
     "propagation.model");
+
+cfg.propagation.phase_model = normalizedChoice( ...
+    cfg.propagation.phase_model, ...
+    ["local_k_distance", "straight_ray_numerical"], ...
+    "propagation.phase_model");
+
+validatePositiveFinite( ...
+    cfg.propagation.phase_tolerance_rad, ...
+    "propagation.phase_tolerance_rad");
+
+validatePositiveInteger( ...
+    cfg.propagation.maximum_refinement_depth, ...
+    "propagation.maximum_refinement_depth", ...
+    false);
 
 validatePositiveInteger( ...
     cfg.directions.count, ...
@@ -198,6 +209,10 @@ report.output_convention = "U(z,x)";
 report.direction_count = cfg.directions.count;
 report.direction_space = cfg.directions.space;
 report.propagation_model = cfg.propagation.model;
+report.phase_model = cfg.propagation.phase_model;
+report.phase_tolerance_rad = cfg.propagation.phase_tolerance_rad;
+report.maximum_refinement_depth = ...
+    cfg.propagation.maximum_refinement_depth;
 report.medium_object_count = numel(cfg.medium.objects);
 
 end
@@ -464,3 +479,38 @@ if ~(isnumeric(value) && isscalar(value) && isfinite(value) && ...
 end
 
 end
+
+function objects = normalizeMediumObjects(objects)
+%NORMALIZEMEDIUMOBJECTS Canonicalize JSON and MATLAB object collections.
+%
+% jsondecode represents:
+%   []                         as an empty numeric array
+%   [{...}]                    as a scalar struct
+%   [{...}, {...}]             as a struct array
+%
+% Internally, swsynth uses a cell array of scalar object structs.
+
+if iscell(objects)
+    return;
+end
+
+if isempty(objects) && ...
+        (isnumeric(objects) || islogical(objects) || isstruct(objects))
+    objects = {};
+    return;
+end
+
+if isstruct(objects)
+    structArray = objects;
+    objects = arrayfun( ...
+        @(index) structArray(index), ...
+        1:numel(structArray), ...
+        "UniformOutput", false);
+    return;
+end
+
+error("swsynth:InvalidMediumObjects", ...
+    "medium.objects must be an array of object structs.");
+
+end
+

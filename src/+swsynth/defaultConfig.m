@@ -32,6 +32,9 @@ cfg.wavefield.observed_component = "axial";
 
 cfg.propagation = struct();
 cfg.propagation.model = "spherical_wave";
+cfg.propagation.phase_model = "local_k_distance";
+cfg.propagation.phase_tolerance_rad = 0.03;
+cfg.propagation.maximum_refinement_depth = 10;
 
 cfg.directions = struct();
 cfg.directions.count = 30;
