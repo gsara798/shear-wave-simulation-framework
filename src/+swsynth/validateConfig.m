@@ -198,6 +198,12 @@ if cfg.propagation.model == "plane_wave" && ...
         "plane_wave currently requires medium.objects to be empty.");
 end
 
+if cfg.propagation.model == "plane_wave" && ...
+        cfg.propagation.phase_model ~= "local_k_distance"
+    error("swsynth:StraightRayRequiresSphericalWave", ...
+        "straight_ray_numerical requires propagation.model = spherical_wave.");
+end
+
 Nx = round(cfg.domain.Lx_m / cfg.domain.dx_m) + 1;
 Nz = round(cfg.domain.Lz_m / cfg.domain.dz_m) + 1;
 
