@@ -27,14 +27,30 @@ space = cfg.directions.space;
 method = cfg.directions.sampling_method;
 support = cfg.directions.support;
 
+solidAngleDiagnostics = struct();
+
 if space == "two_dimensional"
     [ux, uy, uz] = generate2D(N, method, support);
+
+elseif support.type == "solid_angle_cap"
+    [directionsXYZ, solidAngleDiagnostics] = ...
+        swsynth.sampleSolidAngleDirections( ...
+            N, ...
+            support.solid_angle_sr, ...
+            support.axis_xyz, ...
+            cfg.directions.in_plane_count);
+
+    ux = directionsXYZ(:, 1).';
+    uy = directionsXYZ(:, 2).';
+    uz = directionsXYZ(:, 3).';
+
 else
     [ux, uy, uz] = generate3D(N, method, support);
-end
 
-if cfg.directions.require_in_plane
-    [ux, uy, uz] = forceInPlaneDirection(ux, uy, uz, cfg);
+    % Legacy support types retain the former one-direction behavior.
+    if cfg.directions.in_plane_count == 1
+        [ux, uy, uz] = forceInPlaneDirection(ux, uy, uz, cfg);
+    end
 end
 
 directions = struct();
@@ -45,6 +61,24 @@ directions.count = N;
 directions.space = space;
 directions.sampling_method = method;
 directions.support_type = support.type;
+directions.in_plane_count = ...
+    nnz(abs(double(directions.uy)) <= 1e-12);
+directions.requested_in_plane_count = ...
+    cfg.directions.in_plane_count;
+
+if support.type == "solid_angle_cap"
+    directions.solid_angle_sr = ...
+        support.solid_angle_sr;
+    directions.support_axis_xyz = ...
+        support.axis_xyz;
+    directions.support_half_angle_deg = ...
+        solidAngleDiagnostics.half_angle_deg;
+else
+    directions.solid_angle_sr = NaN;
+    directions.support_axis_xyz = ...
+        support.axis_xyz;
+    directions.support_half_angle_deg = NaN;
+end
 
 end
 

@@ -40,11 +40,20 @@ cfg.directions = struct();
 cfg.directions.count = 30;
 cfg.directions.space = "three_dimensional";
 cfg.directions.sampling_method = "random";
+
+% Legacy compatibility flag. New configurations should use
+% directions.in_plane_count.
 cfg.directions.require_in_plane = false;
+cfg.directions.in_plane_count = 0;
 
 cfg.directions.support = struct();
 cfg.directions.support.type = "full_sphere";
 cfg.directions.support.axis_xyz = [-1, 0, 0];
+
+% Used by support.type = "solid_angle_cap".
+% 4*pi is a full sphere and 2*pi is a hemisphere.
+cfg.directions.support.solid_angle_sr = 4*pi;
+
 cfg.directions.support.half_angle_deg = 180;
 cfg.directions.support.band_half_width_deg = 90;
 cfg.directions.support.phi_range_rad = [0, 2*pi];
