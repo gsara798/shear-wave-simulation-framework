@@ -138,10 +138,10 @@ Campaigns are appropriate for:
 Example campaign files include:
 
 ```text
-configs/campaigns/homogeneous_directional_2d_sweep.json
-configs/campaigns/homogeneous_partial_3d_n8_p2_smoke.json
-configs/campaigns/homogeneous_generated_angular_n32_p8_smoke.json
-configs/campaigns/heterogeneous_large_sphere_n32_p8_smoke.json
+configs/campaigns/kwsim/scientific/homogeneous_directional_2d_sweep.json
+configs/campaigns/kwsim/smoke/homogeneous_partial_3d_n8_p2_smoke.json
+configs/campaigns/kwsim/smoke/homogeneous_generated_angular_n32_p8_smoke.json
+configs/campaigns/kwsim/smoke/heterogeneous_large_sphere_n32_p8_smoke.json
 ```
 
 A campaign contains one existing base configuration and an ordered list of
@@ -178,7 +178,7 @@ addpath("src");
 > retained temporarily for compatibility with existing k-Wave workflows.
 
 [runs, expansion] = simcampaigns.expandCampaign( ...
-    "configs/campaigns/homogeneous_partial_3d_n8_p2_smoke.json");
+    "configs/campaigns/kwsim/smoke/homogeneous_partial_3d_n8_p2_smoke.json");
 
 disp(expansion.run_count);
 disp(string({runs.run_id})');
@@ -189,7 +189,7 @@ path:
 
 ```matlab
 [~, validation] = simcampaigns.validateCampaign( ...
-    "configs/campaigns/homogeneous_partial_3d_n8_p2_smoke.json");
+    "configs/campaigns/kwsim/smoke/homogeneous_partial_3d_n8_p2_smoke.json");
 
 disp(validation.summary);
 assert(validation.valid);
@@ -203,7 +203,7 @@ Execute or resume a campaign:
 
 ```matlab
 report = simcampaigns.runCampaign( ...
-    "configs/campaigns/homogeneous_partial_3d_n8_p2_smoke.json", ...
+    "configs/campaigns/kwsim/smoke/homogeneous_partial_3d_n8_p2_smoke.json", ...
     Resume=true, ...
     ContinueOnError=true);
 

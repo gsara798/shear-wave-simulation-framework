@@ -41,7 +41,7 @@ The complete campaign contains:
 The campaign JSON is located at:
 
 ```text
-configs/campaigns/scientific/
+configs/campaigns/swsynth/scientific/
 └── reqml_projected3d_clean_training_v1/
     └── homogeneous.json
 ```
