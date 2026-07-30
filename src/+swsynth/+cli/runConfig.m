@@ -36,6 +36,7 @@ outcome.validation = validationReport;
 outcome.paths = struct();
 
 if options.DryRun
+    outcome.status = "dry_run_valid";
     outcome.completed = false;
     outcome.result = [];
 
@@ -85,6 +86,7 @@ writeManifest( ...
     runSummary, ...
     paths);
 
+outcome.status = "completed";
 outcome.completed = true;
 outcome.runtime_s = runtimeS;
 outcome.output_directory = char(paths.run);

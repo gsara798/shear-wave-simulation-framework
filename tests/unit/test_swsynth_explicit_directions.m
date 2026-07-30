@@ -35,6 +35,32 @@ verifyEqual(testCase,directions.in_plane_count,3);
 
 end
 
+function testSingleExplicitDirectionJsonVectorIsCanonicalized(testCase)
+
+cfg = swsynth.defaultConfig();
+cfg.directions.count = 1;
+cfg.directions.space = "three_dimensional";
+cfg.directions.sampling_method = "explicit";
+
+% This is how MATLAB jsondecode may represent JSON [1,0,0].
+cfg.directions.explicit_xyz = [1;0;0];
+
+[resolved,~] = swsynth.validateConfig(cfg);
+
+verifySize( ...
+    testCase, ...
+    resolved.directions.explicit_xyz, ...
+    [1,3]);
+
+verifyEqual( ...
+    testCase, ...
+    resolved.directions.explicit_xyz, ...
+    [1,0,0], ...
+    AbsTol=1e-12);
+
+end
+
+
 function testExplicitCountMismatchFails(testCase)
 
 cfg = swsynth.defaultConfig();

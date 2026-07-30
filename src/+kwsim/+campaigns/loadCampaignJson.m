@@ -37,7 +37,7 @@ required_fields = [ ...
     "base_config", ...
     "sweep"];
 
-optional_fields = "output";
+optional_fields = ["backend", "output"];
 
 validateFields( ...
     requested, ...
@@ -57,6 +57,24 @@ if ~isTextScalar(requested.campaign_name)
 end
 
 campaign_name = string(requested.campaign_name);
+
+backend = "kwsim";
+
+if isfield(requested, "backend")
+    if ~isTextScalar(requested.backend)
+        error( ...
+            "kwsim:InvalidCampaignBackend", ...
+            "campaign.backend must be a text scalar.");
+    end
+
+    backend = lower(strtrim(string(requested.backend)));
+
+    if ~ismember(backend, ["kwsim", "swsynth"])
+        error( ...
+            "kwsim:InvalidCampaignBackend", ...
+            "campaign.backend must be kwsim or swsynth.");
+    end
+end
 
 if strlength(campaign_name) == 0 || ...
         isempty(regexp( ...
@@ -87,7 +105,7 @@ if ~isfile(base_config_file)
 end
 
 [base_config, base_metadata] = ...
-    kwsim.io.loadConfigJson(base_config_file);
+    loadBaseConfig(base_config_file, backend);
 
 output = validateOutput(requested);
 
@@ -137,7 +155,14 @@ for index = 1:parameter_count
     validateSweepPath(base_config, path_value);
 
     paths(index) = path_value;
-    value_counts(index) = countValues(parameter.values);
+
+    base_value = kwsim.campaigns.getPathValue( ...
+        base_config, ...
+        path_value);
+
+    value_counts(index) = countValues( ...
+        parameter.values, ...
+        base_value);
 
     if value_counts(index) == 0
         error("kwsim:EmptyCampaignSweepValues", ...
@@ -156,6 +181,7 @@ end
 campaign = struct();
 campaign.schema_version = "1.0";
 campaign.campaign_name = campaign_name;
+campaign.backend = backend;
 campaign.base_config = base_config_file;
 campaign.output = output;
 campaign.sweep = sweep;
@@ -171,6 +197,48 @@ metadata.value_counts = value_counts;
 metadata.expanded_run_count = prod(value_counts);
 metadata.json_text = string(json_text);
 metadata.requested = requested;
+
+end
+
+
+function [baseConfig, metadata] = ...
+        loadBaseConfig(baseConfigFile, backend)
+
+switch lower(string(backend))
+    case "kwsim"
+        [baseConfig, metadata] = ...
+            kwsim.io.loadConfigJson(baseConfigFile);
+
+    case "swsynth"
+        try
+            jsonText = fileread(baseConfigFile);
+            baseConfig = jsondecode(jsonText);
+        catch exception
+            error( ...
+                "kwsim:InvalidCampaignBaseConfigJson", ...
+                ["Could not decode swsynth campaign base config " + ...
+                 "'%s': %s"], ...
+                baseConfigFile, ...
+                exception.message);
+        end
+
+        if ~isstruct(baseConfig) || ~isscalar(baseConfig)
+            error( ...
+                "kwsim:InvalidCampaignBaseConfig", ...
+                ["The swsynth campaign base configuration must " + ...
+                 "contain one top-level JSON object."]);
+        end
+
+        metadata = struct();
+        metadata.config_file = absolutePath(baseConfigFile);
+        metadata.json_text = string(jsonText);
+
+    otherwise
+        error( ...
+            "kwsim:UnsupportedCampaignBackend", ...
+            "Unsupported campaign backend: %s", ...
+            backend);
+end
 
 end
 
@@ -243,13 +311,37 @@ kwsim.campaigns.getPathValue( ...
 end
 
 
-function count = countValues(values)
+function count = countValues(values, baseValue)
+
+if iscell(values)
+    count = numel(values);
+    return
+end
 
 if ischar(values)
     count = double(~isempty(values));
-else
-    count = numel(values);
+    return
 end
+
+if isscalar(baseValue)
+    count = numel(values);
+    return
+end
+
+baseSize = size(baseValue);
+
+if isrow(baseValue) && ...
+        ismatrix(values) && ...
+        size(values,2) == baseSize(2)
+
+    count = size(values,1);
+    return
+end
+
+error( ...
+    "kwsim:InvalidCampaignSweepValues", ...
+    ["Sweep values for a non-scalar configuration field must " + ...
+     "contain one value per row matching the base field shape."]);
 
 end
 

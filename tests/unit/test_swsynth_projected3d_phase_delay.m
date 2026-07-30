@@ -46,7 +46,7 @@ verifyEqual(testCase, diagnostics.solver.iterations, 0);
 
 end
 
-function testNegativeProjectedDirectionUsesOppositeBoundaries(testCase)
+function testNegativeProjectedDirectionUsesGlobalPhaseOrigin(testCase)
 
 xM = 0:0.0005:0.020;
 zM = (0:0.0007:0.014).';
@@ -68,8 +68,8 @@ phaseDelayZX = ...
 [X, Z] = meshgrid(xM, zM);
 
 expectedZX = ...
-    directionXYZ(1) .* (X - xM(end)) ./ csMps + ...
-    directionXYZ(3) .* (Z - zM(end)) ./ csMps;
+    directionXYZ(1) .* X ./ csMps + ...
+    directionXYZ(3) .* Z ./ csMps;
 
 verifyEqual( ...
     testCase, ...

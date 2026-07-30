@@ -45,9 +45,14 @@ for ordinal = 1:run_count
 
     for parameter_index = 1:parameter_count
         parameter = campaign.sweep(parameter_index);
+        base_value = kwsim.campaigns.getPathValue( ...
+            campaign_metadata.base_config, ...
+            parameter.path);
+
         selected_value = valueAt( ...
             parameter.values, ...
-            value_indices(parameter_index));
+            value_indices(parameter_index), ...
+            base_value);
 
         config = kwsim.campaigns.setPathValue( ...
             config, ...
@@ -105,20 +110,40 @@ end
 end
 
 
-function value = valueAt(values, index)
+function value = valueAt(values, index, baseValue)
 
 if iscell(values)
     value = values{index};
-elseif ischar(values)
+    return
+end
+
+if ischar(values)
     if index ~= 1
-        error("kwsim:InvalidCampaignSweepValues", ...
+        error( ...
+            "kwsim:InvalidCampaignSweepValues", ...
             "A character sweep value can only contain one entry.");
     end
 
     value = values;
-else
-    value = values(index);
+    return
 end
+
+if isscalar(baseValue)
+    value = values(index);
+    return
+end
+
+if isrow(baseValue) && ...
+        ismatrix(values) && ...
+        size(values,2) == size(baseValue,2)
+
+    value = values(index,:);
+    return
+end
+
+error( ...
+    "kwsim:InvalidCampaignSweepValues", ...
+    "Could not extract a structured campaign sweep value.");
 
 end
 

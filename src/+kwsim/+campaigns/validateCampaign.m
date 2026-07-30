@@ -4,8 +4,8 @@ function [runs, validation] = validateCampaign(campaign_file)
 %   [runs, validation] = ...
 %       kwsim.campaigns.validateCampaign(campaign_file)
 %
-% Every expanded configuration is validated through
-% kwsim.cli.runConfig(..., DryRun=true). All runs are checked even if one
+% Every expanded configuration is validated through the CLI selected
+% by campaign.backend. All runs are checked even if one
 % fails. No solver is executed and no simulation or campaign output
 % directories are created.
 
@@ -37,7 +37,9 @@ for index = 1:expansion.run_count
     run_validations(index).run_id = run.run_id;
 
     try
-        outcome = validateExpandedConfig(run.config);
+        outcome = validateExpandedConfig( ...
+            run.config, ...
+            expansion.campaign.backend);
 
         run_validations(index).outcome = outcome;
         run_validations(index).status = ...
@@ -99,16 +101,37 @@ validation.summary = string(sprintf( ...
 end
 
 
-function outcome = validateExpandedConfig(config)
+function outcome = validateExpandedConfig(config, backend)
 
 config_file = writeTemporaryConfig(config);
 cleanup = onCleanup(@() deleteIfPresent(config_file));
 
-outcome = kwsim.cli.runConfig( ...
+runner = resolveBackendRunner(backend);
+
+outcome = runner( ...
     config_file, ...
     DryRun=true);
 
 clear cleanup
+
+end
+
+
+function runner = resolveBackendRunner(backend)
+
+switch lower(string(backend))
+    case "kwsim"
+        runner = @kwsim.cli.runConfig;
+
+    case "swsynth"
+        runner = @swsynth.cli.runConfig;
+
+    otherwise
+        error( ...
+            "kwsim:UnsupportedCampaignBackend", ...
+            "Unsupported campaign backend: %s", ...
+            backend);
+end
 
 end
 

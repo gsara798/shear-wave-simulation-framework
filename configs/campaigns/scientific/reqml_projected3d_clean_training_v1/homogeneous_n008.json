@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "campaign_name": "reqml_projected3d_clean_training_v1_homogeneous_n008",
+  "backend": "swsynth",
+  "base_config": "configs/swsynth/scientific/reqml_projected3d_clean_training_v1/homogeneous_n008_base.json",
+  "output": {
+    "directory": "outputs/campaigns/scientific/reqml_projected3d_clean_training_v1"
+  },
+  "sweep": [
+    {
+      "path": "medium.background_cs_m_s",
+      "values": [
+        2.0,
+        3.0,
+        4.0
+      ]
+    },
+    {
+      "path": "wavefield.frequency_hz",
+      "values": [
+        200,
+        400,
+        600
+      ]
+    },
+    {
+      "path": "directions.support.solid_angle_sr",
+      "values": [
+        0.7853981633974483,
+        6.283185307179586,
+        12.566370614359172
+      ]
+    },
+    {
+      "path": "seed",
+      "values": [
+        4101,
+        4102
+      ]
+    }
+  ]
+}
