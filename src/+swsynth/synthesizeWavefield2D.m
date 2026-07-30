@@ -72,14 +72,45 @@ xSource = sourceRadius .* ux + single(cfg.domain.Lx_m/2);
 ySource = sourceRadius .* uy + single(cfg.domain.observation_y_m);
 zSource = sourceRadius .* uz + single(cfg.domain.Lz_m/2);
 
-polarizationZ = computePolarizationZ(ux, uy, uz, cfg);
+if cfg.propagation.model == "plane_wave"
+    directionsXYZ = double([
+        ux(:), ...
+        uy(:), ...
+        uz(:)]);
 
-amplitudeJitter = single(cfg.sources.amplitude_jitter_fraction);
-amplitude = single(1 + amplitudeJitter * randn(1, N, "single"));
-phase = 2*pi * rand(1, N, "single");
+    excitation = ...
+        swsynth.generateDirectionalExcitation( ...
+            cfg, ...
+            directionsXYZ);
 
-weights = ...
-    (amplitude .* polarizationZ .* exp(1i * phase)) / sqrt(N);
+    polarizationZ = ...
+        single(excitation.polarization_z(:));
+
+    amplitude = ...
+        single(excitation.amplitude(:));
+
+    phase = ...
+        single(excitation.phase_rad(:));
+
+    weights = ...
+        single(excitation.weights(:));
+else
+    polarizationZ = computePolarizationZ(ux, uy, uz, cfg);
+
+    amplitudeJitter = ...
+        single(cfg.sources.amplitude_jitter_fraction);
+
+    amplitude = ...
+        single(1 + ...
+        amplitudeJitter * randn(1, N, "single"));
+
+    phase = ...
+        2*pi * rand(1, N, "single");
+
+    weights = ...
+        (amplitude .* polarizationZ .* ...
+         exp(1i * phase)) / sqrt(N);
+end
 
 fieldXZ = complex(zeros(Nx, Nz, "single"));
 observationY = single(cfg.domain.observation_y_m);
@@ -97,33 +128,76 @@ end
 
 switch cfg.propagation.model
     case "spherical_wave"
-        parfor (zIndex = 1:Nz, parallelFlag(useParallel))
-            column = complex(zeros(Nx, 1, "single"));
-            xColumn = single(x(:));
-            zValue = single(z(zIndex));
-            localK = single(kMapZX(zIndex, :).');
+        switch cfg.propagation.phase_model
+            case "local_k_distance"
+                parfor (zIndex = 1:Nz, parallelFlag(useParallel))
+                    column = complex(zeros(Nx, 1, "single"));
+                    xColumn = single(x(:));
+                    zValue = single(z(zIndex));
+                    localK = single(kMapZX(zIndex, :).');
 
-            for directionIndex = 1:N
-                distance = sqrt( ...
-                    (xColumn - xSource(directionIndex)).^2 + ...
-                    (observationY - ySource(directionIndex)).^2 + ...
-                    (zValue - zSource(directionIndex)).^2);
+                    for directionIndex = 1:N
+                        distance = sqrt( ...
+                            (xColumn - xSource(directionIndex)).^2 + ...
+                            (observationY - ySource(directionIndex)).^2 + ...
+                            (zValue - zSource(directionIndex)).^2);
 
-                exponent = cfg.amplitude.geometric_decay_exponent;
-                if exponent ~= 0
-                    geometricAmplitude = ...
-                        1 ./ max(distance, 1e-6).^exponent;
-                else
-                    geometricAmplitude = 1;
+                        geometricAmplitude = computeGeometricAmplitude( ...
+                            distance, ...
+                            cfg.amplitude.geometric_decay_exponent);
+
+                        column = column + ...
+                            weights(directionIndex) .* ...
+                            exp(1i * (localK .* distance)) .* ...
+                            geometricAmplitude;
+                    end
+
+                    fieldXZ(:, zIndex) = column;
                 end
 
-                column = column + ...
-                    weights(directionIndex) .* ...
-                    exp(1i * (localK .* distance)) .* ...
-                    geometricAmplitude;
-            end
+            case "straight_ray_numerical"
+                [targetX, targetZ] = ndgrid(x, z);
+                pointCount = numel(targetX);
 
-            fieldXZ(:, zIndex) = column;
+                targetXYZ = [ ...
+                    targetX(:), ...
+                    double(observationY) * ones(pointCount, 1), ...
+                    targetZ(:)];
+
+                contributionByDirection = ...
+                    complex(zeros(pointCount, N, "single"));
+
+                omega = 2*pi*cfg.wavefield.frequency_hz;
+                amplitudeExponent = ...
+                    cfg.amplitude.geometric_decay_exponent;
+
+                parfor (directionIndex = 1:N, parallelFlag(useParallel))
+                    sourceXYZ = double([ ...
+                        xSource(directionIndex), ...
+                        ySource(directionIndex), ...
+                        zSource(directionIndex)]);
+
+                    travelTimeS = ...
+                        swsynth.integrateStraightRayTravelTime( ...
+                            cfg, sourceXYZ, targetXYZ);
+
+                    distance = sqrt(sum( ...
+                        (targetXYZ - sourceXYZ).^2, ...
+                        2));
+
+                    geometricAmplitude = computeGeometricAmplitude( ...
+                        distance, ...
+                        amplitudeExponent);
+
+                    propagationPhase = single(omega .* travelTimeS);
+
+                    contributionByDirection(:, directionIndex) = ...
+                        weights(directionIndex) .* ...
+                        exp(1i .* propagationPhase) .* ...
+                        single(geometricAmplitude);
+                end
+
+                fieldXZ(:) = sum(contributionByDirection, 2);
         end
 
     case "plane_wave"
@@ -175,13 +249,14 @@ wavefield = struct();
 wavefield.U_zx = fieldZX;
 wavefield.component = cfg.wavefield.observed_component;
 wavefield.frequency_hz = cfg.wavefield.frequency_hz;
+wavefield.phase_model = cfg.propagation.phase_model;
 wavefield.is_complex = true;
 wavefield.output_convention = "U(z,x)";
 
-wavefield.polarization_z = double(polarizationZ);
-wavefield.weights = double(weights);
-wavefield.phase_rad = double(phase);
-wavefield.amplitude = double(amplitude);
+wavefield.polarization_z = double(polarizationZ(:));
+wavefield.weights = double(weights(:));
+wavefield.phase_rad = double(phase(:));
+wavefield.amplitude = double(amplitude(:));
 
 if cfg.propagation.model == "spherical_wave"
     wavefield.sources = struct( ...
@@ -195,6 +270,18 @@ else
         "y_m", [], ...
         "z_m", [], ...
         "radius_m", []);
+end
+
+end
+
+function geometricAmplitude = computeGeometricAmplitude( ...
+    distance, exponent)
+
+if exponent ~= 0
+    geometricAmplitude = ...
+        1 ./ max(distance, 1e-6).^exponent;
+else
+    geometricAmplitude = ones(size(distance), "like", distance);
 end
 
 end

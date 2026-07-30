@@ -15,7 +15,7 @@ arguments
     campaign_file {mustBeTextScalar}
     options.Resume (1,1) logical = true
     options.ContinueOnError (1,1) logical = true
-    options.Runner (1,1) function_handle = @kwsim.cli.runConfig
+    options.Runner = []
 end
 
 [runs, validation] = ...
@@ -31,6 +31,17 @@ end
     kwsim.campaigns.expandCampaign(campaign_file);
 
 campaign_directory = resolveCampaignDirectory(expansion);
+
+runner = options.Runner;
+
+if isempty(runner)
+    runner = resolveBackendRunner( ...
+        expansion.campaign.backend);
+elseif ~isa(runner, "function_handle")
+    error( ...
+        "kwsim:InvalidCampaignRunner", ...
+        "Runner must be a function handle.");
+end
 
 empty_record = struct();
 empty_record.ordinal = 0;
@@ -117,7 +128,7 @@ kwsim.campaigns.writeCampaignRunsCsv(report, runs);
         @() deleteIfPresent(config_file));
 
     try
-        outcome = options.Runner(config_file);
+        outcome = runner(config_file);
 
         records(index).status = "completed";
         records(index).outcome_status = ...
@@ -176,6 +187,25 @@ config.output.directory = string(campaign_directory);
 config.output.run_name = string(run_id);
 config.output.append_timestamp = false;
 config.output.overwrite = false;
+
+end
+
+
+function runner = resolveBackendRunner(backend)
+
+switch lower(string(backend))
+    case "kwsim"
+        runner = @kwsim.cli.runConfig;
+
+    case "swsynth"
+        runner = @swsynth.cli.runConfig;
+
+    otherwise
+        error( ...
+            "kwsim:UnsupportedCampaignBackend", ...
+            "Unsupported campaign backend: %s", ...
+            backend);
+end
 
 end
 

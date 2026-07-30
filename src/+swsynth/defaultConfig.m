@@ -32,16 +32,39 @@ cfg.wavefield.observed_component = "axial";
 
 cfg.propagation = struct();
 cfg.propagation.model = "spherical_wave";
+cfg.propagation.phase_model = "local_k_distance";
+
+% Behavior for projected3d_eikonal directions that become evanescent in
+% part of the heterogeneous medium:
+%   "error"  : reject the complete run
+%   "filter" : remove those directional components deterministically
+cfg.propagation.nonpropagating_policy = "error";
+
+cfg.propagation.phase_tolerance_rad = 0.03;
+cfg.propagation.maximum_refinement_depth = 10;
 
 cfg.directions = struct();
 cfg.directions.count = 30;
 cfg.directions.space = "three_dimensional";
 cfg.directions.sampling_method = "random";
+
+% Optional N-by-3 propagation directions used when
+% directions.sampling_method = "explicit".
+cfg.directions.explicit_xyz = zeros(0,3);
+
+% Legacy compatibility flag. New configurations should use
+% directions.in_plane_count.
 cfg.directions.require_in_plane = false;
+cfg.directions.in_plane_count = 0;
 
 cfg.directions.support = struct();
 cfg.directions.support.type = "full_sphere";
 cfg.directions.support.axis_xyz = [-1, 0, 0];
+
+% Used by support.type = "solid_angle_cap".
+% 4*pi is a full sphere and 2*pi is a hemisphere.
+cfg.directions.support.solid_angle_sr = 4*pi;
+
 cfg.directions.support.half_angle_deg = 180;
 cfg.directions.support.band_half_width_deg = 90;
 cfg.directions.support.phi_range_rad = [0, 2*pi];

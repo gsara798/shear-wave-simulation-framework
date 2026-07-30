@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.1",
+  "backend": "swsynth",
+  "campaign_name": "reqml_projected3d_bilayer_clean_training_v1",
+  "base_config": "configs/swsynth/scientific/reqml_projected3d_clean_training_v1/bilayer_base.json",
+  "output": {
+    "directory": "outputs/campaigns/scientific/reqml_projected3d_clean_training_v1"
+  },
+  "sweep": [
+    {
+      "path": "medium.background_cs_m_s",
+      "values": [1.0, 4.0]
+    },
+    {
+      "path": "medium.objects[1].cs_m_s",
+      "values": [2.0, 3.0]
+    },
+    {
+      "path": "wavefield.frequency_hz",
+      "values": [200, 400, 600]
+    },
+    {
+      "path": "directions.count",
+      "values": [1, 8, 128]
+    },
+    {
+      "path": "domain.dx_m",
+      "values": [0.00025, 0.0004]
+    },
+    {
+      "path": "domain.dz_m",
+      "values": [0.00025, 0.0004]
+    },
+    {
+      "path": "medium.objects[1].normal_angle_rad",
+      "values": [0.0, 0.7853981633974483]
+    },
+    {
+      "path": "seed",
+      "values": [4201, 4202]
+    }
+  ]
+}
