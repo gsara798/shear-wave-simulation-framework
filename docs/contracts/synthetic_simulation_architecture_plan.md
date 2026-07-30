@@ -125,7 +125,7 @@ adaptive_req
 Examples:
 
 ```matlab
-kwsim.campaigns.runCampaign(...)
+simcampaigns.runCampaign(...)
 cfg = swsynth.defaultConfig();
 result = swsynth.run(cfg);
 features = reqml.features.extract_radial_features(...);

@@ -173,7 +173,11 @@ Expand a campaign without executing simulations:
 ```matlab
 addpath("src");
 
-[runs, expansion] = kwsim.campaigns.expandCampaign( ...
+> **Campaign API:** New code should use the backend-neutral
+> `simcampaigns` package. The older `kwsim.campaigns` namespace is
+> retained temporarily for compatibility with existing k-Wave workflows.
+
+[runs, expansion] = simcampaigns.expandCampaign( ...
     "configs/campaigns/homogeneous_partial_3d_n8_p2_smoke.json");
 
 disp(expansion.run_count);
@@ -184,7 +188,7 @@ Validate every expanded configuration through the normal configured dry-run
 path:
 
 ```matlab
-[~, validation] = kwsim.campaigns.validateCampaign( ...
+[~, validation] = simcampaigns.validateCampaign( ...
     "configs/campaigns/homogeneous_partial_3d_n8_p2_smoke.json");
 
 disp(validation.summary);
@@ -198,7 +202,7 @@ outputs are created.
 Execute or resume a campaign:
 
 ```matlab
-report = kwsim.campaigns.runCampaign( ...
+report = simcampaigns.runCampaign( ...
     "configs/campaigns/homogeneous_partial_3d_n8_p2_smoke.json", ...
     Resume=true, ...
     ContinueOnError=true);

@@ -639,7 +639,7 @@ Dry-run does not:
 addpath("src");
 
 [runs, expansion] = ...
-    kwsim.campaigns.expandCampaign( ...
+    simcampaigns.expandCampaign( ...
         "configs/campaigns/example.json");
 ```
 
@@ -663,7 +663,7 @@ runs(1).config
 addpath("src");
 
 [runs, report] = ...
-    kwsim.campaigns.validateCampaign( ...
+    simcampaigns.validateCampaign( ...
         "configs/campaigns/example.json");
 
 disp(report.summary);
@@ -689,7 +689,7 @@ Validation creates no simulation outputs.
 ```matlab
 addpath("src");
 
-report = kwsim.campaigns.runCampaign( ...
+report = simcampaigns.runCampaign( ...
     "configs/campaigns/example.json", ...
     Resume=true, ...
     ContinueOnError=true);
@@ -1321,7 +1321,7 @@ Start with two values for one parameter.
 
 ```matlab
 [runs, expansion] = ...
-    kwsim.campaigns.expandCampaign(campaign_file);
+    simcampaigns.expandCampaign(campaign_file);
 
 disp(expansion.run_count);
 disp(string({runs.run_id})');
@@ -1331,7 +1331,7 @@ disp(string({runs.run_id})');
 
 ```matlab
 [~, validation] = ...
-    kwsim.campaigns.validateCampaign(campaign_file);
+    simcampaigns.validateCampaign(campaign_file);
 
 assert(validation.valid);
 ```
@@ -1339,7 +1339,7 @@ assert(validation.valid);
 ## Step 5: execute the smoke campaign
 
 ```matlab
-report = kwsim.campaigns.runCampaign( ...
+report = simcampaigns.runCampaign( ...
     campaign_file, ...
     Resume=true, ...
     ContinueOnError=false);
@@ -1688,20 +1688,20 @@ Run the campaign suite before committing.
 
 ```matlab
 [runs, expansion] = ...
-    kwsim.campaigns.expandCampaign(campaign_file);
+    simcampaigns.expandCampaign(campaign_file);
 ```
 
 ## Validate
 
 ```matlab
 [~, validation] = ...
-    kwsim.campaigns.validateCampaign(campaign_file);
+    simcampaigns.validateCampaign(campaign_file);
 ```
 
 ## Execute
 
 ```matlab
-report = kwsim.campaigns.runCampaign( ...
+report = simcampaigns.runCampaign( ...
     campaign_file, ...
     Resume=true, ...
     ContinueOnError=true);
