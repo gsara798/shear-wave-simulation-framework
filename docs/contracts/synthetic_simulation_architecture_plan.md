@@ -427,7 +427,7 @@ Create:
 src/+swsynth/
 tests/unit/
 docs/contracts/
-docs/user_guide/
+docs/kwsim/
 examples/synthetic/
 configs/synthetic/
 ```

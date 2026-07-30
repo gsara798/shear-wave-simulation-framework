@@ -32,22 +32,22 @@ are not used by the current configured workflow.
 
 The complete user guide is available at:
 
-[docs/user_guide/README.md](docs/user_guide/README.md)
+[docs/kwsim/README.md](docs/kwsim/README.md)
 
 Recommended starting points:
 
-- [Quick Start](docs/user_guide/quickstart.md)
-- [Configuration Guide](docs/user_guide/configuration_guide.md)
-- [Terminology](docs/user_guide/terminology.md)
-- [Simulation Parameters](docs/user_guide/simulation_parameters.md)
-- [Outputs and Validation](docs/user_guide/outputs_and_validation.md)
+- [Quick Start](docs/kwsim/quickstart.md)
+- [Configuration Guide](docs/kwsim/configuration_guide.md)
+- [Terminology](docs/kwsim/terminology.md)
+- [Simulation Parameters](docs/kwsim/simulation_parameters.md)
+- [Outputs and Validation](docs/kwsim/outputs_and_validation.md)
 
 Physics documentation:
 
-- [Finite-Contact Sources](docs/user_guide/physics/finite_contact_sources.md)
-- [Multiface and Angular Sources](docs/user_guide/physics/multiface_and_angular_sources.md)
-- [Heterogeneous Materials](docs/user_guide/physics/heterogeneous_materials.md)
-- [Harmonic Analysis and P/S Separation](docs/user_guide/physics/harmonic_analysis_and_ps_separation.md)
+- [Finite-Contact Sources](docs/kwsim/physics/finite_contact_sources.md)
+- [Multiface and Angular Sources](docs/kwsim/physics/multiface_and_angular_sources.md)
+- [Heterogeneous Materials](docs/kwsim/physics/heterogeneous_materials.md)
+- [Harmonic Analysis and P/S Separation](docs/kwsim/physics/harmonic_analysis_and_ps_separation.md)
 
 ## Command-line quick start
 
@@ -288,7 +288,7 @@ For the complete campaign contract, indexed-path rules, material behavior,
 state model, resume logic, failure recovery, output artifacts, examples, and
 Adaptive REQ workflow, see:
 
-[Reproducible Simulation Campaigns](docs/user_guide/campaigns.md)
+[Reproducible Simulation Campaigns](docs/kwsim/campaigns.md)
 
 ## MATLAB interface
 
@@ -437,7 +437,7 @@ They do not guarantee an ideal isotropic diffuse field.
 
 See:
 
-[Multiface and Angular Sources](docs/user_guide/physics/multiface_and_angular_sources.md)
+[Multiface and Angular Sources](docs/kwsim/physics/multiface_and_angular_sources.md)
 
 ## Coordinate and field contract
 
@@ -494,7 +494,7 @@ model of actuator mass, force, coupling, contact pressure, or electromechanics.
 
 See:
 
-[Finite-Contact Sources](docs/user_guide/physics/finite_contact_sources.md)
+[Finite-Contact Sources](docs/kwsim/physics/finite_contact_sources.md)
 
 ## Reduced compressional speed
 
@@ -546,7 +546,7 @@ time-domain simulation
 
 See:
 
-[Harmonic Analysis and P/S Separation](docs/user_guide/physics/harmonic_analysis_and_ps_separation.md)
+[Harmonic Analysis and P/S Separation](docs/kwsim/physics/harmonic_analysis_and_ps_separation.md)
 
 ## Reliability and validation
 
@@ -581,7 +581,7 @@ truth maps
 
 See:
 
-[Outputs and Validation](docs/user_guide/outputs_and_validation.md)
+[Outputs and Validation](docs/kwsim/outputs_and_validation.md)
 
 ## Output structure
 
@@ -646,7 +646,7 @@ composition supports those claims.
 
 See:
 
-[Heterogeneous Materials](docs/user_guide/physics/heterogeneous_materials.md)
+[Heterogeneous Materials](docs/kwsim/physics/heterogeneous_materials.md)
 
 ## Tests
 
