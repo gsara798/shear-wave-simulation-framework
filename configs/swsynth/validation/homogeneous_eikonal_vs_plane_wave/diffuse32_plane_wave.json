@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0",
+  "scenario": "homogeneous_diffuse32_plane_wave_validation",
+  "seed": 8123,
+  "domain": {
+    "Lx_m": 0.05,
+    "Lz_m": 0.05,
+    "dx_m": 0.00025,
+    "dz_m": 0.00025,
+    "observation_y_m": 0.0
+  },
+  "medium": {
+    "background_cs_m_s": 3.0,
+    "combine_mode": "overlay",
+    "objects": []
+  },
+  "wavefield": {
+    "frequency_hz": 250,
+    "observed_component": "axial"
+  },
+  "propagation": {
+    "model": "plane_wave",
+    "phase_model": "local_k_distance",
+    "nonpropagating_policy": "filter",
+    "phase_tolerance_rad": 0.03,
+    "maximum_refinement_depth": 10
+  },
+  "directions": {
+    "count": 32,
+    "space": "three_dimensional",
+    "sampling_method": "fibonacci",
+    "require_in_plane": false,
+    "in_plane_count": 4,
+    "support": {
+      "type": "solid_angle_cap",
+      "axis_xyz": [
+        1,
+        0,
+        0
+      ],
+      "solid_angle_sr": 12.566370614359172,
+      "half_angle_deg": 180,
+      "band_half_width_deg": 90,
+      "phi_range_rad": [
+        0,
+        6.283185307179586
+      ],
+      "theta_range_rad": [
+        0,
+        3.141592653589793
+      ],
+      "angle_range_2d_rad": [
+        0,
+        6.283185307179586
+      ]
+    }
+  },
+  "sources": {
+    "radius_range_m": [],
+    "phase_policy": "random_uniform",
+    "amplitude_jitter_fraction": 0.0
+  },
+  "polarization": {
+    "model": "transverse_random"
+  },
+  "amplitude": {
+    "geometric_decay_exponent": 0.0
+  },
+  "noise": {
+    "snr_db": 1000
+  },
+  "execution": {
+    "use_parallel": false
+  }
+}

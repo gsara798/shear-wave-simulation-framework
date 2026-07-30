@@ -33,6 +33,13 @@ cfg.wavefield.observed_component = "axial";
 cfg.propagation = struct();
 cfg.propagation.model = "spherical_wave";
 cfg.propagation.phase_model = "local_k_distance";
+
+% Behavior for projected3d_eikonal directions that become evanescent in
+% part of the heterogeneous medium:
+%   "error"  : reject the complete run
+%   "filter" : remove those directional components deterministically
+cfg.propagation.nonpropagating_policy = "error";
+
 cfg.propagation.phase_tolerance_rad = 0.03;
 cfg.propagation.maximum_refinement_depth = 10;
 

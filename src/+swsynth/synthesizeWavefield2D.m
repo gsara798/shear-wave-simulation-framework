@@ -72,14 +72,45 @@ xSource = sourceRadius .* ux + single(cfg.domain.Lx_m/2);
 ySource = sourceRadius .* uy + single(cfg.domain.observation_y_m);
 zSource = sourceRadius .* uz + single(cfg.domain.Lz_m/2);
 
-polarizationZ = computePolarizationZ(ux, uy, uz, cfg);
+if cfg.propagation.model == "plane_wave"
+    directionsXYZ = double([
+        ux(:), ...
+        uy(:), ...
+        uz(:)]);
 
-amplitudeJitter = single(cfg.sources.amplitude_jitter_fraction);
-amplitude = single(1 + amplitudeJitter * randn(1, N, "single"));
-phase = 2*pi * rand(1, N, "single");
+    excitation = ...
+        swsynth.generateDirectionalExcitation( ...
+            cfg, ...
+            directionsXYZ);
 
-weights = ...
-    (amplitude .* polarizationZ .* exp(1i * phase)) / sqrt(N);
+    polarizationZ = ...
+        single(excitation.polarization_z(:));
+
+    amplitude = ...
+        single(excitation.amplitude(:));
+
+    phase = ...
+        single(excitation.phase_rad(:));
+
+    weights = ...
+        single(excitation.weights(:));
+else
+    polarizationZ = computePolarizationZ(ux, uy, uz, cfg);
+
+    amplitudeJitter = ...
+        single(cfg.sources.amplitude_jitter_fraction);
+
+    amplitude = ...
+        single(1 + ...
+        amplitudeJitter * randn(1, N, "single"));
+
+    phase = ...
+        2*pi * rand(1, N, "single");
+
+    weights = ...
+        (amplitude .* polarizationZ .* ...
+         exp(1i * phase)) / sqrt(N);
+end
 
 fieldXZ = complex(zeros(Nx, Nz, "single"));
 observationY = single(cfg.domain.observation_y_m);
@@ -222,10 +253,10 @@ wavefield.phase_model = cfg.propagation.phase_model;
 wavefield.is_complex = true;
 wavefield.output_convention = "U(z,x)";
 
-wavefield.polarization_z = double(polarizationZ);
-wavefield.weights = double(weights);
-wavefield.phase_rad = double(phase);
-wavefield.amplitude = double(amplitude);
+wavefield.polarization_z = double(polarizationZ(:));
+wavefield.weights = double(weights(:));
+wavefield.phase_rad = double(phase(:));
+wavefield.amplitude = double(amplitude(:));
 
 if cfg.propagation.model == "spherical_wave"
     wavefield.sources = struct( ...

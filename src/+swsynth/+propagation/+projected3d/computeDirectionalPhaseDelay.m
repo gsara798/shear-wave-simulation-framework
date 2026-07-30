@@ -137,6 +137,26 @@ else
     end
 end
 
+% Convert the upstream-boundary reference used internally by the Eikonal
+% solver to a common spatial phase origin at x = 0, z = 0:
+%
+%   tau_global = tau_upstream + px*x_ref + pz*z_ref.
+%
+% This changes only the additive constant of each directional travel-time
+% solution. Gradients, refraction, and propagation paths remain unchanged.
+if boundaryDiagnostics.projected_direction_norm > 1e-12
+    phaseReferenceOffsetS = ...
+        boundaryDiagnostics.px_s_m .* ...
+            boundaryDiagnostics.reference_x_m + ...
+        boundaryDiagnostics.pz_s_m .* ...
+            boundaryDiagnostics.reference_z_m;
+
+    phaseDelayZX = ...
+        phaseDelayZX + phaseReferenceOffsetS;
+else
+    phaseReferenceOffsetS = 0;
+end
+
 diagnostics = struct();
 diagnostics.model = "projected3d_directional_eikonal";
 diagnostics.reference_cs_m_s = referenceCsMps;
@@ -144,6 +164,9 @@ diagnostics.grid_spacing_x_m = dxM;
 diagnostics.grid_spacing_z_m = dzM;
 diagnostics.slowness = slownessDiagnostics;
 diagnostics.boundary = boundaryDiagnostics;
+diagnostics.phase_reference = "global_origin_x0_z0";
+diagnostics.phase_reference_offset_s = ...
+    phaseReferenceOffsetS;
 diagnostics.solver = solverDiagnostics;
 
 end
