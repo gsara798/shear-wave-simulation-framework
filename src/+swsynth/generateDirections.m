@@ -29,7 +29,14 @@ support = cfg.directions.support;
 
 solidAngleDiagnostics = struct();
 
-if space == "two_dimensional"
+if method == "explicit"
+    directionsXYZ = double(cfg.directions.explicit_xyz);
+
+    ux = directionsXYZ(:,1).';
+    uy = directionsXYZ(:,2).';
+    uz = directionsXYZ(:,3).';
+
+elseif space == "two_dimensional"
     [ux, uy, uz] = generate2D(N, method, support);
 
 elseif support.type == "solid_angle_cap"

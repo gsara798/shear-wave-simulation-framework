@@ -48,6 +48,10 @@ cfg.directions.count = 30;
 cfg.directions.space = "three_dimensional";
 cfg.directions.sampling_method = "random";
 
+% Optional N-by-3 propagation directions used when
+% directions.sampling_method = "explicit".
+cfg.directions.explicit_xyz = zeros(0,3);
+
 % Legacy compatibility flag. New configurations should use
 % directions.in_plane_count.
 cfg.directions.require_in_plane = false;
