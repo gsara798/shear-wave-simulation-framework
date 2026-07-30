@@ -171,3 +171,88 @@ verifyEqual(testCase, ...
     2.5);
 
 end
+
+function testExpandsStructuredRowSweepValues(testCase)
+
+base_config = struct();
+base_config.scenario = "structured_row_sweep";
+base_config.seed = 1001;
+base_config.medium = struct( ...
+    "background_cs_m_s", 2.0, ...
+    "objects", {{}});
+base_config.wavefield = struct("frequency_hz", 400);
+base_config.directions = struct( ...
+    "sampling_method", "explicit", ...
+    "count", 1, ...
+    "explicit_xyz", [1, 0, 0]);
+base_config.propagation = struct("model", "plane_wave");
+
+base_file = string(tempname) + ".json";
+campaign_file = string(tempname) + ".json";
+
+cleanup = onCleanup(@() cleanupFiles( ...
+    [base_file, campaign_file]));
+
+writeJson(base_file, base_config);
+
+campaign = struct();
+campaign.schema_version = "1.1";
+campaign.backend = "swsynth";
+campaign.campaign_name = "structured_row_sweep_test";
+campaign.base_config = base_file;
+campaign.sweep = struct( ...
+    "path", "directions.explicit_xyz", ...
+    "values", [ ...
+        1, 0, 0; ...
+        0, 0, 1; ...
+        2^(-0.5), 0, 2^(-0.5)]);
+
+writeJson(campaign_file, campaign);
+
+[runs, expansion] = ...
+    simcampaigns.expandCampaign(campaign_file);
+
+verifyEqual(testCase, expansion.run_count, 3);
+
+actual = vertcat(runs.config);
+actual = vertcat(actual.directions);
+actual = vertcat(actual.explicit_xyz);
+
+expected = [ ...
+    1, 0, 0; ...
+    0, 0, 1; ...
+    2^(-0.5), 0, 2^(-0.5)];
+
+verifyEqual(testCase, actual, expected, AbsTol=1e-14);
+
+clear cleanup
+
+end
+
+function writeJson(path_value, value)
+
+file_id = fopen(path_value, "w");
+
+if file_id < 0
+    error("test:FileWriteFailed", ...
+        "Could not create temporary JSON file.");
+end
+
+cleanup = onCleanup(@() fclose(file_id));
+
+fprintf(file_id, "%s", ...
+    jsonencode(value, PrettyPrint=true));
+
+clear cleanup
+
+end
+
+function cleanupFiles(paths)
+
+for path_value = string(paths)
+    if isfile(path_value)
+        delete(path_value);
+    end
+end
+
+end

@@ -153,7 +153,14 @@ for index = 1:parameter_count
     validateSweepPath(base_config, path_value);
 
     paths(index) = path_value;
-    value_counts(index) = countValues(parameter.values);
+
+    base_value = simcampaigns.getPathValue( ...
+        base_config, ...
+        path_value);
+
+    value_counts(index) = countValues( ...
+        parameter.values, ...
+        base_value);
 
     if value_counts(index) == 0
         error("simcampaigns:EmptyCampaignSweepValues", ...
@@ -260,13 +267,33 @@ simcampaigns.getPathValue( ...
 end
 
 
-function count = countValues(values)
+function count = countValues(values, base_value)
 
 if ischar(values)
     count = double(~isempty(values));
-else
-    count = numel(values);
+    return
 end
+
+if isscalar(base_value)
+    count = numel(values);
+    return
+end
+
+if isrow(base_value) && ...
+        ismatrix(values) && ...
+        size(values, 2) == size(base_value, 2)
+
+    count = size(values, 1);
+    return
+end
+
+if iscell(values)
+    count = numel(values);
+    return
+end
+
+error("simcampaigns:InvalidCampaignSweepValues", ...
+    "Could not determine the number of structured sweep values.");
 
 end
 

@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "campaign_name": "reqml_projected3d_clean_training_v1_homogeneous_n004",
   "backend": "swsynth",
   "base_config": "configs/swsynth/scientific/reqml_projected3d_clean_training_v1/homogeneous_n004_base.json",
