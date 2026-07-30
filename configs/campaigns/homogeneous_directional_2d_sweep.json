@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "campaign_name": "homogeneous_directional_2d_sweep",
-  "base_config": "configs/two_d/homogeneous_directional_cli.json",
+  "base_config": "configs/kwsim/two_d/homogeneous_directional_cli.json",
   "output": {
     "directory": "outputs/campaigns"
   },

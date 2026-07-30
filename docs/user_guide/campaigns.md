@@ -101,7 +101,7 @@ Minimal example:
 {
   "schema_version": "1.0",
   "campaign_name": "homogeneous_directional_2d_sweep",
-  "base_config": "configs/two_d/homogeneous_directional_cli.json",
+  "base_config": "configs/kwsim/two_d/homogeneous_directional_cli.json",
   "output": {
     "directory": "outputs/campaigns"
   },
@@ -179,7 +179,7 @@ outputs/campaigns/homogeneous_directional_2d_sweep/
 ## 1.3 `base_config`
 
 ```json
-"base_config": "configs/three_d/homogeneous_partial_3d_n8_p2_req_validation.json"
+"base_config": "configs/kwsim/three_d/homogeneous_partial_3d_n8_p2_req_validation.json"
 ```
 
 The base configuration must be an existing single-run JSON accepted by:
@@ -1157,7 +1157,7 @@ Campaign:
 {
   "schema_version": "1.0",
   "campaign_name": "homogeneous_partial_3d_n8_p2_smoke",
-  "base_config": "configs/three_d/homogeneous_partial_3d_n8_p2_req_validation.json",
+  "base_config": "configs/kwsim/three_d/homogeneous_partial_3d_n8_p2_req_validation.json",
   "output": {
     "directory": "outputs/campaigns"
   },
@@ -1189,7 +1189,7 @@ req_ready = 1 when the saved validation reports readiness
 {
   "schema_version": "1.0",
   "campaign_name": "homogeneous_generated_angular_n32_p8_smoke",
-  "base_config": "configs/three_d/homogeneous_generated_angular_n32_p8_req_validation.json",
+  "base_config": "configs/kwsim/three_d/homogeneous_generated_angular_n32_p8_req_validation.json",
   "output": {
     "directory": "outputs/campaigns"
   },
@@ -1221,7 +1221,7 @@ These describe the configured source geometry, not a universal measured-field di
 Base configuration:
 
 ```text
-configs/three_d/heterogeneous_large_sphere_n32_p8_req_validation.json
+configs/kwsim/three_d/heterogeneous_large_sphere_n32_p8_req_validation.json
 ```
 
 Campaign:
@@ -1230,7 +1230,7 @@ Campaign:
 {
   "schema_version": "1.0",
   "campaign_name": "heterogeneous_large_sphere_n32_p8_smoke",
-  "base_config": "configs/three_d/heterogeneous_large_sphere_n32_p8_req_validation.json",
+  "base_config": "configs/kwsim/three_d/heterogeneous_large_sphere_n32_p8_req_validation.json",
   "output": {
     "directory": "outputs/campaigns"
   },
@@ -1268,7 +1268,7 @@ A future controlled homogeneous campaign may use:
 {
   "schema_version": "1.0",
   "campaign_name": "adaptive_req_partial_3d_grid",
-  "base_config": "configs/three_d/homogeneous_partial_3d_n8_p2_req_validation.json",
+  "base_config": "configs/kwsim/three_d/homogeneous_partial_3d_n8_p2_req_validation.json",
   "output": {
     "directory": "outputs/campaigns"
   },

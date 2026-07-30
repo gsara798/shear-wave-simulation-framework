@@ -12,7 +12,7 @@ source, material, geometry, validation, or single-run output logic.
 {
   "schema_version": "1.0",
   "campaign_name": "example_campaign",
-  "base_config": "configs/two_d/example.json",
+  "base_config": "configs/kwsim/two_d/example.json",
   "sweep": [
     {
       "path": "medium.cs_m_s",

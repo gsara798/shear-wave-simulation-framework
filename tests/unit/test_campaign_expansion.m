@@ -23,7 +23,7 @@ testCase.TestData.campaign_file = fullfile( ...
     "homogeneous_directional_2d_sweep.json");
 
 testCase.TestData.base_config = ...
-    "configs/two_d/homogeneous_directional_cli.json";
+    "configs/kwsim/two_d/homogeneous_directional_cli.json";
 
 end
 

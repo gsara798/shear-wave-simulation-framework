@@ -63,7 +63,7 @@ Validate a configuration without running k-Wave:
 
 ```bash
 ./scripts/kwsim-run \
-  configs/two_d/homogeneous_directional_cli.json \
+  configs/kwsim/two_d/homogeneous_directional_cli.json \
   --dry-run
 ```
 
@@ -71,7 +71,7 @@ Execute the verified 2D configured reference:
 
 ```bash
 ./scripts/kwsim-run \
-  configs/two_d/homogeneous_directional_cli.json
+  configs/kwsim/two_d/homogeneous_directional_cli.json
 ```
 
 The verified reference completed successfully and produced:
@@ -94,7 +94,7 @@ in approximately 23 seconds on the development computer.
 
 ```bash
 ./scripts/kwsim-run \
-  configs/three_d/homogeneous_directional_req_validation.json \
+  configs/kwsim/three_d/homogeneous_directional_req_validation.json \
   --dry-run
 ```
 
@@ -102,7 +102,7 @@ in approximately 23 seconds on the development computer.
 
 ```bash
 ./scripts/kwsim-run \
-  configs/three_d/heterogeneous_sphere_3d.json \
+  configs/kwsim/three_d/heterogeneous_sphere_3d.json \
   --dry-run
 ```
 
@@ -110,7 +110,7 @@ in approximately 23 seconds on the development computer.
 
 ```bash
 ./scripts/kwsim-run \
-  configs/three_d/homogeneous_generated_angular_n32_p8_req_validation.json \
+  configs/kwsim/three_d/homogeneous_generated_angular_n32_p8_req_validation.json \
   --dry-run
 ```
 

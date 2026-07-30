@@ -92,7 +92,7 @@ A sphere is defined by center, radius, material properties, and material ID.
 Representative configuration:
 
 ```text
-configs/three_d/heterogeneous_sphere_3d.json
+configs/kwsim/three_d/heterogeneous_sphere_3d.json
 ```
 
 Typical object:
@@ -122,7 +122,7 @@ A finite cylinder is defined by center, axis, radius, length, material propertie
 Representative configuration:
 
 ```text
-configs/three_d/heterogeneous_cylinder_3d.json
+configs/kwsim/three_d/heterogeneous_cylinder_3d.json
 ```
 
 Typical object:
@@ -150,7 +150,7 @@ A bilayer divides the domain with a plane.
 Representative configuration:
 
 ```text
-configs/three_d/heterogeneous_bilayer_3d.json
+configs/kwsim/three_d/heterogeneous_bilayer_3d.json
 ```
 
 The plane is defined by:
@@ -191,7 +191,7 @@ spheres
 Representative configuration:
 
 ```text
-configs/three_d/heterogeneous_combined_3d.json
+configs/kwsim/three_d/heterogeneous_combined_3d.json
 ```
 
 Combined cases are useful for testing overlap, precedence, arbitrary orientation, material-map consistency, and complex wavefields.

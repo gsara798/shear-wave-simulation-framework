@@ -92,7 +92,7 @@ A simulation launched from a JSON configuration through the CLI.
 Example:
 
 ```bash
-./scripts/kwsim-run   configs/three_d/homogeneous_directional_req_validation.json
+./scripts/kwsim-run   configs/kwsim/three_d/homogeneous_directional_req_validation.json
 ```
 
 A configured run differs from calling low-level MATLAB functions manually

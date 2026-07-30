@@ -56,7 +56,7 @@ For the smallest configured 2D example:
 
 ```bash
 ./scripts/kwsim-run \
-  configs/two_d/homogeneous_directional_cli.json \
+  configs/kwsim/two_d/homogeneous_directional_cli.json \
   --dry-run
 ```
 
@@ -75,7 +75,7 @@ Run the same configuration without `--dry-run`:
 
 ```bash
 ./scripts/kwsim-run \
-  configs/two_d/homogeneous_directional_cli.json
+  configs/kwsim/two_d/homogeneous_directional_cli.json
 ```
 
 The CLI will:
@@ -195,7 +195,7 @@ The following configurations have been verified through the CLI dry-run path.
 
 ```bash
 ./scripts/kwsim-run \
-  configs/three_d/homogeneous_directional_req_validation.json \
+  configs/kwsim/three_d/homogeneous_directional_req_validation.json \
   --dry-run
 ```
 
@@ -203,7 +203,7 @@ The following configurations have been verified through the CLI dry-run path.
 
 ```bash
 ./scripts/kwsim-run \
-  configs/three_d/heterogeneous_sphere_3d.json \
+  configs/kwsim/three_d/heterogeneous_sphere_3d.json \
   --dry-run
 ```
 
@@ -211,7 +211,7 @@ The following configurations have been verified through the CLI dry-run path.
 
 ```bash
 ./scripts/kwsim-run \
-  configs/three_d/homogeneous_generated_angular_n32_p8_req_validation.json \
+  configs/kwsim/three_d/homogeneous_generated_angular_n32_p8_req_validation.json \
   --dry-run
 ```
 
@@ -228,7 +228,7 @@ Example:
 export MATLAB_BIN="/path/to/MATLAB/bin/matlab"
 
 ./scripts/kwsim-run \
-  configs/two_d/homogeneous_directional_cli.json \
+  configs/kwsim/two_d/homogeneous_directional_cli.json \
   --dry-run
 ```
 

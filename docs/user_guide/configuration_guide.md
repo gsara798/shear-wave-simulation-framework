@@ -18,22 +18,22 @@ Do not begin with an empty JSON file. Copy the closest verified example and modi
 ### Available 2D configured case
 
 ```text
-configs/two_d/homogeneous_directional_cli.json
+configs/kwsim/two_d/homogeneous_directional_cli.json
 ```
 
 ### Representative 3D configured cases
 
 ```text
-configs/three_d/homogeneous_directional_req_validation.json
-configs/three_d/heterogeneous_sphere_3d.json
-configs/three_d/homogeneous_generated_angular_n32_p8_req_validation.json
-configs/three_d/heterogeneous_combined_generated_angular_n32_p8.json
+configs/kwsim/three_d/homogeneous_directional_req_validation.json
+configs/kwsim/three_d/heterogeneous_sphere_3d.json
+configs/kwsim/three_d/homogeneous_generated_angular_n32_p8_req_validation.json
+configs/kwsim/three_d/heterogeneous_combined_generated_angular_n32_p8.json
 ```
 
 Example:
 
 ```bash
-cp   configs/three_d/homogeneous_directional_req_validation.json   configs/three_d/my_simulation.json
+cp   configs/kwsim/three_d/homogeneous_directional_req_validation.json   configs/kwsim/three_d/my_simulation.json
 ```
 
 Change the copied file, not the reference configuration.
@@ -43,7 +43,7 @@ Change the copied file, not the reference configuration.
 Before executing k-Wave:
 
 ```bash
-./scripts/kwsim-run   configs/three_d/my_simulation.json   --dry-run
+./scripts/kwsim-run   configs/kwsim/three_d/my_simulation.json   --dry-run
 ```
 
 A successful dry run ends with:
@@ -315,9 +315,9 @@ For multi-source cases, start from a verified bank configuration rather than man
 Examples:
 
 ```text
-configs/three_d/homogeneous_partial_3d_n8_p2_req_validation.json
-configs/three_d/homogeneous_generated_angular_n32_p8_req_validation.json
-configs/three_d/homogeneous_generated_angular_n128_p8_req_validation.json
+configs/kwsim/three_d/homogeneous_partial_3d_n8_p2_req_validation.json
+configs/kwsim/three_d/homogeneous_generated_angular_n32_p8_req_validation.json
+configs/kwsim/three_d/homogeneous_generated_angular_n128_p8_req_validation.json
 ```
 
 ## 13. Geometry
@@ -333,10 +333,10 @@ The 3D framework supports:
 Start from the closest verified example:
 
 ```text
-configs/three_d/heterogeneous_sphere_3d.json
-configs/three_d/heterogeneous_cylinder_3d.json
-configs/three_d/heterogeneous_bilayer_3d.json
-configs/three_d/heterogeneous_combined_3d.json
+configs/kwsim/three_d/heterogeneous_sphere_3d.json
+configs/kwsim/three_d/heterogeneous_cylinder_3d.json
+configs/kwsim/three_d/heterogeneous_bilayer_3d.json
+configs/kwsim/three_d/heterogeneous_combined_3d.json
 ```
 
 Geometry values use meters and SI material units.
@@ -383,7 +383,7 @@ The following workflow was dry-run verified in both 2D and 3D:
 Example:
 
 ```bash
-cp   configs/three_d/homogeneous_directional_req_validation.json   /tmp/kwsim_modified.json
+cp   configs/kwsim/three_d/homogeneous_directional_req_validation.json   /tmp/kwsim_modified.json
 
 python3 - <<'PY'
 import json
