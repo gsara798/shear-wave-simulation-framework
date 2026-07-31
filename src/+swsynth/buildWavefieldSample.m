@@ -76,21 +76,117 @@ sample.medium.objects = result.config.medium.objects;
 sample.propagation = struct();
 sample.propagation.model = result.config.propagation.model;
 sample.propagation.direction_space = result.config.directions.space;
-sample.propagation.direction_count = result.config.directions.count;
+
+sample.propagation.direction_count = ...
+    result.directions.count;
+
+sample.propagation.requested_direction_count = ...
+    result.config.directions.count;
+
 sample.propagation.direction_sampling_method = ...
     result.config.directions.sampling_method;
+
 sample.propagation.angular_support = ...
     result.config.directions.support;
+
 sample.propagation.require_in_plane = ...
     result.config.directions.require_in_plane;
 
+if isfield(result.wavefield, "reference_cs_m_s")
+    sample.propagation.reference_cs_m_s = ...
+        result.wavefield.reference_cs_m_s;
+end
+
+if isfield(result.wavefield, "diagnostics")
+    sample.propagation.diagnostics = ...
+        result.wavefield.diagnostics;
+end
+
+effectiveXYZ = [
+    double(result.directions.ux(:)), ...
+    double(result.directions.uy(:)), ...
+    double(result.directions.uz(:))];
+
 sample.directions = struct();
+sample.directions.xyz = effectiveXYZ;
 sample.directions.ux = result.directions.ux;
 sample.directions.uy = result.directions.uy;
 sample.directions.uz = result.directions.uz;
-sample.directions.plane_intersection = result.direction_metrics;
+
+sample.directions.requested_count = ...
+    result.config.directions.count;
+
+sample.directions.retained_count = ...
+    size(effectiveXYZ,1);
+
+sample.directions.in_plane_count = ...
+    result.direction_metrics.count_in_plane;
+
+if sample.directions.retained_count > 0
+    sample.directions.in_plane_fraction = ...
+        sample.directions.in_plane_count / ...
+        sample.directions.retained_count;
+else
+    sample.directions.in_plane_fraction = NaN;
+end
+
+sample.directions.requested_in_plane_count = ...
+    result.config.directions.in_plane_count;
+
+sample.directions.plane_intersection = ...
+    result.direction_metrics;
+
+sample.requested_directions = struct();
+
+if isfield(result, "requested_directions")
+    requestedXYZ = [
+        double(result.requested_directions.ux(:)), ...
+        double(result.requested_directions.uy(:)), ...
+        double(result.requested_directions.uz(:))];
+
+    sample.requested_directions.xyz = requestedXYZ;
+    sample.requested_directions.count = ...
+        size(requestedXYZ,1);
+else
+    sample.requested_directions.xyz = effectiveXYZ;
+    sample.requested_directions.count = ...
+        size(effectiveXYZ,1);
+end
+
+if isfield(result, "requested_direction_metrics")
+    sample.requested_directions.plane_intersection = ...
+        result.requested_direction_metrics;
+else
+    sample.requested_directions.plane_intersection = ...
+        result.direction_metrics;
+end
+
+sample.excitation = struct();
+
+excitationFields = [
+    "weights"
+    "phase_rad"
+    "amplitude"
+    "polarization_xyz"
+    "polarization_z"];
+
+for fieldIndex = 1:numel(excitationFields)
+    fieldName = excitationFields(fieldIndex);
+
+    if isfield(result.wavefield, fieldName)
+        sample.excitation.(fieldName) = ...
+            result.wavefield.(fieldName);
+    end
+end
 
 sample.sources = result.wavefield.sources;
+
+sample.metrics = struct();
+
+if isfield(result, "spectral_metrics")
+    sample.metrics.global_spectrum = ...
+        result.spectral_metrics;
+end
 
 sample.validation = struct();
 sample.validation.valid = logical(result.validation.valid);
@@ -155,6 +251,16 @@ for i = 1:numel(requiredTruth)
     end
 end
 
+validateDirections( ...
+    result.directions, ...
+    "result.directions");
+
+if isfield(result, "requested_directions")
+    validateDirections( ...
+        result.requested_directions, ...
+        "result.requested_directions");
+end
+
 fieldSize = size(result.wavefield.U_zx);
 
 if ~isequal(size(result.truth.cs_map_zx), fieldSize) || ...
@@ -163,6 +269,48 @@ if ~isequal(size(result.truth.cs_map_zx), fieldSize) || ...
         ~isequal(size(result.truth.valid_mask_zx), fieldSize)
     error("swsynth:WavefieldSampleSizeMismatch", ...
         "Wavefield and truth maps must have identical z-x dimensions.");
+end
+
+end
+
+
+function validateDirections(directions, location)
+
+requiredFields = ["ux", "uy", "uz"];
+
+for fieldIndex = 1:numel(requiredFields)
+    fieldName = requiredFields(fieldIndex);
+
+    if ~isfield(directions, fieldName)
+        error( ...
+            "swsynth:InvalidWavefieldDirections", ...
+            "%s.%s is required.", ...
+            location, ...
+            fieldName);
+    end
+end
+
+ux = double(directions.ux(:));
+uy = double(directions.uy(:));
+uz = double(directions.uz(:));
+
+if isempty(ux) || ...
+        numel(uy) ~= numel(ux) || ...
+        numel(uz) ~= numel(ux) || ...
+        any(~isfinite([ux; uy; uz]))
+    error( ...
+        "swsynth:InvalidWavefieldDirections", ...
+        "%s must contain finite direction vectors of equal length.", ...
+        location);
+end
+
+directionNorms = sqrt(ux.^2 + uy.^2 + uz.^2);
+
+if any(directionNorms <= eps)
+    error( ...
+        "swsynth:InvalidWavefieldDirections", ...
+        "%s contains a zero-magnitude direction.", ...
+        location);
 end
 
 end
