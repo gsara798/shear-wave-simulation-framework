@@ -116,8 +116,50 @@ try
         numel(result.config.medium.objects);
     summary.direction_count = ...
         double(result.config.directions.count);
+
+    summary.retained_direction_count = ...
+        double(result.directions.count);
+
+    summary.requested_in_plane_count = ...
+        double(result.config.directions.in_plane_count);
+
+    summary.retained_in_plane_count = ...
+        double(result.direction_metrics.count_in_plane);
+
+    if summary.retained_direction_count > 0
+        summary.retained_in_plane_fraction = ...
+            summary.retained_in_plane_count / ...
+            summary.retained_direction_count;
+    else
+        summary.retained_in_plane_fraction = NaN;
+    end
+
+    summary.direction_support_type = ...
+        string(result.config.directions.support.type);
+
+    summary.solid_angle_sr = ...
+        double(result.config.directions.support.solid_angle_sr);
+
+    summary.geometry_family = ...
+        resolveGeometryFamily(result.config.medium);
+
     summary.propagation_model = ...
         string(result.config.propagation.model);
+
+    if isfield(result, "spectral_metrics")
+        summary.angular_entropy = ...
+            double(result.spectral_metrics.angular_entropy);
+
+        summary.angular_effective_bins = ...
+            double(result.spectral_metrics.angular_effective_bins);
+
+        summary.radial_entropy = ...
+            double(result.spectral_metrics.radial_entropy);
+
+        summary.radial_effective_bins = ...
+            double(result.spectral_metrics.radial_effective_bins);
+    end
+
     summary.elapsed_solver_time_s = elapsed_s;
     summary.valid = logical(result.validation.valid);
     summary.wavefield_size_zx = ...
@@ -145,6 +187,46 @@ catch exception
 end
 
 end
+
+
+function family = resolveGeometryFamily(medium)
+
+if ~isfield(medium, "objects") || isempty(medium.objects)
+    family = "homogeneous";
+    return
+end
+
+object = firstMediumObject(medium.objects);
+objectType = string(object.type);
+
+switch objectType
+    case "circle"
+        family = "circular_inclusion";
+
+    case "bilayer"
+        family = "bilayer";
+
+    otherwise
+        family = objectType;
+end
+
+end
+
+
+function object = firstMediumObject(objects)
+
+if iscell(objects)
+    object = objects{1};
+elseif isstruct(objects)
+    object = objects(1);
+else
+    error( ...
+        "simcampaigns:InvalidMediumObjects", ...
+        "medium.objects must be a cell or struct array.");
+end
+
+end
+
 
 function config_file = writeTemporaryConfig(config)
 

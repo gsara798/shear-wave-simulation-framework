@@ -124,8 +124,57 @@ runSummary.requested_direction_count = ...
 runSummary.solid_angle_sr = ...
     resolvedConfig.directions.support.solid_angle_sr;
 
-runSummary.in_plane_count = ...
+runSummary.requested_in_plane_count = ...
     resolvedConfig.directions.in_plane_count;
+
+runSummary.direction_support_type = ...
+    resolvedConfig.directions.support.type;
+
+runSummary.solid_angle_sr = ...
+    resolvedConfig.directions.support.solid_angle_sr;
+
+runSummary.geometry_family = ...
+    resolveGeometryFamily(resolvedConfig.medium);
+
+runSummary.background_cs_m_s = ...
+    resolvedConfig.medium.background_cs_m_s;
+
+runSummary.medium_object_count = ...
+    numel(resolvedConfig.medium.objects);
+
+if runSummary.medium_object_count > 0
+    primaryObject = firstMediumObject( ...
+        resolvedConfig.medium.objects);
+
+    runSummary.primary_object_type = ...
+        primaryObject.type;
+
+    runSummary.primary_object_cs_m_s = ...
+        primaryObject.cs_m_s;
+
+    if isfield(primaryObject, "radius_m")
+        runSummary.primary_object_radius_m = ...
+            primaryObject.radius_m;
+    end
+
+    if isfield(primaryObject, "center_xz_m")
+        runSummary.primary_object_center_x_m = ...
+            primaryObject.center_xz_m(1);
+
+        runSummary.primary_object_center_z_m = ...
+            primaryObject.center_xz_m(2);
+    end
+
+    if isfield(primaryObject, "normal_angle_rad")
+        runSummary.primary_object_normal_angle_rad = ...
+            primaryObject.normal_angle_rad;
+    end
+
+    if isfield(primaryObject, "offset_m")
+        runSummary.primary_object_offset_m = ...
+            primaryObject.offset_m;
+    end
+end
 
 runSummary.runtime_s = runtimeS;
 runSummary.output_directory = char(paths.run);
@@ -162,7 +211,75 @@ if isfield(result.wavefield, "diagnostics")
     end
 end
 
+runSummary.retained_direction_count = ...
+    result.directions.count;
+
+runSummary.retained_in_plane_count = ...
+    result.direction_metrics.count_in_plane;
+
+if runSummary.retained_direction_count > 0
+    runSummary.retained_in_plane_fraction = ...
+        runSummary.retained_in_plane_count / ...
+        runSummary.retained_direction_count;
+else
+    runSummary.retained_in_plane_fraction = NaN;
 end
+
+if isfield(result, "spectral_metrics")
+    runSummary.angular_entropy = ...
+        result.spectral_metrics.angular_entropy;
+
+    runSummary.angular_effective_bins = ...
+        result.spectral_metrics.angular_effective_bins;
+
+    runSummary.radial_entropy = ...
+        result.spectral_metrics.radial_entropy;
+
+    runSummary.radial_effective_bins = ...
+        result.spectral_metrics.radial_effective_bins;
+end
+
+end
+
+
+function family = resolveGeometryFamily(medium)
+
+if ~isfield(medium, "objects") || isempty(medium.objects)
+    family = "homogeneous";
+    return
+end
+
+object = firstMediumObject(medium.objects);
+objectType = string(object.type);
+
+switch objectType
+    case "circle"
+        family = "circular_inclusion";
+
+    case "bilayer"
+        family = "bilayer";
+
+    otherwise
+        family = objectType;
+end
+
+end
+
+
+function object = firstMediumObject(objects)
+
+if iscell(objects)
+    object = objects{1};
+elseif isstruct(objects)
+    object = objects(1);
+else
+    error( ...
+        "swsynth:InvalidMediumObjects", ...
+        "medium.objects must be a cell or struct array.");
+end
+
+end
+
 
 function writeManifest( ...
     manifestPath, configFile, resolvedConfig, runSummary, paths)
