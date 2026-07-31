@@ -9,6 +9,7 @@ end
 run_count = numel(report.runs);
 
 ordinal = zeros(run_count, 1);
+design_id = strings(run_count, 1);
 run_id = strings(run_count, 1);
 backend = strings(run_count, 1);
 hash_sha256 = strings(run_count, 1);
@@ -41,6 +42,7 @@ for index = 1:run_count
     config = runs(index).config;
 
     ordinal(index) = record.ordinal;
+    design_id(index) = string(runs(index).design_id);
     run_id(index) = string(record.run_id);
     backend(index) = string(runs(index).backend);
     hash_sha256(index) = string(record.hash_sha256);
@@ -149,6 +151,7 @@ end
 
 campaign_runs = table( ...
     ordinal, ...
+    design_id, ...
     run_id, ...
     backend, ...
     hash_sha256, ...

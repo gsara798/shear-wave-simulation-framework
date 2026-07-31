@@ -118,6 +118,7 @@ function records = initializeRecords(runs, campaign_directory)
 
 empty_record = struct();
 empty_record.ordinal = 0;
+empty_record.design_id = "";
 empty_record.run_id = "";
 empty_record.hash_sha256 = "";
 empty_record.status = "pending";
@@ -130,6 +131,7 @@ records = repmat(empty_record, numel(runs), 1);
 
 for index = 1:numel(runs)
     records(index).ordinal = runs(index).ordinal;
+    records(index).design_id = runs(index).design_id;
     records(index).run_id = runs(index).run_id;
     records(index).hash_sha256 = runs(index).hash_sha256;
     records(index).run_directory = fullfile( ...
@@ -250,6 +252,7 @@ marker = struct();
 marker.schema_version = "1.0";
 marker.status = "completed";
 marker.ordinal = run.ordinal;
+marker.design_id = run.design_id;
 marker.run_id = run.run_id;
 marker.backend = run.backend;
 marker.hash_sha256 = run.hash_sha256;
