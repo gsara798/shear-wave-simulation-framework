@@ -188,6 +188,162 @@ clear cleanup
 end
 
 
+function testRunProvenancePropagatesThroughExpansion(testCase)
+
+campaign = baseCampaign(testCase);
+
+campaign.runs = makeRuns( ...
+    ["design_r001", "design_r002"], ...
+    [300, 300], ...
+    [101, 202], ...
+    ["condition_a", "condition_a"], ...
+    [1, 2]);
+
+campaignFile = writeJson(campaign);
+cleanup = onCleanup(@() deleteIfPresent(campaignFile));
+
+[runs, ~] = simcampaigns.expandCampaign(campaignFile);
+
+verifyEqual(testCase, ...
+    string({runs.condition_id})', ...
+    ["condition_a"; "condition_a"]);
+
+verifyEqual(testCase, ...
+    [runs.realization_id]', ...
+    [1; 2]);
+
+clear cleanup
+
+end
+
+
+function testRunProvenancePropagatesToArtifacts(testCase)
+
+campaign = baseCampaign(testCase);
+
+campaign.campaign_name = ...
+    "explicit_run_provenance_unit_test";
+
+campaign.output = struct( ...
+    "directory", ...
+    string(tempname));
+
+campaign.runs = makeRuns( ...
+    ["design_r001", "design_r002"], ...
+    [300, 300], ...
+    [101, 202], ...
+    ["condition_a", "condition_a"], ...
+    [1, 2]);
+
+campaignFile = writeJson(campaign);
+outputRoot = string(campaign.output.directory);
+
+cleanup = onCleanup(@() cleanupPaths( ...
+    campaignFile, ...
+    outputRoot));
+
+executor = @(config, backend, runDirectory) ...
+    fakeExecutor(config, backend, runDirectory);
+
+report = simcampaigns.runCampaign( ...
+    campaignFile, ...
+    Resume=true, ...
+    ContinueOnError=false, ...
+    Executor=executor);
+
+verifyEqual(testCase, ...
+    string({report.runs.condition_id})', ...
+    ["condition_a"; "condition_a"]);
+
+verifyEqual(testCase, ...
+    [report.runs.realization_id]', ...
+    [1; 2]);
+
+csvFile = fullfile( ...
+    outputRoot, ...
+    campaign.campaign_name, ...
+    "campaign_runs.csv");
+
+campaignRuns = readtable( ...
+    csvFile, ...
+    Delimiter=",", ...
+    TextType="string");
+
+verifyEqual(testCase, ...
+    campaignRuns.condition_id, ...
+    ["condition_a"; "condition_a"]);
+
+verifyEqual(testCase, ...
+    campaignRuns.realization_id, ...
+    [1; 2]);
+
+for index = 1:2
+    markerFile = fullfile( ...
+        report.runs(index).run_directory, ...
+        "campaign_run.json");
+
+    completion = jsondecode(fileread(markerFile));
+
+    verifyEqual(testCase, ...
+        string(completion.condition_id), ...
+        "condition_a");
+
+    verifyEqual(testCase, ...
+        completion.realization_id, ...
+        index);
+end
+
+clear cleanup
+
+end
+
+
+function testRejectsIncompleteRunProvenance(testCase)
+
+campaign = baseCampaign(testCase);
+
+campaign.runs = makeRuns( ...
+    ["design_a", "design_b"], ...
+    [300, 500], ...
+    [101, 202]);
+
+campaign.runs(1).condition_id = "condition_a";
+
+campaignFile = writeJson(campaign);
+cleanup = onCleanup(@() deleteIfPresent(campaignFile));
+
+verifyError(testCase, ...
+    @() simcampaigns.loadCampaignJson(campaignFile), ...
+    "simcampaigns:IncompleteRunProvenance");
+
+clear cleanup
+
+end
+
+
+function testRejectsInvalidRealizationId(testCase)
+
+campaign = baseCampaign(testCase);
+
+campaign.runs = makeRuns( ...
+    ["design_a", "design_b"], ...
+    [300, 500], ...
+    [101, 202], ...
+    ["condition_a", "condition_b"], ...
+    [0, 1]);
+
+campaignFile = writeJson(campaign);
+cleanup = onCleanup(@() deleteIfPresent(campaignFile));
+
+verifyError(testCase, ...
+    @() simcampaigns.loadCampaignJson(campaignFile), ...
+    "simcampaigns:InvalidRealizationId");
+
+clear cleanup
+
+end
+
+
 function testDuplicateDesignIdsAreRejected(testCase)
 
 campaignFile = writeCampaign( ...
@@ -271,7 +427,16 @@ campaign.base_config = source.base_config;
 end
 
 
-function runs = makeRuns(designIds, frequencies, seeds)
+function runs = makeRuns( ...
+        designIds, frequencies, seeds, conditionIds, realizationIds)
+
+if nargin < 4
+    conditionIds = strings(0, 1);
+end
+
+if nargin < 5
+    realizationIds = [];
+end
 
 runCount = numel(designIds);
 
@@ -291,6 +456,12 @@ for index = 1:runCount
         "value", seeds(index));
 
     runs(index).design_id = designIds(index);
+
+    if ~isempty(conditionIds)
+        runs(index).condition_id = conditionIds(index);
+        runs(index).realization_id = realizationIds(index);
+    end
+
     runs(index).overrides = overrides;
 end
 

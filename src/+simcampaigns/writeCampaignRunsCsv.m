@@ -10,6 +10,8 @@ run_count = numel(report.runs);
 
 ordinal = zeros(run_count, 1);
 design_id = strings(run_count, 1);
+condition_id = strings(run_count, 1);
+realization_id = NaN(run_count, 1);
 run_id = strings(run_count, 1);
 backend = strings(run_count, 1);
 hash_sha256 = strings(run_count, 1);
@@ -64,6 +66,8 @@ for index = 1:run_count
 
     ordinal(index) = record.ordinal;
     design_id(index) = string(runs(index).design_id);
+    condition_id(index) = string(runs(index).condition_id);
+    realization_id(index) = double(runs(index).realization_id);
     run_id(index) = string(record.run_id);
     backend(index) = string(runs(index).backend);
     hash_sha256(index) = string(record.hash_sha256);
@@ -279,6 +283,8 @@ end
 campaign_runs = table( ...
     ordinal, ...
     design_id, ...
+    condition_id, ...
+    realization_id, ...
     run_id, ...
     backend, ...
     hash_sha256, ...

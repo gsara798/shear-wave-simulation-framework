@@ -62,6 +62,8 @@ empty_selection = repmat(struct( ...
 empty_run = struct();
 empty_run.ordinal = 0;
 empty_run.design_id = "";
+empty_run.condition_id = "";
+empty_run.realization_id = NaN;
 empty_run.run_id = "";
 empty_run.hash_sha256 = "";
 empty_run.backend = campaign.backend;
@@ -132,6 +134,8 @@ run_count = numel(campaign.runs);
 empty_run = struct();
 empty_run.ordinal = 0;
 empty_run.design_id = "";
+empty_run.condition_id = "";
+empty_run.realization_id = NaN;
 empty_run.run_id = "";
 empty_run.hash_sha256 = "";
 empty_run.backend = campaign.backend;
@@ -179,6 +183,21 @@ for ordinal = 1:run_count
     runs(ordinal).ordinal = ordinal;
     runs(ordinal).design_id = ...
         string(definition.design_id);
+
+    if isfield(definition, "condition_id")
+        runs(ordinal).condition_id = ...
+            string(definition.condition_id);
+    else
+        runs(ordinal).condition_id = "";
+    end
+
+    if isfield(definition, "realization_id")
+        runs(ordinal).realization_id = ...
+            double(definition.realization_id);
+    else
+        runs(ordinal).realization_id = NaN;
+    end
+
     runs(ordinal).run_id = run_id;
     runs(ordinal).hash_sha256 = hash_sha256;
     runs(ordinal).backend = campaign.backend;
