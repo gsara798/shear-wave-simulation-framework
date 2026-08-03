@@ -1,0 +1,257 @@
+{
+  "schema_version": "1.2",
+  "backend": "swsynth",
+  "campaign_name": "reqml_eikonal_bilayer_pilot_v1",
+  "base_config": "configs/swsynth/scientific/reqml_eikonal_training_v1/bilayer_base.json",
+  "runs": [
+    {
+      "design_id": "bil_001_bg1p8_obj2p8_f250_directional",
+      "overrides": [
+        {
+          "path": "seed",
+          "value": 5201
+        },
+        {
+          "path": "wavefield.frequency_hz",
+          "value": 250
+        },
+        {
+          "path": "directions.count",
+          "value": 4
+        },
+        {
+          "path": "directions.in_plane_count",
+          "value": 2
+        },
+        {
+          "path": "directions.support.solid_angle_sr",
+          "value": 0.5
+        },
+        {
+          "path": "medium.background_cs_m_s",
+          "value": 1.8
+        },
+        {
+          "path": "medium.objects[1].cs_m_s",
+          "value": 2.8
+        },
+        {
+          "path": "medium.objects[1].normal_angle_rad",
+          "value": 0.0
+        },
+        {
+          "path": "medium.objects[1].offset_m",
+          "value": 0.022
+        }
+      ]
+    },
+    {
+      "design_id": "bil_002_bg2p0_obj3p5_f400_intermediate",
+      "overrides": [
+        {
+          "path": "seed",
+          "value": 5202
+        },
+        {
+          "path": "wavefield.frequency_hz",
+          "value": 400
+        },
+        {
+          "path": "directions.count",
+          "value": 16
+        },
+        {
+          "path": "directions.in_plane_count",
+          "value": 4
+        },
+        {
+          "path": "directions.support.solid_angle_sr",
+          "value": 3.141592653589793
+        },
+        {
+          "path": "medium.background_cs_m_s",
+          "value": 2.0
+        },
+        {
+          "path": "medium.objects[1].cs_m_s",
+          "value": 3.5
+        },
+        {
+          "path": "medium.objects[1].normal_angle_rad",
+          "value": 0.5235987755982988
+        },
+        {
+          "path": "medium.objects[1].offset_m",
+          "value": 0.025
+        }
+      ]
+    },
+    {
+      "design_id": "bil_003_bg2p5_obj1p5_f500_broad",
+      "overrides": [
+        {
+          "path": "seed",
+          "value": 5203
+        },
+        {
+          "path": "wavefield.frequency_hz",
+          "value": 500
+        },
+        {
+          "path": "directions.count",
+          "value": 32
+        },
+        {
+          "path": "directions.in_plane_count",
+          "value": 8
+        },
+        {
+          "path": "directions.support.solid_angle_sr",
+          "value": 12.566370614359172
+        },
+        {
+          "path": "medium.background_cs_m_s",
+          "value": 2.5
+        },
+        {
+          "path": "medium.objects[1].cs_m_s",
+          "value": 1.5
+        },
+        {
+          "path": "medium.objects[1].normal_angle_rad",
+          "value": 1.0471975511965976
+        },
+        {
+          "path": "medium.objects[1].offset_m",
+          "value": 0.028
+        }
+      ]
+    },
+    {
+      "design_id": "bil_004_bg3p0_obj4p0_f250_broad",
+      "overrides": [
+        {
+          "path": "seed",
+          "value": 5204
+        },
+        {
+          "path": "wavefield.frequency_hz",
+          "value": 250
+        },
+        {
+          "path": "directions.count",
+          "value": 32
+        },
+        {
+          "path": "directions.in_plane_count",
+          "value": 8
+        },
+        {
+          "path": "directions.support.solid_angle_sr",
+          "value": 12.566370614359172
+        },
+        {
+          "path": "medium.background_cs_m_s",
+          "value": 3.0
+        },
+        {
+          "path": "medium.objects[1].cs_m_s",
+          "value": 4.0
+        },
+        {
+          "path": "medium.objects[1].normal_angle_rad",
+          "value": 1.5707963267948966
+        },
+        {
+          "path": "medium.objects[1].offset_m",
+          "value": 0.024
+        }
+      ]
+    },
+    {
+      "design_id": "bil_005_bg3p5_obj2p0_f400_directional",
+      "overrides": [
+        {
+          "path": "seed",
+          "value": 5205
+        },
+        {
+          "path": "wavefield.frequency_hz",
+          "value": 400
+        },
+        {
+          "path": "directions.count",
+          "value": 4
+        },
+        {
+          "path": "directions.in_plane_count",
+          "value": 2
+        },
+        {
+          "path": "directions.support.solid_angle_sr",
+          "value": 0.5
+        },
+        {
+          "path": "medium.background_cs_m_s",
+          "value": 3.5
+        },
+        {
+          "path": "medium.objects[1].cs_m_s",
+          "value": 2.0
+        },
+        {
+          "path": "medium.objects[1].normal_angle_rad",
+          "value": 2.0943951023931953
+        },
+        {
+          "path": "medium.objects[1].offset_m",
+          "value": 0.026
+        }
+      ]
+    },
+    {
+      "design_id": "bil_006_bg4p0_obj2p5_f500_intermediate",
+      "overrides": [
+        {
+          "path": "seed",
+          "value": 5206
+        },
+        {
+          "path": "wavefield.frequency_hz",
+          "value": 500
+        },
+        {
+          "path": "directions.count",
+          "value": 16
+        },
+        {
+          "path": "directions.in_plane_count",
+          "value": 4
+        },
+        {
+          "path": "directions.support.solid_angle_sr",
+          "value": 3.141592653589793
+        },
+        {
+          "path": "medium.background_cs_m_s",
+          "value": 4.0
+        },
+        {
+          "path": "medium.objects[1].cs_m_s",
+          "value": 2.5
+        },
+        {
+          "path": "medium.objects[1].normal_angle_rad",
+          "value": 2.6179938779914944
+        },
+        {
+          "path": "medium.objects[1].offset_m",
+          "value": 0.023
+        }
+      ]
+    }
+  ],
+  "output": {
+    "directory": "outputs/campaigns/scientific"
+  }
+}

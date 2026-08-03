@@ -1,0 +1,275 @@
+{
+  "schema_version": "1.2",
+  "backend": "swsynth",
+  "campaign_name": "reqml_eikonal_circular_inclusion_pilot_v1",
+  "base_config": "configs/swsynth/scientific/reqml_eikonal_training_v1/circular_inclusion_base.json",
+  "runs": [
+    {
+      "design_id": "inc_001_bg1p8_obj2p8_f250_directional",
+      "overrides": [
+        {
+          "path": "seed",
+          "value": 5301
+        },
+        {
+          "path": "wavefield.frequency_hz",
+          "value": 250
+        },
+        {
+          "path": "directions.count",
+          "value": 4
+        },
+        {
+          "path": "directions.in_plane_count",
+          "value": 2
+        },
+        {
+          "path": "directions.support.solid_angle_sr",
+          "value": 0.5
+        },
+        {
+          "path": "medium.background_cs_m_s",
+          "value": 1.8
+        },
+        {
+          "path": "medium.objects[1].cs_m_s",
+          "value": 2.8
+        },
+        {
+          "path": "medium.objects[1].radius_m",
+          "value": 0.006
+        },
+        {
+          "path": "medium.objects[1].center_xz_m",
+          "value": [
+            0.02,
+            0.022
+          ]
+        }
+      ]
+    },
+    {
+      "design_id": "inc_002_bg2p0_obj3p5_f400_intermediate",
+      "overrides": [
+        {
+          "path": "seed",
+          "value": 5302
+        },
+        {
+          "path": "wavefield.frequency_hz",
+          "value": 400
+        },
+        {
+          "path": "directions.count",
+          "value": 16
+        },
+        {
+          "path": "directions.in_plane_count",
+          "value": 4
+        },
+        {
+          "path": "directions.support.solid_angle_sr",
+          "value": 3.141592653589793
+        },
+        {
+          "path": "medium.background_cs_m_s",
+          "value": 2.0
+        },
+        {
+          "path": "medium.objects[1].cs_m_s",
+          "value": 3.5
+        },
+        {
+          "path": "medium.objects[1].radius_m",
+          "value": 0.008
+        },
+        {
+          "path": "medium.objects[1].center_xz_m",
+          "value": [
+            0.027,
+            0.024
+          ]
+        }
+      ]
+    },
+    {
+      "design_id": "inc_003_bg2p5_obj1p5_f500_broad",
+      "overrides": [
+        {
+          "path": "seed",
+          "value": 5303
+        },
+        {
+          "path": "wavefield.frequency_hz",
+          "value": 500
+        },
+        {
+          "path": "directions.count",
+          "value": 32
+        },
+        {
+          "path": "directions.in_plane_count",
+          "value": 8
+        },
+        {
+          "path": "directions.support.solid_angle_sr",
+          "value": 12.566370614359172
+        },
+        {
+          "path": "medium.background_cs_m_s",
+          "value": 2.5
+        },
+        {
+          "path": "medium.objects[1].cs_m_s",
+          "value": 1.5
+        },
+        {
+          "path": "medium.objects[1].radius_m",
+          "value": 0.01
+        },
+        {
+          "path": "medium.objects[1].center_xz_m",
+          "value": [
+            0.025,
+            0.029
+          ]
+        }
+      ]
+    },
+    {
+      "design_id": "inc_004_bg3p0_obj4p0_f250_broad",
+      "overrides": [
+        {
+          "path": "seed",
+          "value": 5304
+        },
+        {
+          "path": "wavefield.frequency_hz",
+          "value": 250
+        },
+        {
+          "path": "directions.count",
+          "value": 32
+        },
+        {
+          "path": "directions.in_plane_count",
+          "value": 8
+        },
+        {
+          "path": "directions.support.solid_angle_sr",
+          "value": 12.566370614359172
+        },
+        {
+          "path": "medium.background_cs_m_s",
+          "value": 3.0
+        },
+        {
+          "path": "medium.objects[1].cs_m_s",
+          "value": 4.0
+        },
+        {
+          "path": "medium.objects[1].radius_m",
+          "value": 0.007
+        },
+        {
+          "path": "medium.objects[1].center_xz_m",
+          "value": [
+            0.03,
+            0.02
+          ]
+        }
+      ]
+    },
+    {
+      "design_id": "inc_005_bg3p5_obj2p0_f400_directional",
+      "overrides": [
+        {
+          "path": "seed",
+          "value": 5305
+        },
+        {
+          "path": "wavefield.frequency_hz",
+          "value": 400
+        },
+        {
+          "path": "directions.count",
+          "value": 4
+        },
+        {
+          "path": "directions.in_plane_count",
+          "value": 2
+        },
+        {
+          "path": "directions.support.solid_angle_sr",
+          "value": 0.5
+        },
+        {
+          "path": "medium.background_cs_m_s",
+          "value": 3.5
+        },
+        {
+          "path": "medium.objects[1].cs_m_s",
+          "value": 2.0
+        },
+        {
+          "path": "medium.objects[1].radius_m",
+          "value": 0.009
+        },
+        {
+          "path": "medium.objects[1].center_xz_m",
+          "value": [
+            0.021,
+            0.028
+          ]
+        }
+      ]
+    },
+    {
+      "design_id": "inc_006_bg4p0_obj2p5_f500_intermediate",
+      "overrides": [
+        {
+          "path": "seed",
+          "value": 5306
+        },
+        {
+          "path": "wavefield.frequency_hz",
+          "value": 500
+        },
+        {
+          "path": "directions.count",
+          "value": 16
+        },
+        {
+          "path": "directions.in_plane_count",
+          "value": 4
+        },
+        {
+          "path": "directions.support.solid_angle_sr",
+          "value": 3.141592653589793
+        },
+        {
+          "path": "medium.background_cs_m_s",
+          "value": 4.0
+        },
+        {
+          "path": "medium.objects[1].cs_m_s",
+          "value": 2.5
+        },
+        {
+          "path": "medium.objects[1].radius_m",
+          "value": 0.011
+        },
+        {
+          "path": "medium.objects[1].center_xz_m",
+          "value": [
+            0.028,
+            0.027
+          ]
+        }
+      ]
+    }
+  ],
+  "output": {
+    "directory": "outputs/campaigns/scientific"
+  }
+}

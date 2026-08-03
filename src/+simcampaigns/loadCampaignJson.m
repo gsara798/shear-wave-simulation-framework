@@ -1,9 +1,16 @@
 function [campaign, metadata] = loadCampaignJson(campaign_file)
 %LOADCAMPAIGNJSON Load and validate a simulation campaign JSON file.
 %
-% Contract v1 defines an ordered Cartesian sweep over one existing
-% single-run configuration. This loader validates only campaign structure
-% and sweep paths; expansion and execution are handled separately.
+% Supported contracts:
+%
+%   1.0  implicit kwsim backend, Cartesian sweep
+%   1.1  explicit backend, Cartesian sweep
+%   1.2  explicit backend, Cartesian sweep or explicit ordered runs
+%
+% Contract 1.2 requires exactly one of:
+%
+%   sweep
+%   runs
 
 arguments
     campaign_file {mustBeTextScalar}
@@ -31,32 +38,54 @@ if ~isstruct(requested) || ~isscalar(requested)
         "The top level of the campaign JSON must be one object.");
 end
 
+if ~isfield(requested, "schema_version")
+    error("simcampaigns:MissingCampaignField", ...
+        "Missing required campaign field 'campaign.schema_version'.");
+end
+
 schema_version = string(requested.schema_version);
 
-if schema_version == "1.0"
-    backend = "kwsim";
-    required_fields = [ ...
-        "schema_version", ...
-        "campaign_name", ...
-        "base_config", ...
-        "sweep"];
-    optional_fields = "output";
-elseif schema_version == "1.1"
-    backend = lower(string(requested.backend));
-    required_fields = [ ...
-        "schema_version", ...
-        "backend", ...
-        "campaign_name", ...
-        "base_config", ...
-        "sweep"];
-    optional_fields = "output";
-    if ~ismember(backend, ["kwsim", "swsynth"])
-        error("simcampaigns:UnsupportedBackend", ...
-            "backend must be kwsim or swsynth.");
-    end
-else
-    error("simcampaigns:UnsupportedCampaignSchema", ...
-        "schema_version must be 1.0 or 1.1.");
+switch schema_version
+    case "1.0"
+        backend = "kwsim";
+
+        required_fields = [ ...
+            "schema_version", ...
+            "campaign_name", ...
+            "base_config", ...
+            "sweep"];
+
+        optional_fields = "output";
+
+    case "1.1"
+        backend = validateBackend(requested);
+
+        required_fields = [ ...
+            "schema_version", ...
+            "backend", ...
+            "campaign_name", ...
+            "base_config", ...
+            "sweep"];
+
+        optional_fields = "output";
+
+    case "1.2"
+        backend = validateBackend(requested);
+
+        required_fields = [ ...
+            "schema_version", ...
+            "backend", ...
+            "campaign_name", ...
+            "base_config"];
+
+        optional_fields = [ ...
+            "output", ...
+            "sweep", ...
+            "runs"];
+
+    otherwise
+        error("simcampaigns:UnsupportedCampaignSchema", ...
+            "schema_version must be 1.0, 1.1, or 1.2.");
 end
 
 validateFields( ...
@@ -64,7 +93,6 @@ validateFields( ...
     required_fields, ...
     optional_fields, ...
     "campaign");
-
 
 if ~isTextScalar(requested.campaign_name)
     error("simcampaigns:InvalidCampaignName", ...
@@ -107,15 +135,96 @@ end
 
 output = validateOutput(requested);
 
-if ~isstruct(requested.sweep) || isempty(requested.sweep)
+has_sweep = isfield(requested, "sweep");
+has_runs = isfield(requested, "runs");
+
+if schema_version ~= "1.2"
+    has_runs = false;
+end
+
+if schema_version == "1.2" && has_sweep == has_runs
+    error("simcampaigns:InvalidCampaignMode", ...
+        "Campaign schema 1.2 must define exactly one of sweep or runs.");
+end
+
+sweep = struct([]);
+explicit_runs = struct([]);
+
+parameter_count = 0;
+value_counts = zeros(0,1);
+expanded_run_count = 0;
+
+if has_sweep
+    [sweep, parameter_count, value_counts] = ...
+        validateSweep(requested.sweep, base_config);
+
+    mode = "cartesian_sweep";
+    expanded_run_count = prod(value_counts);
+
+else
+    explicit_runs = ...
+        validateExplicitRuns(requested.runs, base_config);
+
+    mode = "explicit_runs";
+    expanded_run_count = numel(explicit_runs);
+end
+
+campaign = struct();
+campaign.schema_version = schema_version;
+campaign.backend = backend;
+campaign.campaign_name = campaign_name;
+campaign.base_config = base_config_file;
+campaign.output = output;
+campaign.mode = mode;
+campaign.sweep = sweep;
+campaign.runs = explicit_runs;
+
+metadata = struct();
+metadata.campaign_file = absolutePath(campaign_file);
+metadata.repository_root = repository_root;
+metadata.base_config_file = base_config_file;
+metadata.base_config = base_config;
+metadata.base_config_metadata = base_metadata;
+metadata.mode = mode;
+metadata.parameter_count = parameter_count;
+metadata.value_counts = value_counts;
+metadata.expanded_run_count = expanded_run_count;
+metadata.json_text = string(json_text);
+metadata.requested = requested;
+
+end
+
+
+function backend = validateBackend(requested)
+
+if ~isfield(requested, "backend")
+    error("simcampaigns:MissingCampaignField", ...
+        "Missing required campaign field 'campaign.backend'.");
+end
+
+backend = lower(string(requested.backend));
+
+if ~ismember(backend, ["kwsim", "swsynth"])
+    error("simcampaigns:UnsupportedBackend", ...
+        "backend must be kwsim or swsynth.");
+end
+
+end
+
+
+function [sweep, parameter_count, value_counts] = ...
+        validateSweep(requested_sweep, base_config)
+
+if ~isstruct(requested_sweep) || isempty(requested_sweep)
     error("simcampaigns:InvalidCampaignSweep", ...
         "sweep must be a non-empty array of parameter objects.");
 end
 
-sweep = requested.sweep;
+sweep = requested_sweep;
 parameter_count = numel(sweep);
-paths = strings(parameter_count, 1);
-value_counts = zeros(parameter_count, 1);
+
+paths = strings(parameter_count,1);
+value_counts = zeros(parameter_count,1);
 
 for index = 1:parameter_count
     parameter = sweep(index);
@@ -128,31 +237,12 @@ for index = 1:parameter_count
     validateFields( ...
         parameter, ...
         ["path", "values"], ...
-        strings(0, 1), ...
+        strings(0,1), ...
         "campaign.sweep");
 
-    if ~isTextScalar(parameter.path) || ...
-            strlength(string(parameter.path)) == 0
-        error("simcampaigns:InvalidCampaignSweepPath", ...
-            "Each sweep path must be a non-empty text scalar.");
-    end
-
-    path_value = string(parameter.path);
-
-    if path_value == "dimension"
-        error("simcampaigns:ForbiddenCampaignSweepPath", ...
-            "dimension cannot be swept in campaign contract v1.");
-    end
-
-    if path_value == "output" || ...
-            startsWith(path_value, "output.")
-        error("simcampaigns:ForbiddenCampaignSweepPath", ...
-            "Paths under output are controlled by the campaign runner.");
-    end
-
-    validateSweepPath(base_config, path_value);
-
-    paths(index) = path_value;
+    path_value = validateConfigPath( ...
+        parameter.path, ...
+        base_config);
 
     base_value = simcampaigns.getPathValue( ...
         base_config, ...
@@ -168,6 +258,7 @@ for index = 1:parameter_count
             path_value);
     end
 
+    paths(index) = path_value;
     sweep(index).path = path_value;
 end
 
@@ -176,25 +267,165 @@ if numel(unique(paths)) ~= numel(paths)
         "Each sweep path may appear only once.");
 end
 
-campaign = struct();
-campaign.schema_version = schema_version;
-campaign.backend = backend;
-campaign.campaign_name = campaign_name;
-campaign.base_config = base_config_file;
-campaign.output = output;
-campaign.sweep = sweep;
+end
 
-metadata = struct();
-metadata.campaign_file = absolutePath(campaign_file);
-metadata.repository_root = repository_root;
-metadata.base_config_file = base_config_file;
-metadata.base_config = base_config;
-metadata.base_config_metadata = base_metadata;
-metadata.parameter_count = parameter_count;
-metadata.value_counts = value_counts;
-metadata.expanded_run_count = prod(value_counts);
-metadata.json_text = string(json_text);
-metadata.requested = requested;
+
+function explicit_runs = validateExplicitRuns( ...
+        requested_runs, base_config)
+
+if ~isstruct(requested_runs) || isempty(requested_runs)
+    error("simcampaigns:InvalidExplicitRuns", ...
+        "runs must be a non-empty array of run objects.");
+end
+
+explicit_runs = requested_runs;
+run_count = numel(explicit_runs);
+design_ids = strings(run_count,1);
+
+for run_index = 1:run_count
+    run_definition = explicit_runs(run_index);
+
+    if ~isscalar(run_definition)
+        error("simcampaigns:InvalidExplicitRuns", ...
+            "Each runs entry must be one object.");
+    end
+
+    validateFields( ...
+        run_definition, ...
+        ["design_id", "overrides"], ...
+        ["condition_id", "realization_id"], ...
+        "campaign.runs");
+
+    if ~isTextScalar(run_definition.design_id)
+        error("simcampaigns:InvalidDesignId", ...
+            "design_id must be a non-empty text scalar.");
+    end
+
+    design_id = string(run_definition.design_id);
+
+    if strlength(design_id) == 0 || ...
+            isempty(regexp( ...
+                char(design_id), ...
+                '^[A-Za-z0-9_-]+$', ...
+                'once'))
+        error("simcampaigns:InvalidDesignId", ...
+            ["design_id must contain only letters, numbers, " ...
+             "underscores, and hyphens."]);
+    end
+
+    condition_id = "";
+    realization_id = NaN;
+
+    if isfield(run_definition, "condition_id")
+        if ~isTextScalar(run_definition.condition_id)
+            error("simcampaigns:InvalidConditionId", ...
+                "condition_id must be a non-empty text scalar.");
+        end
+
+        condition_id = string(run_definition.condition_id);
+
+        if strlength(condition_id) == 0 || ...
+                isempty(regexp( ...
+                    char(condition_id), ...
+                    '^[A-Za-z0-9_-]+$', ...
+                    'once'))
+
+            error("simcampaigns:InvalidConditionId", ...
+                ["condition_id must contain only letters, numbers, " ...
+                 "underscores, and hyphens."]);
+        end
+    end
+
+    if isfield(run_definition, "realization_id")
+        realization_id = double(run_definition.realization_id);
+
+        if ~isscalar(realization_id) || ...
+                ~isfinite(realization_id) || ...
+                realization_id < 1 || ...
+                realization_id ~= fix(realization_id)
+
+            error("simcampaigns:InvalidRealizationId", ...
+                "realization_id must be a positive integer.");
+        end
+    end
+
+    if xor(strlength(condition_id) > 0, isfinite(realization_id))
+        error("simcampaigns:IncompleteRunProvenance", ...
+            "condition_id and realization_id must either both be defined or both be omitted.");
+    end
+
+    overrides = run_definition.overrides;
+
+    if ~isstruct(overrides) || isempty(overrides)
+        error("simcampaigns:InvalidRunOverrides", ...
+            "Each explicit run must define non-empty overrides.");
+    end
+
+    override_paths = strings(numel(overrides),1);
+
+    for override_index = 1:numel(overrides)
+        override = overrides(override_index);
+
+        if ~isscalar(override)
+            error("simcampaigns:InvalidRunOverrides", ...
+                "Each override must be one object.");
+        end
+
+        validateFields( ...
+            override, ...
+            ["path", "value"], ...
+            strings(0,1), ...
+            "campaign.runs.overrides");
+
+        path_value = validateConfigPath( ...
+            override.path, ...
+            base_config);
+
+        override_paths(override_index) = path_value;
+        overrides(override_index).path = path_value;
+    end
+
+    if numel(unique(override_paths)) ~= numel(override_paths)
+        error("simcampaigns:DuplicateRunOverridePath", ...
+            ["Each override path may appear only once within " ...
+             "one explicit run."]);
+    end
+
+    design_ids(run_index) = design_id;
+    explicit_runs(run_index).design_id = design_id;
+    explicit_runs(run_index).overrides = overrides;
+end
+
+if numel(unique(design_ids)) ~= numel(design_ids)
+    error("simcampaigns:DuplicateDesignId", ...
+        "Each explicit run must have a unique design_id.");
+end
+
+end
+
+
+function path_value = validateConfigPath(path_value, base_config)
+
+if ~isTextScalar(path_value) || ...
+        strlength(string(path_value)) == 0
+    error("simcampaigns:InvalidCampaignSweepPath", ...
+        "Each configuration path must be a non-empty text scalar.");
+end
+
+path_value = string(path_value);
+
+if path_value == "dimension"
+    error("simcampaigns:ForbiddenCampaignSweepPath", ...
+        "dimension cannot be modified by a campaign.");
+end
+
+if path_value == "output" || ...
+        startsWith(path_value, "output.")
+    error("simcampaigns:ForbiddenCampaignSweepPath", ...
+        "Paths under output are controlled by the campaign runner.");
+end
+
+simcampaigns.getPathValue(base_config, path_value);
 
 end
 
@@ -217,7 +448,7 @@ end
 
 validateFields( ...
     requested_output, ...
-    strings(0, 1), ...
+    strings(0,1), ...
     "directory", ...
     "campaign.output");
 
@@ -258,15 +489,6 @@ end
 end
 
 
-function validateSweepPath(base_config, path_value)
-
-simcampaigns.getPathValue( ...
-    base_config, ...
-    path_value);
-
-end
-
-
 function count = countValues(values, base_value)
 
 if ischar(values)
@@ -281,9 +503,9 @@ end
 
 if isrow(base_value) && ...
         ismatrix(values) && ...
-        size(values, 2) == size(base_value, 2)
+        size(values,2) == size(base_value,2)
 
-    count = size(values, 1);
+    count = size(values,1);
     return
 end
 
@@ -308,19 +530,17 @@ end
 
 function repository_root = resolveRepositoryRoot()
 
-% Current file:
-%   repository/src/+simcampaigns/loadCampaignJson.m
-
 repository_root = fileparts( ...
     fileparts( ...
-    fileparts(mfilename("fullpath"))));
+        fileparts(mfilename("fullpath"))));
 
 repository_root = string(repository_root);
 
 end
 
 
-function path_value = resolveRelativePath(path_value, repository_root)
+function path_value = resolveRelativePath( ...
+        path_value, repository_root)
 
 if ~isAbsolutePath(path_value)
     path_value = fullfile(repository_root, path_value);
