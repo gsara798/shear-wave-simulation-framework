@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.2", "backend": "swsynth",
+  "campaign_name": "reqml_q0_v2_external_eikonal_bilayer",
+  "base_config": "configs/swsynth/scientific/reqml_q0_v2/bilayer_base.json",
+  "output": {"directory": "outputs/campaigns/scientific/reqml_q0_v2"},
+  "runs": [
+    {"design_id":"eikonal_bilayer_low","condition_id":"eikonal_bilayer_low","realization_id":1,"overrides":[{"path":"seed","value":972001},{"path":"directions.count","value":1},{"path":"directions.in_plane_count","value":1},{"path":"directions.support.solid_angle_sr","value":0.01}]},
+    {"design_id":"eikonal_bilayer_mid","condition_id":"eikonal_bilayer_mid","realization_id":1,"overrides":[{"path":"seed","value":972002},{"path":"directions.count","value":16},{"path":"directions.in_plane_count","value":4},{"path":"directions.support.solid_angle_sr","value":3.141592653589793}]},
+    {"design_id":"eikonal_bilayer_high","condition_id":"eikonal_bilayer_high","realization_id":1,"overrides":[{"path":"seed","value":972003},{"path":"directions.count","value":32},{"path":"directions.in_plane_count","value":8},{"path":"directions.support.solid_angle_sr","value":12.566370614359172}]}
+  ]
+}

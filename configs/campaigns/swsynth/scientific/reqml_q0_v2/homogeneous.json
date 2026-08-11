@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.2",
+  "backend": "swsynth",
+  "campaign_name": "reqml_q0_v2_external_eikonal_homogeneous",
+  "base_config": "configs/swsynth/scientific/reqml_q0_v2/homogeneous_base.json",
+  "output": {"directory": "outputs/campaigns/scientific/reqml_q0_v2"},
+  "runs": [
+    {"design_id":"eikonal_hom_cs2_low","condition_id":"eikonal_hom_cs2_low","realization_id":1,"overrides":[{"path":"seed","value":970001},{"path":"medium.background_cs_m_s","value":2.0},{"path":"directions.count","value":1},{"path":"directions.in_plane_count","value":1},{"path":"directions.support.solid_angle_sr","value":0.01}]},
+    {"design_id":"eikonal_hom_cs2_mid","condition_id":"eikonal_hom_cs2_mid","realization_id":1,"overrides":[{"path":"seed","value":970002},{"path":"medium.background_cs_m_s","value":2.0},{"path":"directions.count","value":16},{"path":"directions.in_plane_count","value":4},{"path":"directions.support.solid_angle_sr","value":3.141592653589793}]},
+    {"design_id":"eikonal_hom_cs2_high","condition_id":"eikonal_hom_cs2_high","realization_id":1,"overrides":[{"path":"seed","value":970003},{"path":"medium.background_cs_m_s","value":2.0},{"path":"directions.count","value":32},{"path":"directions.in_plane_count","value":8},{"path":"directions.support.solid_angle_sr","value":12.566370614359172}]},
+    {"design_id":"eikonal_hom_cs3_low","condition_id":"eikonal_hom_cs3_low","realization_id":1,"overrides":[{"path":"seed","value":970004},{"path":"medium.background_cs_m_s","value":3.0},{"path":"directions.count","value":1},{"path":"directions.in_plane_count","value":1},{"path":"directions.support.solid_angle_sr","value":0.01}]},
+    {"design_id":"eikonal_hom_cs3_mid","condition_id":"eikonal_hom_cs3_mid","realization_id":1,"overrides":[{"path":"seed","value":970005},{"path":"medium.background_cs_m_s","value":3.0},{"path":"directions.count","value":16},{"path":"directions.in_plane_count","value":4},{"path":"directions.support.solid_angle_sr","value":3.141592653589793}]},
+    {"design_id":"eikonal_hom_cs3_high","condition_id":"eikonal_hom_cs3_high","realization_id":1,"overrides":[{"path":"seed","value":970006},{"path":"medium.background_cs_m_s","value":3.0},{"path":"directions.count","value":32},{"path":"directions.in_plane_count","value":8},{"path":"directions.support.solid_angle_sr","value":12.566370614359172}]}
+  ]
+}
