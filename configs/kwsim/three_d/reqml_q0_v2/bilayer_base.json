@@ -12,7 +12,7 @@
     "placement_policy":"angular_random_search","angular_support_solid_angle_sr":0.01,"angular_support_axis_xyz":[1,0,0]
   },
   "time":{"settling_cycles":1,"analysis_cycles":2,"end_time_s":0.075},
-  "sensor":{"source_buffer_m":0.001,"boundary_margin_m":0.001},
+  "sensor":{"source_buffer_m":0.001,"boundary_margin_m":0.001,"save_full_volume":false},
   "solver":{"pml_size_points":[8,8,8],"plot_simulation":false,"data_cast":"single"},
   "req_validation":{"quantity":"displacement","cs_guess_m_s":3.0,"window_wavelengths":3.0,"minimum_placements_per_axis":10},
   "output":{"enabled":true,"directory":"outputs","run_name":"reqml_q0_v2_external_kwave_bilayer","append_timestamp":false,"overwrite":false,"save_result":true,"save_summary":true,"save_config_mat":true,"save_config_json":true,"save_time_series":false,"save_req_validation_sample":false,"save_figures":false,"save_matlab_figures":false,"save_wavefield_sample":true},

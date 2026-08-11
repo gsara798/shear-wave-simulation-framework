@@ -56,6 +56,23 @@ verifyFalse(testCase, ...
     any(sensor.mask(source_x, :, :), "all"));
 end
 
+function testPlaneOnlySensorRetainsComplete3DPropagationGrid(testCase)
+cfg = kwsim.three_d.defaultConfig();
+cfg.sensor.save_full_volume = false;
+[cfg, preflight] = kwsim.three_d.validateConfig(cfg);
+[~, cfg, ~] = kwsim.three_d.buildGrid(cfg);
+[sensor, metadata] = kwsim.three_d.buildSensor(cfg);
+
+verifyEqual(testCase, numel(cfg.sensor.y_indices), 1);
+verifyEqual(testCase, cfg.sensor.y_indices, ...
+    cfg.sensor.acquisition_y_index_full);
+verifyEqual(testCase, metadata.size_xyz(2), 1);
+verifySize(testCase, sensor.mask, ...
+    [cfg.grid.Nx,cfg.grid.Ny,cfg.grid.Nz]);
+verifyEqual(testCase, preflight.sensor.point_count, ...
+    numel(cfg.sensor.x_indices)*numel(cfg.sensor.z_indices));
+end
+
 function cfg = resolvedConfigWithGrid()
 cfg = kwsim.three_d.defaultConfig();
 [cfg, ~] = kwsim.three_d.validateConfig(cfg);

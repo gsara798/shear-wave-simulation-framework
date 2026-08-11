@@ -97,6 +97,7 @@ cfg.time.end_time_s = 8e-3;
 cfg.source.boundary_margin_m = 2e-3;
 cfg.sensor.source_buffer_m = 2e-3;
 cfg.sensor.boundary_margin_m = 1.5e-3;
+cfg.sensor.save_full_volume = false;
 
 % Smaller exterior PML for this compact integration test.
 cfg.solver.pml_size_points = [8, 8, 8];

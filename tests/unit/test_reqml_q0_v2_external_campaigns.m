@@ -55,6 +55,9 @@ verifyEqual(testCase,[k.grid.Nx,k.grid.Ny,k.grid.Nz],[304,240,304]);
 verifyEqual(testCase,k.geometry.objects.radius_m,.052);
 verifyEqual(testCase,string(k.geometry.objects.type),"sphere");
 verifyEqual(testCase,k.geometry.objects.center_m_xyz(:).',[.075,.060,.075]);
+verifyFalse(testCase,k.sensor.save_full_volume);
+verifyFalse(testCase,k.geometry.require_objects_inside_sensor_roi);
+verifyEqual(testCase,k.execution.maximum_memory_bytes,12e9);
 verifyEqual(testCase, ...
     [k.grid.Nx,k.grid.Ny,k.grid.Nz]+2*double(k.solver.pml_size_points(:).'), ...
     [320,256,320]);
@@ -66,6 +69,7 @@ for name=["homogeneous_base.json","bilayer_base.json"]
     k=jsondecode(fileread(fullfile(root,"configs","kwsim","three_d", ...
         "reqml_q0_v2",name)));
     verifyEqual(testCase,[k.grid.Nx,k.grid.Ny,k.grid.Nz],[304,48,304]);
+    verifyFalse(testCase,k.sensor.save_full_volume);
     verifyEqual(testCase, ...
         [k.grid.Nx,k.grid.Ny,k.grid.Nz]+2*double(k.solver.pml_size_points(:).'), ...
         [320,64,320]);
