@@ -51,9 +51,25 @@ e=jsondecode(fileread(fullfile(root,"configs","swsynth","scientific", ...
 k=jsondecode(fileread(fullfile(root,"configs","kwsim","three_d", ...
     "reqml_q0_v2","inclusion_base.json")));
 verifyEqual(testCase,e.domain.Lx_m,.15); verifyEqual(testCase,e.medium.objects.radius_m,.052);
-verifyEqual(testCase,[k.grid.Nx,k.grid.Ny,k.grid.Nz],[301,225,301]);
+verifyEqual(testCase,[k.grid.Nx,k.grid.Ny,k.grid.Nz],[304,240,304]);
 verifyEqual(testCase,k.geometry.objects.radius_m,.052);
 verifyEqual(testCase,string(k.geometry.objects.type),"sphere");
+verifyEqual(testCase,k.geometry.objects.center_m_xyz(:).',[.075,.060,.075]);
+verifyEqual(testCase, ...
+    [k.grid.Nx,k.grid.Ny,k.grid.Nz]+2*double(k.solver.pml_size_points(:).'), ...
+    [320,256,320]);
+end
+
+function testKwaveThinDomainsUseFftEfficientExpandedGrids(testCase)
+root=testCase.TestData.repo;
+for name=["homogeneous_base.json","bilayer_base.json"]
+    k=jsondecode(fileread(fullfile(root,"configs","kwsim","three_d", ...
+        "reqml_q0_v2",name)));
+    verifyEqual(testCase,[k.grid.Nx,k.grid.Ny,k.grid.Nz],[304,48,304]);
+    verifyEqual(testCase, ...
+        [k.grid.Nx,k.grid.Ny,k.grid.Nz]+2*double(k.solver.pml_size_points(:).'), ...
+        [320,64,320]);
+end
 end
 
 function testKwaveCampaignCsvRetainsAngularProvenance(testCase)

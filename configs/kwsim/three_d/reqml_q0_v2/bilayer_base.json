@@ -1,6 +1,6 @@
 {
   "dimension": 3, "scenario": "reqml_q0_v2_external_kwave_bilayer", "seed": 982001,
-  "grid": {"Nx":301,"Ny":48,"Nz":301,"dx_m":0.0005,"dy_m":0.0005,"dz_m":0.0005},
+  "grid": {"Nx":304,"Ny":48,"Nz":304,"dx_m":0.0005,"dy_m":0.0005,"dz_m":0.0005},
   "medium": {"cs_m_s":2.0,"rho_kg_m3":1000,"cp_mode":"reduced","reduced_cp_factor":10},
   "source": {
     "side":"multiface","f0_hz":400,"velocity_amplitude_m_s":1e-6,"contact_radius_m":0.001,"ramp_cycles":1,"boundary_margin_m":0.002,
