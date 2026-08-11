@@ -257,6 +257,37 @@ The candidate count controls search effort.
 More candidates may improve the selected geometry but increase configuration
 resolution time.
 
+### Spherical-cap support
+
+Generated banks can optionally restrict every requested propagation direction
+to a spherical cap:
+
+```json
+"angular_support_solid_angle_sr": 3.141592653589793,
+"angular_support_axis_xyz": [1, 0, 0]
+```
+
+For solid angle \(\Omega\), the cap half-angle \(\alpha\) is defined by
+
+\[
+\cos\alpha = 1 - \frac{\Omega}{2\pi}.
+\]
+
+The default is `4*pi`, which preserves the historical full-sphere candidate
+generator exactly. For a restricted cap, requested directions are sampled
+uniformly in cap area. Exactly `exact_in_plane_sources` directions have zero
+elevational component and lie in the x-z acquisition plane; the remaining
+directions lie off that plane. Consequently, a restricted cap that requests
+exact in-plane directions currently requires its axis to lie in the x-z
+plane. Unsupported axes fail explicitly rather than applying an angular
+tolerance.
+
+The selected bank records the requested solid angle, support fraction, axis,
+desired directions, realized finite-contact directions, and maximum mapping
+error in `source.angular_generation`. Finite-contact mapping can rotate a
+realized direction slightly, so requested and realized vectors must both be
+reported when comparing backends.
+
 ## 10. Exact in-plane source count
 
 A generated bank may require:
