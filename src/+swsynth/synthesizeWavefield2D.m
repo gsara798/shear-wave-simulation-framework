@@ -123,6 +123,7 @@ if useParallel
         end
     catch
         % Fall back to serial execution when no parallel pool is available.
+        useParallel = false;
     end
 end
 
