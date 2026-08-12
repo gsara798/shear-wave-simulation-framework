@@ -235,7 +235,7 @@ for index = 1:run_count
     if isfile(summary_path(index))
         try
             summary_value = ...
-                jsondecode(fileread(summary_path(index)));
+                readStructuredArtifact(summary_path(index), "summary");
 
             retained_direction_count(index) = ...
                 numericField( ...
@@ -300,7 +300,9 @@ for index = 1:run_count
     if isfile(validation_report_path(index))
         try
             validation_value = ...
-                jsondecode(fileread(validation_report_path(index)));
+                readStructuredArtifact( ...
+                    validation_report_path(index), ...
+                    "validation_report");
 
             valid(index) = ...
                 numericField(validation_value, "valid");
@@ -491,6 +493,37 @@ if (isstring(candidate) && isscalar(candidate)) || ...
 end
 
 end
+
+function value = readStructuredArtifact(path_value, mat_variable)
+
+path_value = string(path_value);
+
+[~, ~, extension] = fileparts(path_value);
+extension = lower(string(extension));
+
+switch extension
+    case ".json"
+        value = jsondecode(fileread(path_value));
+
+    case ".mat"
+        loaded = load(path_value, mat_variable);
+        if ~isfield(loaded, mat_variable)
+            error( ...
+                "simcampaigns:MissingMatVariable", ...
+                "MAT artifact '%s' does not contain variable '%s'.", ...
+                path_value, mat_variable);
+        end
+        value = loaded.(mat_variable);
+
+    otherwise
+        error( ...
+            "simcampaigns:UnsupportedStructuredArtifact", ...
+            "Unsupported structured artifact extension '%s' for %s.", ...
+            extension, path_value);
+end
+
+end
+
 
 function deleteIfPresent(path_value)
 
