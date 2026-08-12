@@ -177,9 +177,9 @@ if cfg.sensor.save_full_volume
     sensor.y_indices = ...
         start_indices(2):end_indices(2);
 else
-    % REQ consumes the central x-z acquisition plane. The elastic solver
-    % still propagates on the complete 3D grid; only temporal recording is
-    % restricted to the plane to avoid an unnecessary volume-time array.
+    % Record only the central x-z acquisition plane when full-volume
+    % recording is disabled. The elastic solver still propagates on the
+    % complete 3D grid; only temporal recording is restricted.
     sensor.y_indices = ...
         sensor.acquisition_y_index_full;
 end
