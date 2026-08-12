@@ -3,6 +3,11 @@ function recovery=recoverSavedKwaveRun(campaign_file,ordinal)
 % This is intentionally strict and is only for runs whose solver products
 % were saved before a post-processing/validation exception prevented the
 % campaign completion marker from being published.
+% expandCampaign supplies the canonical expected run hash. Its hashing
+% implementation is package-private, so recovery does not duplicate it to
+% independently hash config_requested; identity fields, output location,
+% and full physical revalidation are checked before the expected hash is
+% published in the completion marker.
 arguments
     campaign_file {mustBeTextScalar}
     ordinal (1,1) double {mustBeInteger,mustBePositive}
