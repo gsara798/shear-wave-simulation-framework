@@ -124,14 +124,12 @@ sample.axes.x_m = double(result.axes.x_m(:));
 sample.axes.z_m = double(result.axes.z_m(:));
 
 sample.truth = struct();
-sample.truth.cs_m_s_zx = ...
-    result.truth.cs_m_s_zx;
-
-sample.truth.rho_kg_m3_zx = ...
-    result.truth.rho_kg_m3_zx;
-
-sample.truth.material_id_zx = ...
-    result.truth.material_id_zx;
+sample.truth.cs_m_s_zx = crop2DTruthToSensor( ...
+    result, result.truth.cs_m_s_zx);
+sample.truth.rho_kg_m3_zx = crop2DTruthToSensor( ...
+    result, result.truth.rho_kg_m3_zx);
+sample.truth.material_id_zx = crop2DTruthToSensor( ...
+    result, result.truth.material_id_zx);
 
 sample.extraction = struct();
 sample.extraction.method = "native_2d";
@@ -141,6 +139,31 @@ sample.extraction.y_m = [];
 
 assertSampleSizes(sample);
 
+end
+
+function cropped = crop2DTruthToSensor(result, full_map)
+expected_size = [numel(result.axes.z_m), numel(result.axes.x_m)];
+if isequal(size(full_map), expected_size)
+    cropped = full_map;
+    return
+end
+if ~isfield(result, 'sensor') || ...
+        ~isfield(result.sensor, 'x_indices') || ...
+        ~isfield(result.sensor, 'z_indices')
+    error('kwsim:InvalidReqSampleSize', ...
+        'Full-domain 2D truth requires sensor x/z indices for cropping.');
+end
+x_indices = double(result.sensor.x_indices(:).');
+z_indices = double(result.sensor.z_indices(:).');
+indices_valid = numel(x_indices) == expected_size(2) && ...
+    numel(z_indices) == expected_size(1) && ...
+    all(x_indices >= 1 & x_indices <= size(full_map,2)) && ...
+    all(z_indices >= 1 & z_indices <= size(full_map,1));
+if ~indices_valid
+    error('kwsim:InvalidReqSampleSize', ...
+        'Sensor indices are inconsistent with full-domain 2D truth.');
+end
+cropped = full_map(z_indices, x_indices);
 end
 
 

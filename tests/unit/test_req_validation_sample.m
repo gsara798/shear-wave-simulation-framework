@@ -49,6 +49,21 @@ verifyEqual(testCase, ...
 
 end
 
+function testCropsFullDomainTruthToNative2DSensor(testCase)
+result = synthetic2DResult();
+full_cs = reshape(1:30, 5, 6);
+result.truth.cs_m_s_zx = full_cs;
+result.truth.rho_kg_m3_zx = 1000 + full_cs;
+result.truth.material_id_zx = uint16(full_cs);
+result.sensor = struct('x_indices', 2:5, 'z_indices', 2:4);
+sample = kwsim.req.createValidationSample(result);
+verifyEqual(testCase, sample.truth.cs_m_s_zx, full_cs(2:4,2:5));
+verifyEqual(testCase, sample.truth.rho_kg_m3_zx, ...
+    (1000+full_cs(2:4,2:5)));
+verifyEqual(testCase, sample.truth.material_id_zx, ...
+    uint16(full_cs(2:4,2:5)));
+end
+
 
 function testCreatesCentral3DSample(testCase)
 
