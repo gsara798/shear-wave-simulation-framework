@@ -110,6 +110,10 @@ cfg.source.maximum_directional_bias = 1;
 cfg.source.minimum_third_angular_eigenvalue = 0;
 cfg.source.minimum_axis_separation_deg = 0;
 cfg.source.maximum_mapping_error_deg = 10;
+% Optional spherical-cap restriction for generated propagation directions.
+% The default 4*pi preserves the historical full-sphere generator.
+cfg.source.angular_support_solid_angle_sr = 4*pi;
+cfg.source.angular_support_axis_xyz = [1, 0, 0];
 
 cfg.time = struct();
 cfg.time.analysis_cycles = 8;

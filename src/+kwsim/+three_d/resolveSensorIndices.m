@@ -165,19 +165,27 @@ end
 
 sensor = struct();
 
-sensor.x_indices = ...
-    start_indices(1):end_indices(1);
-
-sensor.y_indices = ...
-    start_indices(2):end_indices(2);
-
-sensor.z_indices = ...
-    start_indices(3):end_indices(3);
-
 sensor.acquisition_y_index_full = ...
     round( ...
         0.5 * ...
         (start_indices(2) + end_indices(2)));
+
+sensor.x_indices = ...
+    start_indices(1):end_indices(1);
+
+if cfg.sensor.save_full_volume
+    sensor.y_indices = ...
+        start_indices(2):end_indices(2);
+else
+    % Record only the central x-z acquisition plane when full-volume
+    % recording is disabled. The elastic solver still propagates on the
+    % complete 3D grid; only temporal recording is restricted.
+    sensor.y_indices = ...
+        sensor.acquisition_y_index_full;
+end
+
+sensor.z_indices = ...
+    start_indices(3):end_indices(3);
 
 sensor.minimum_source_clearance_m = ...
     minimum_source_clearance_m;

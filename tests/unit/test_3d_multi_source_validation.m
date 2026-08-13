@@ -106,6 +106,29 @@ for index = 1:numel( ...
         vibrators(index).phase_rad = 0;
 end
 
+function testConfiguredSingleVibratorEndpointIsValid(testCase)
+
+[result, directional_report] = ...
+    syntheticCase();
+
+source = result.config_resolved.source;
+source.vibrators = source.vibrators(1);
+source.vibrator_count = 1;
+source.vibrators.velocity_amplitude_m_s = ...
+    source.velocity_amplitude_m_s;
+result.config_resolved.source = source;
+
+report = kwsim.validation.evaluateMultiSourceHarmonic3D( ...
+    result,DirectionalReport=directional_report);
+
+verifyTrue(testCase,report.valid,report.summary);
+verifyTrue(testCase,findCheck(report,"multiple_vibrators_resolved").pass);
+verifyTrue(testCase,findCheck(report,"distinct_source_phases").pass);
+verifyEqual(testCase,report.metrics.source.vibrator_count,1);
+verifyEqual(testCase,report.metrics.source.unique_phase_count,1);
+
+end
+
 report = ...
     kwsim.validation. ...
     evaluateMultiSourceHarmonic3D( ...

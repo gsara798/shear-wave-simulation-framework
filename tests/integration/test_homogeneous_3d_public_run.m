@@ -8,7 +8,10 @@ end
 
 function setupOnce(testCase)
 
-addpath(fullfile(pwd, "src"));
+repositoryRoot = fileparts(fileparts(fileparts( ...
+    mfilename("fullpath"))));
+
+addpath(fullfile(repositoryRoot, "src"));
 kwsim.io.locateKWave("");
 
 testCase.TestData.cfg = compactConfig();

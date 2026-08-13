@@ -1,0 +1,8 @@
+{
+  "schema_version":"1.2","backend":"kwsim","campaign_name":"reqml_q0_v2_external_kwave_inclusion","base_config":"configs/kwsim/three_d/reqml_q0_v2/inclusion_base.json","output":{"directory":"outputs/campaigns/scientific/reqml_q0_v2"},
+  "runs":[
+    {"design_id":"kwave_inclusion_low","condition_id":"kwave_inclusion_low","realization_id":1,"overrides":[{"path":"seed","value":981001},{"path":"source.geometry_seed","value":981101},{"path":"source.vibrator_count","value":1},{"path":"source.exact_in_plane_sources","value":1},{"path":"source.minimum_in_plane_sources","value":1},{"path":"source.minimum_out_of_plane_sources","value":0},{"path":"source.angular_support_solid_angle_sr","value":0.01}]},
+    {"design_id":"kwave_inclusion_mid","condition_id":"kwave_inclusion_mid","realization_id":1,"overrides":[{"path":"seed","value":981002},{"path":"source.geometry_seed","value":981102},{"path":"source.vibrator_count","value":16},{"path":"source.exact_in_plane_sources","value":4},{"path":"source.minimum_in_plane_sources","value":4},{"path":"source.minimum_out_of_plane_sources","value":12},{"path":"source.angular_support_solid_angle_sr","value":3.141592653589793}]},
+    {"design_id":"kwave_inclusion_high","condition_id":"kwave_inclusion_high","realization_id":1,"overrides":[{"path":"seed","value":981003},{"path":"source.geometry_seed","value":981103},{"path":"source.vibrator_count","value":32},{"path":"source.exact_in_plane_sources","value":8},{"path":"source.minimum_in_plane_sources","value":8},{"path":"source.minimum_out_of_plane_sources","value":24},{"path":"source.angular_support_solid_angle_sr","value":12.566370614359172}]}
+  ]
+}

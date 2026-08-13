@@ -46,4 +46,7 @@ verifyTrue(testCase, estimate.within_limit);
 verifyGreaterThan(testCase, estimate.estimated_solver_bytes, 0);
 verifyEqual(testCase, estimate.grid_size_xyz, ...
     [cfg.grid.Nx, cfg.grid.Ny, cfg.grid.Nz]);
+verifyGreaterThan(testCase, estimate.estimated_sensor_bytes, 0);
+verifyEqual(testCase, estimate.estimated_total_bytes, ...
+    estimate.estimated_solver_bytes+estimate.estimated_sensor_bytes);
 end

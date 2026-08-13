@@ -1,0 +1,8 @@
+{
+  "schema_version":"1.2","backend":"kwsim","campaign_name":"reqml_q0_v2_external_kwave_bilayer","base_config":"configs/kwsim/three_d/reqml_q0_v2/bilayer_base.json","output":{"directory":"outputs/campaigns/scientific/reqml_q0_v2"},
+  "runs":[
+    {"design_id":"kwave_bilayer_low","condition_id":"kwave_bilayer_low","realization_id":1,"overrides":[{"path":"seed","value":982001},{"path":"source.geometry_seed","value":982101},{"path":"source.vibrator_count","value":1},{"path":"source.exact_in_plane_sources","value":1},{"path":"source.minimum_in_plane_sources","value":1},{"path":"source.minimum_out_of_plane_sources","value":0},{"path":"source.angular_support_solid_angle_sr","value":0.01}]},
+    {"design_id":"kwave_bilayer_mid","condition_id":"kwave_bilayer_mid","realization_id":1,"overrides":[{"path":"seed","value":982002},{"path":"source.geometry_seed","value":982102},{"path":"source.vibrator_count","value":16},{"path":"source.exact_in_plane_sources","value":4},{"path":"source.minimum_in_plane_sources","value":4},{"path":"source.minimum_out_of_plane_sources","value":12},{"path":"source.angular_support_solid_angle_sr","value":3.141592653589793}]},
+    {"design_id":"kwave_bilayer_high","condition_id":"kwave_bilayer_high","realization_id":1,"overrides":[{"path":"seed","value":982003},{"path":"source.geometry_seed","value":982103},{"path":"source.vibrator_count","value":32},{"path":"source.exact_in_plane_sources","value":8},{"path":"source.minimum_in_plane_sources","value":8},{"path":"source.minimum_out_of_plane_sources","value":24},{"path":"source.angular_support_solid_angle_sr","value":12.566370614359172}]}
+  ]
+}

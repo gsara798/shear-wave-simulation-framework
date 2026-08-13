@@ -96,6 +96,12 @@ for index = 1:run_count
         "data", ...
         "validation_report.json");
 
+    if backend(index) == "kwsim"
+        summary_path(index) = fullfile(run_directory(index),"data","summary.mat");
+        validation_report_path(index) = fullfile( ...
+            run_directory(index),"data","validation_report.mat");
+    end
+
     error_identifier(index) = string(record.error_identifier);
     error_message(index) = string(record.error_message);
 
@@ -194,18 +200,42 @@ for index = 1:run_count
         if isfield(config, "source")
             frequency_hz(index) = ...
                 numericField(config.source, "f0_hz");
+            direction_count(index) = ...
+                numericField(config.source,"vibrator_count");
+            requested_in_plane_count(index) = ...
+                numericField(config.source,"exact_in_plane_sources");
+            retained_direction_count(index) = ...
+                numericField(config.source,"vibrator_count");
+            retained_in_plane_count(index) = ...
+                numericField(config.source,"in_plane_vibrator_count");
+            solid_angle_sr(index) = ...
+                numericField(config.source,"angular_support_solid_angle_sr");
+            if isfinite(solid_angle_sr(index))
+                if solid_angle_sr(index) < 4*pi
+                    direction_support_type(index) = "solid_angle_cap";
+                else
+                    direction_support_type(index) = "full_sphere";
+                end
+            end
+            if isfinite(retained_direction_count(index)) && ...
+                    retained_direction_count(index) > 0
+                retained_in_plane_fraction(index) = ...
+                    retained_in_plane_count(index)/retained_direction_count(index);
+            end
         end
 
         if isfield(config, "medium")
             background_cs_m_s(index) = ...
                 numericField(config.medium, "cs_m_s");
         end
+        geometry_family(index) = geometryFamilyKwave(config);
+        valid(index) = double(outcome_status(index)=="completed_valid");
     end
 
     if isfile(summary_path(index))
         try
             summary_value = ...
-                jsondecode(fileread(summary_path(index)));
+                readStructuredArtifact(summary_path(index), "summary");
 
             retained_direction_count(index) = ...
                 numericField( ...
@@ -270,7 +300,9 @@ for index = 1:run_count
     if isfile(validation_report_path(index))
         try
             validation_value = ...
-                jsondecode(fileread(validation_report_path(index)));
+                readStructuredArtifact( ...
+                    validation_report_path(index), ...
+                    "validation_report");
 
             valid(index) = ...
                 numericField(validation_value, "valid");
@@ -362,6 +394,7 @@ if ~isstruct(config) || ...
     return
 end
 
+
 medium = config.medium;
 
 if ~isfield(medium, "objects") || ...
@@ -382,6 +415,28 @@ switch objectType
 
     otherwise
         family = objectType;
+end
+
+end
+
+
+function family = geometryFamilyKwave(config)
+
+family = "homogeneous";
+if ~isfield(config,"geometry"), return; end
+geometry = config.geometry;
+if isfield(geometry,"bilayer") && isfield(geometry.bilayer,"enabled") && ...
+        logical(geometry.bilayer.enabled)
+    family = "bilayer";
+    return
+end
+if ~isfield(geometry,"objects") || isempty(geometry.objects), return; end
+object = firstObject(geometry.objects);
+object_type = textField(object,"type");
+if object_type=="sphere" || object_type=="cylinder"
+    family = "inclusion";
+else
+    family = object_type;
 end
 
 end
@@ -438,6 +493,37 @@ if (isstring(candidate) && isscalar(candidate)) || ...
 end
 
 end
+
+function value = readStructuredArtifact(path_value, mat_variable)
+
+path_value = string(path_value);
+
+[~, ~, extension] = fileparts(path_value);
+extension = lower(string(extension));
+
+switch extension
+    case ".json"
+        value = jsondecode(fileread(path_value));
+
+    case ".mat"
+        loaded = load(path_value, mat_variable);
+        if ~isfield(loaded, mat_variable)
+            error( ...
+                "simcampaigns:MissingMatVariable", ...
+                "MAT artifact '%s' does not contain variable '%s'.", ...
+                path_value, mat_variable);
+        end
+        value = loaded.(mat_variable);
+
+    otherwise
+        error( ...
+            "simcampaigns:UnsupportedStructuredArtifact", ...
+            "Unsupported structured artifact extension '%s' for %s.", ...
+            extension, path_value);
+end
+
+end
+
 
 function deleteIfPresent(path_value)
 
