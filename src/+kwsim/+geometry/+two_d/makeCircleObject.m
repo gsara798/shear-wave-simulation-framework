@@ -29,6 +29,7 @@ object.type = "circle";
 object.name = string(name);
 object.center_m_xz = center_m_xz;
 object.radius_m = radius_m;
+object.bounds_m_xz = [NaN, NaN, NaN, NaN];
 object.material_id = uint16(material_id);
 object.cs_m_s = cs_m_s;
 object.rho_kg_m3 = rho_kg_m3;
