@@ -12,7 +12,7 @@ function sample = buildWavefieldSample(result, options)
 % Usage:
 %   sample = kwsim.samples.buildWavefieldSample(result);
 %   sample = kwsim.samples.buildWavefieldSample( ...
-%       result, Quantity="velocity");
+%       result, Quantity="velocity", Component="lateral_total");
 %
 % This function intentionally reuses the existing validated 2D/3D
 % extraction implemented by kwsim.req.createValidationSample. The resulting
@@ -22,11 +22,13 @@ function sample = buildWavefieldSample(result, options)
 arguments
     result (1,1) struct
     options.Quantity (1,1) string = "displacement"
+    options.Component (1,1) string = "axial_total"
 end
 
 legacy = kwsim.req.createValidationSample( ...
     result, ...
-    Quantity=options.Quantity);
+    Quantity=options.Quantity, ...
+    Component=options.Component);
 
 sample = struct();
 

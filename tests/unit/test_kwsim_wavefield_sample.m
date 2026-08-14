@@ -98,6 +98,15 @@ verifyEqual( ...
 
 end
 
+function testSupportsLateral2DComponent(testCase)
+result=synthetic2DResult();
+lateral=2i*result.fields.displacement.axial_total_zx;
+result.fields.displacement.lateral_total_zx=lateral;
+sample=kwsim.samples.buildWavefieldSample(result,Component="lateral_total");
+verifyEqual(testCase,sample.wavefield.data_zx,lateral);
+verifyEqual(testCase,sample.wavefield.component,"lateral_total");
+end
+
 function testSampleRemainsEstimatorNeutral(testCase)
 
 sample = kwsim.samples.buildWavefieldSample( ...

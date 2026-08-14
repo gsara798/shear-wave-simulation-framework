@@ -16,9 +16,11 @@ function sample = createValidationSample(result, options)
 arguments
     result struct
     options.Quantity (1,1) string = "displacement"
+    options.Component (1,1) string = "axial_total"
 end
 
 quantity = lower(options.Quantity);
+component = lower(options.Component);
 
 if ~ismember(quantity, ["displacement", "velocity"])
     error("kwsim:InvalidReqQuantity", ...
@@ -34,9 +36,13 @@ dimension = double(result.dimension);
 
 switch dimension
     case 2
-        sample = createFrom2D(result, quantity);
+        sample = createFrom2D(result, quantity, component);
 
     case 3
+        if component ~= "axial_total"
+            error("kwsim:UnsupportedReqComponent", ...
+                "Three-dimensional samples currently support axial_total only.");
+        end
         sample = createFrom3D(result, quantity);
 
     otherwise
@@ -47,7 +53,7 @@ end
 sample.sample_schema_version = "1.0";
 sample.source_dimension = dimension;
 sample.quantity = quantity;
-sample.component = "axial_total";
+sample.component = component;
 sample.orientation = "[Nz,Nx]";
 sample.frequency_hz = resolveFrequency(result);
 
@@ -95,11 +101,15 @@ end
 end
 
 
-function sample = createFrom2D(result, quantity)
+function sample = createFrom2D(result, quantity, component)
 
 container = resolve2DContainer(result, quantity);
 
-required_field = "axial_total_zx";
+if ~ismember(component,["axial_total","lateral_total"])
+    error("kwsim:UnsupportedReqComponent", ...
+        "Two-dimensional samples support axial_total or lateral_total.");
+end
+required_field = component + "_zx";
 
 if ~isfield(container, required_field)
     error("kwsim:MissingReqField", ...
