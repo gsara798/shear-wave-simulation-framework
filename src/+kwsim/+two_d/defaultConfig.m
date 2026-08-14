@@ -60,6 +60,9 @@ cfg.source.contact_node_spacing_points = 2;
 cfg.source.ramp_cycles = 3;
 cfg.source.phase_rad = 0;
 cfg.source.mode = "dirichlet";
+% pstdElastic2D uses ux along physical x and uy along the package's
+% physical z coordinate. [0,1] preserves the historical SOURCE-Z contact.
+cfg.source.polarization_xz = [0, 1];
 cfg.source.regime = "single";
 cfg.source.vibrator_count = 1;
 cfg.source.target_angle_deg = 0;
@@ -75,6 +78,9 @@ cfg.time.end_time_s = [];  % Empty selects the conservative automatic value.
 cfg.sensor = struct();
 cfg.sensor.source_buffer_m = 4e-3;
 cfg.sensor.boundary_margin_m = 2e-3;
+% Optional physical [x_min,x_max,z_min,z_max] estimator-facing FOV. Empty
+% preserves the historical source-buffer/boundary-margin resolution.
+cfg.sensor.analysis_bounds_m_xz = [];
 
 cfg.solver = struct();
 cfg.solver.backend = "cpu";

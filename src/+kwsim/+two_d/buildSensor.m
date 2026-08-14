@@ -25,5 +25,11 @@ metadata.z_indices = cfg.sensor.z_indices;
 metadata.x_m = cfg.derived.x_full_m(metadata.x_indices);
 metadata.z_m = cfg.derived.z_full_m(metadata.z_indices);
 metadata.record_start_index = cfg.time.record_start_index;
+metadata.requested_analysis_bounds_m_xz = ...
+    cfg.derived.requested_analysis_bounds_m_xz;
+metadata.realized_analysis_bounds_m_xz = ...
+    cfg.derived.realized_analysis_bounds_m_xz;
+metadata.source_contact_to_analysis_gap_m = ...
+    cfg.derived.source_contact_to_analysis_gap_m;
 
 end

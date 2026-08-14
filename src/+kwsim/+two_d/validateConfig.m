@@ -141,6 +141,15 @@ if ~uses_vibrator_bank
             "velocity profile. Tapered profiles require a labelled " + ...
             "vibrator-bank source.");
     end
+    polarization = double(cfg.source.polarization_xz(:));
+    valid_polarization = numel(polarization) == 2 && ...
+        all(isfinite(polarization)) && norm(polarization) > 0;
+    addCheck("single_contact_polarization", valid_polarization, ...
+        double(valid_polarization), 1, ...
+        "source.polarization_xz must be a finite nonzero [x,z] vector.");
+    if valid_polarization
+        cfg.source.polarization_xz = (polarization / norm(polarization)).';
+    end
 else
     valid_regime = any(lower(string(cfg.source.regime)) == ...
         ["directional", "partially_diffuse", "diffuse"]);
@@ -247,18 +256,54 @@ if ~uses_vibrator_bank && lower(string(cfg.source.contact_model)) == "point"
 end
 source_x_max = source_center_x + radius_points;
 
-boundary_x = round(cfg.sensor.boundary_margin_m / dx);
-boundary_z = round(cfg.sensor.boundary_margin_m / dz);
-buffer_x = round(cfg.sensor.source_buffer_m / dx);
-x_start = source_x_max + buffer_x + 1;
-x_end = Nx - boundary_x;
-z_start = 1 + boundary_z;
-z_end = Nz - boundary_z;
+x_m = (0:(Nx - 1)) * dx;
+z_m = (0:(Nz - 1)) * dz;
+requested_analysis_bounds = double(cfg.sensor.analysis_bounds_m_xz(:).');
+uses_explicit_analysis_bounds = ~isempty(requested_analysis_bounds);
+if uses_explicit_analysis_bounds
+    valid_analysis_bounds = numel(requested_analysis_bounds) == 4 && ...
+        all(isfinite(requested_analysis_bounds)) && ...
+        requested_analysis_bounds(2) > requested_analysis_bounds(1) && ...
+        requested_analysis_bounds(4) > requested_analysis_bounds(3) && ...
+        requested_analysis_bounds(1) >= 0 && ...
+        requested_analysis_bounds(2) <= x_m(end) && ...
+        requested_analysis_bounds(3) >= 0 && ...
+        requested_analysis_bounds(4) <= z_m(end);
+    addCheck("analysis_bounds",valid_analysis_bounds, ...
+        double(valid_analysis_bounds),1, ...
+        ["sensor.analysis_bounds_m_xz must be finite in-domain " + ...
+        "[x_min,x_max,z_min,z_max]."]);
+    if ~valid_analysis_bounds, throwPreflight(checks); end
+    tolerance = 10*eps(max([x_m(end),z_m(end),dx,dz]));
+    x_indices = find(x_m >= requested_analysis_bounds(1)-tolerance & ...
+        x_m <= requested_analysis_bounds(2)+tolerance);
+    z_indices = find(z_m >= requested_analysis_bounds(3)-tolerance & ...
+        z_m <= requested_analysis_bounds(4)+tolerance);
+    x_start=x_indices(1); x_end=x_indices(end);
+    z_start=z_indices(1); z_end=z_indices(end);
+else
+    boundary_x = round(cfg.sensor.boundary_margin_m / dx);
+    boundary_z = round(cfg.sensor.boundary_margin_m / dz);
+    buffer_x = round(cfg.sensor.source_buffer_m / dx);
+    x_start = source_x_max + buffer_x + 1;
+    x_end = Nx - boundary_x;
+    z_start = 1 + boundary_z;
+    z_end = Nz - boundary_z;
+    x_indices = x_start:x_end;
+    z_indices = z_start:z_end;
+    requested_analysis_bounds = [x_m(x_start),x_m(x_end), ...
+        z_m(z_start),z_m(z_end)];
+end
 
 roi_valid = x_start < x_end && z_start < z_end;
 addCheck("analysis_roi", roi_valid, double(roi_valid), 1, ...
     "The sensor ROI is empty; enlarge the grid or reduce margins/buffer.");
-actual_source_roi_separation_m = (x_start - source_x_max) * dx;
+source_contact_to_analysis_gap_m = x_m(x_start)-x_m(source_center_x);
+if uses_explicit_analysis_bounds
+    actual_source_roi_separation_m = source_contact_to_analysis_gap_m;
+else
+    actual_source_roi_separation_m = (x_start-source_x_max)*dx;
+end
 addCheck("source_roi_separation", ...
     actual_source_roi_separation_m >= cfg.sensor.source_buffer_m, ...
     actual_source_roi_separation_m, cfg.sensor.source_buffer_m, ...
@@ -267,10 +312,8 @@ if ~roi_valid
     throwPreflight(checks);
 end
 
-x_indices = x_start:x_end;
-z_indices = z_start:z_end;
-x_m = (0:(Nx - 1)) * dx;
-z_m = (0:(Nz - 1)) * dz;
+realized_analysis_bounds = [x_m(x_start),x_m(x_end), ...
+    z_m(z_start),z_m(z_end)];
 
 source_position_m = [x_m(source_center_x), (source_center_z - 1) * dz];
 
@@ -471,6 +514,10 @@ cfg.derived.shear_wavelength_m = shear_wavelength_m;
 cfg.derived.shear_points_per_wavelength = shear_ppw;
 cfg.derived.travel_distance_m = travel_distance_m;
 cfg.derived.source_roi_separation_m = actual_source_roi_separation_m;
+cfg.derived.requested_analysis_bounds_m_xz = requested_analysis_bounds;
+cfg.derived.realized_analysis_bounds_m_xz = realized_analysis_bounds;
+cfg.derived.source_contact_to_analysis_gap_m = ...
+    source_contact_to_analysis_gap_m;
 cfg.derived.estimated_dt_s = estimated_dt_s;
 cfg.derived.estimated_Nt = estimated_Nt;
 cfg.derived.estimated_recorded_samples = estimated_recorded_samples;

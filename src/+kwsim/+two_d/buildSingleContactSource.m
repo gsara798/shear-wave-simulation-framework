@@ -2,8 +2,8 @@ function [source, metadata] = buildSingleContactSource(cfg, kgrid)
 %BUILDSINGLECONTACTSOURCE Build a prescribed 2D single-contact source.
 %
 % The contact is represented by regularly sampled points along a vertical
-% line near the left boundary. Its imposed velocity is purely axial (+z),
-% transverse to the intended lateral (+x) propagation. A half-cosine ramp
+% line near the left boundary. Its imposed velocity follows the explicit
+% physical [x,z] polarization. A half-cosine ramp
 % avoids the broadband onset produced by a suddenly enabled sine or square
 % wave.
 %
@@ -38,7 +38,15 @@ waveform_m_s = cfg.source.velocity_amplitude_m_s * envelope .* ...
 
 source = struct();
 source.u_mask = mask;
-source.uy = single(waveform_m_s);
+polarization = double(cfg.source.polarization_xz(:).');
+if polarization(1) ~= 0
+    % pstdElastic2D ux is physical lateral Ux.
+    source.ux = single(polarization(1) * waveform_m_s);
+end
+if polarization(2) ~= 0
+    % pstdElastic2D uy is mapped by this package to physical axial Uz.
+    source.uy = single(polarization(2) * waveform_m_s);
+end
 source.u_mode = char(cfg.source.mode);
 
 metadata = struct();
@@ -60,7 +68,7 @@ metadata.realized_contact_span_m = ...
     max(metadata.contact_z_m) - min(metadata.contact_z_m);
 metadata.mask_xz = mask;
 metadata.mask_zx = mask.';
-metadata.polarization_xz = [0, 1];
+metadata.polarization_xz = polarization;
 metadata.nominal_propagation_xz = [1, 0];
 metadata.f0_hz = cfg.source.f0_hz;
 metadata.phase_rad = cfg.source.phase_rad;
