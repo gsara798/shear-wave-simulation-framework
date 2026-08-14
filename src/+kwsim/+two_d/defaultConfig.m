@@ -63,6 +63,11 @@ cfg.source.mode = "dirichlet";
 % pstdElastic2D uses ux along physical x and uy along the package's
 % physical z coordinate. [0,1] preserves the historical SOURCE-Z contact.
 cfg.source.polarization_xz = [0, 1];
+% Empty preserves the historical domain mid-plane contact. A requested
+% physical z position is quantized to the nearest symmetric half-grid center
+% for finite contacts so their span and node sampling remain unchanged.
+cfg.source.center_z_m = [];
+cfg.source.expected_material_id = 1;
 cfg.source.regime = "single";
 cfg.source.vibrator_count = 1;
 cfg.source.target_angle_deg = 0;

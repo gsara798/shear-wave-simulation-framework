@@ -236,7 +236,37 @@ source_center_x = radius_points + 2;
 % that half-index in metadata and select a symmetric non-adjacent contact.
 % This removes the former half-pixel symmetry bias without imposing adjacent
 % Dirichlet nodes, which are unstable in pstdElastic2D 1.4.1.
-source_center_z = (Nz + 1) / 2;
+requested_source_center_z_m = double(cfg.source.center_z_m);
+uses_requested_source_z = ~isempty(requested_source_center_z_m);
+valid_source_center_z = ~uses_requested_source_z || ...
+    (isscalar(requested_source_center_z_m) && ...
+    isfinite(requested_source_center_z_m) && ...
+    requested_source_center_z_m >= 0 && ...
+    requested_source_center_z_m <= (Nz-1)*dz);
+addCheck("source_center_z",valid_source_center_z, ...
+    double(valid_source_center_z),1, ...
+    "source.center_z_m must be a finite in-domain physical z coordinate.");
+valid_expected_material = isscalar(cfg.source.expected_material_id) && ...
+    isfinite(cfg.source.expected_material_id) && ...
+    cfg.source.expected_material_id >= 1 && ...
+    cfg.source.expected_material_id == round(cfg.source.expected_material_id);
+addCheck("source_expected_material",valid_expected_material, ...
+    double(valid_expected_material),1, ...
+    "source.expected_material_id must be a positive integer material ID.");
+if ~valid_source_center_z || ~valid_expected_material, throwPreflight(checks); end
+if uses_requested_source_z
+    requested_center_index = requested_source_center_z_m/dz + 1;
+    if lower(string(cfg.source.contact_model)) == "point"
+        source_center_z = round(requested_center_index);
+    else
+        % Symmetric finite-contact sampling requires an integer or half-grid
+        % center. Half-grid quantization preserves the historical even-Nz
+        % contact offsets and avoids changing contact size with z position.
+        source_center_z = round(requested_center_index-0.5)+0.5;
+    end
+else
+    source_center_z = (Nz + 1) / 2;
+end
 if ~uses_vibrator_bank && lower(string(cfg.source.contact_model)) == "point"
     source_contact_z = round(source_center_z);
 else
@@ -249,6 +279,11 @@ else
     end
 end
 source_contact_z = sort(source_contact_z);
+contact_in_domain = all(source_contact_z>=1 & source_contact_z<=Nz);
+addCheck("source_contact_in_domain",contact_in_domain, ...
+    double(contact_in_domain),1, ...
+    "The requested source center does not permit the complete contact inside the physical domain.");
+if ~contact_in_domain, throwPreflight(checks); end
 if ~uses_vibrator_bank && lower(string(cfg.source.contact_model)) == "point"
     % Public metadata must describe the actual driven node, not the
     % half-grid symmetry plane used to choose it on an even-sized grid.
@@ -366,14 +401,16 @@ clearance = cfg.geometry.minimum_boundary_clearance_m;
 if uses_vibrator_bank
     source_mask = source_bank.label_mask_xz > 0;
     geometry_overlaps_source = any( ...
-        geometry_maps.material_id_xz(source_mask) ~= 1);
+        geometry_maps.material_id_xz(source_mask) ~= ...
+        uint16(cfg.source.expected_material_id));
 else
     geometry_overlaps_source = any( ...
-        geometry_maps.material_id_xz(source_center_x, source_contact_z) ~= 1);
+        geometry_maps.material_id_xz(source_center_x, source_contact_z) ~= ...
+        uint16(cfg.source.expected_material_id));
 end
 addCheck("geometry_source_separation", ~geometry_overlaps_source, ...
     double(~geometry_overlaps_source), 1, ...
-    "A geometry object overlaps the prescribed source contact.");
+    "The prescribed source contact does not lie wholly in source.expected_material_id.");
 
 for object_index = 1:numel(objects)
     object = objects(object_index);

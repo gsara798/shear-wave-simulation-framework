@@ -77,3 +77,48 @@ verifyGreaterThanOrEqual(testCase, ...
     resolved.derived.source_contact_to_analysis_gap_m, ...
     resolved.sensor.source_buffer_m);
 end
+
+function testRequestedSourceZPreservesFiniteContactSampling(testCase)
+baseline = kwsim.two_d.defaultConfig();
+baseline.grid.Nx = 152; baseline.grid.Nz = 152;
+baseline.grid.dx_m = 0.0002375; baseline.grid.dz_m = 0.0002375;
+baseline.source.f0_hz = 400; baseline.source.contact_radius_m = 0.00095;
+baseline.source.contact_node_spacing_points = 4;
+baseline.diagnostics.maximum_sensor_memory_bytes = inf;
+[centered, ~] = kwsim.two_d.validateConfig(baseline);
+
+requested = baseline; requested.source.center_z_m = 0.0115;
+[soft, ~] = kwsim.two_d.validateConfig(requested);
+verifyEqual(testCase, soft.source.center_m_xz(2),0.01151875,AbsTol=1e-12);
+verifyEqual(testCase,diff(soft.source.contact_z_indices), ...
+    diff(centered.source.contact_z_indices));
+verifyEqual(testCase,numel(soft.source.contact_z_indices), ...
+    numel(centered.source.contact_z_indices));
+verifyEqual(testCase,soft.source.contact_z_indices-soft.source.center_index_xz(2), ...
+    centered.source.contact_z_indices-centered.source.center_index_xz(2));
+end
+
+function testSourceCanRequireStiffMaterial(testCase)
+cfg = kwsim.two_d.defaultConfig();
+cfg.grid.Nx=213; cfg.grid.Nz=152;
+cfg.grid.dx_m=.0002375; cfg.grid.dz_m=.0002375;
+cfg.source.f0_hz=400; cfg.source.contact_radius_m=.00095;
+cfg.source.contact_node_spacing_points=4; cfg.source.center_z_m=.0265;
+cfg.source.expected_material_id=2;
+cfg.medium.cp_mode="physical"; cfg.medium.physical_cp_m_s=9.15;
+cfg.grid.cfl=.3; cfg.geometry.minimum_boundary_clearance_m=0;
+cfg.geometry.require_objects_inside_sensor_roi=false;
+object=cfg.geometry.objects;
+object(1)=struct('type',"rectangle",'name',"stiff", ...
+    'center_m_xz',[NaN NaN],'radius_m',NaN, ...
+    'bounds_m_xz',[0,.05035,.019,.0358625], ...
+    'material_id',uint16(2),'cs_m_s',3.05,'rho_kg_m3',1000);
+cfg.geometry.objects=object;
+[resolved,preflight]=kwsim.two_d.validateConfig(cfg);
+verifyTrue(testCase,preflight.valid);
+verifyEqual(testCase,resolved.source.center_m_xz(2),.02648125,AbsTol=1e-12);
+[maps,~]=kwsim.two_d.buildGeometry(resolved);
+ids=maps.material_id_xz( ...
+    resolved.source.center_index_xz(1),resolved.source.contact_z_indices);
+verifyEqual(testCase,unique(ids),uint16(2));
+end
