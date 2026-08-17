@@ -76,6 +76,13 @@ cfg.sources.radius_range_m = [];
 cfg.sources.phase_policy = "random_uniform";
 cfg.sources.amplitude_jitter_fraction = 0.10;
 
+% The legacy model applies one constant polarization coefficient to each
+% spherical component. The point-force model instead evaluates the full 3D
+% far-field shear projection at every observation point.
+cfg.sources.radiation = struct();
+cfg.sources.radiation.model = "constant_directional_polarization";
+cfg.sources.radiation.force_direction_xyz = [0, 0, 1];
+
 cfg.polarization = struct();
 cfg.polarization.model = "transverse_random";
 
