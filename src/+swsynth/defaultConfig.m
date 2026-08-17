@@ -83,6 +83,15 @@ cfg.sources.radiation = struct();
 cfg.sources.radiation.model = "constant_directional_polarization";
 cfg.sources.radiation.force_direction_xyz = [0, 0, 1];
 
+% A coherent aperture replaces each spherical parent source by a symmetric
+% set of point-force elements. The default point model deliberately keeps
+% the historical synthesis path byte-for-byte unchanged.
+cfg.sources.aperture = struct();
+cfg.sources.aperture.model = "point";
+cfg.sources.aperture.span_m = 0;
+cfg.sources.aperture.axis_xyz = [0, 0, 1];
+cfg.sources.aperture.node_spacing_m = 5e-4;
+
 cfg.polarization = struct();
 cfg.polarization.model = "transverse_random";
 
