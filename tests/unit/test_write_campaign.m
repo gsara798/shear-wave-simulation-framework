@@ -1,0 +1,239 @@
+function tests = test_write_campaign
+tests = functiontests(localfunctions);
+end
+
+
+function testExplicitCampaignRoundTrip(testCase)
+
+root = repository_root();
+
+base_config = fullfile( ...
+    root, ...
+    "configs","swsynth","scientific", ...
+    "homogeneous_projected3d_clean_base.json");
+
+verifyTrue(testCase,isfile(base_config));
+
+plan = table( ...
+    ["design_a";"design_b"], ...
+    ["condition_a";"condition_b"], ...
+    [1;1], ...
+    [7101;7102], ...
+    [300;500], ...
+    [2.0;3.0], ...
+    VariableNames=[ ...
+        "design_id", ...
+        "condition_id", ...
+        "realization_id", ...
+        "seed", ...
+        "frequency_hz", ...
+        "cs_m_s"]);
+
+mapping = [
+    "seed"                       "seed"
+    "wavefield.frequency_hz"     "frequency_hz"
+    "medium.background_cs_m_s"   "cs_m_s"
+];
+
+definitions = simcampaigns.makeExplicitRuns( ...
+    plan,mapping, ...
+    ConditionIdColumn="condition_id", ...
+    RealizationIdColumn="realization_id");
+
+temporary = string(tempname);
+mkdir(temporary);
+
+cleanup = onCleanup(@() remove_directory(temporary)); %#ok<NASGU>
+
+output_file = fullfile(temporary,"campaign.json");
+simulation_output = fullfile(temporary,"outputs");
+
+campaign = struct();
+campaign.schema_version = "1.2";
+campaign.backend = "swsynth";
+campaign.campaign_name = "generic_round_trip";
+campaign.base_config = base_config;
+campaign.runs = definitions;
+campaign.output = struct("directory",simulation_output);
+
+result = simcampaigns.writeCampaign( ...
+    campaign,output_file);
+
+verifyTrue(testCase,isfile(output_file));
+
+[loaded,metadata] = ...
+    simcampaigns.loadCampaignJson(output_file);
+
+verifyEqual(testCase,string(loaded.mode),"explicit_runs");
+verifyEqual(testCase,metadata.expanded_run_count,2);
+
+[runs,expansion] = ...
+    simcampaigns.expandCampaign(output_file);
+
+verifyEqual(testCase,numel(runs),2);
+verifyEqual(testCase,expansion.run_count,2);
+
+verifyEqual( ...
+    testCase, ...
+    simcampaigns.getPathValue( ...
+        runs(1).config,"wavefield.frequency_hz"), ...
+    300);
+
+verifyEqual( ...
+    testCase, ...
+    simcampaigns.getPathValue( ...
+        runs(2).config,"medium.background_cs_m_s"), ...
+    3);
+
+verifyEqual(testCase,string(runs(1).condition_id),"condition_a");
+verifyEqual(testCase,double(runs(1).realization_id),1);
+
+verifyEqual(testCase,string(result.campaign.mode),"explicit_runs");
+
+end
+
+
+function root = repository_root()
+
+root = string(fileparts( ...
+    fileparts( ...
+    fileparts(mfilename("fullpath")))));
+
+end
+
+
+function remove_directory(path_value)
+
+if isfolder(path_value)
+    rmdir(path_value,"s");
+end
+
+end
+
+
+function testKwsimExplicitCampaignRoundTrip(testCase)
+
+root = repository_root();
+
+base_config = fullfile( ...
+    root, ...
+    "configs","kwsim","two_d", ...
+    "homogeneous_directional_cli.json");
+
+verifyTrue(testCase,isfile(base_config));
+
+plan = table( ...
+    ["kw_a";"kw_b"], ...
+    [8101;8102], ...
+    [400;600], ...
+    [2.0;3.0], ...
+    VariableNames=[ ...
+        "design_id", ...
+        "seed_value", ...
+        "frequency_hz", ...
+        "cs_m_s"]);
+
+mapping = [
+    "seed"           "seed_value"
+    "source.f0_hz"   "frequency_hz"
+    "medium.cs_m_s"  "cs_m_s"
+];
+
+definitions = simcampaigns.makeExplicitRuns( ...
+    plan,mapping);
+
+temporary = string(tempname);
+mkdir(temporary);
+
+cleanup = onCleanup(@() remove_directory(temporary)); %#ok<NASGU>
+
+output_file = fullfile(temporary,"campaign.json");
+
+campaign = struct();
+campaign.schema_version = "1.2";
+campaign.backend = "kwsim";
+campaign.campaign_name = "generic_kw_round_trip";
+campaign.base_config = base_config;
+campaign.runs = definitions;
+campaign.output = struct( ...
+    "directory", ...
+    fullfile(temporary,"outputs"));
+
+simcampaigns.writeCampaign( ...
+    campaign,output_file);
+
+[loaded,metadata] = ...
+    simcampaigns.loadCampaignJson(output_file);
+
+verifyEqual(testCase,string(loaded.backend),"kwsim");
+verifyEqual(testCase,string(loaded.mode),"explicit_runs");
+verifyEqual(testCase,metadata.expanded_run_count,2);
+
+[runs,expansion] = ...
+    simcampaigns.expandCampaign(output_file);
+
+verifyEqual(testCase,numel(runs),2);
+verifyEqual(testCase,expansion.run_count,2);
+
+verifyEqual( ...
+    testCase, ...
+    simcampaigns.getPathValue( ...
+        runs(1).config,"source.f0_hz"), ...
+    400);
+
+verifyEqual( ...
+    testCase, ...
+    simcampaigns.getPathValue( ...
+        runs(2).config,"medium.cs_m_s"), ...
+    3);
+
+end
+
+
+function testInvalidOverridePathIsRejectedByCampaignContract(testCase)
+
+root = repository_root();
+
+base_config = fullfile( ...
+    root, ...
+    "configs","swsynth","scientific", ...
+    "homogeneous_projected3d_clean_base.json");
+
+plan = table( ...
+    "design_a", ...
+    1, ...
+    VariableNames=["design_id","value"]);
+
+% makeExplicitRuns intentionally does not validate simulator paths.
+definitions = simcampaigns.makeExplicitRuns( ...
+    plan, ...
+    ["this.path.does.not.exist" "value"]);
+
+verifyEqual(testCase,numel(definitions),1);
+
+temporary = string(tempname);
+mkdir(temporary);
+
+cleanup = onCleanup(@() remove_directory(temporary)); %#ok<NASGU>
+
+output_file = fullfile(temporary,"campaign.json");
+
+campaign = struct();
+campaign.schema_version = "1.2";
+campaign.backend = "swsynth";
+campaign.campaign_name = "invalid_path_test";
+campaign.base_config = base_config;
+campaign.runs = definitions;
+campaign.output = struct( ...
+    "directory", ...
+    fullfile(temporary,"outputs"));
+
+verifyError( ...
+    testCase, ...
+    @() simcampaigns.writeCampaign( ...
+        campaign,output_file), ...
+    "simcampaigns:UnknownCampaignSweepPath");
+
+verifyFalse(testCase,isfile(output_file));
+
+end
