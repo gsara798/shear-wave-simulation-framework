@@ -10,16 +10,23 @@ function outcome = runConfig(config_file, options)
 %   outcome = kwsim.cli.runConfig(file)
 %
 % The dispatcher selects kwsim.two_d or kwsim.three_d from cfg.dimension.
+% OutputDirectory overrides cfg.output.directory when supplied.
 
 arguments
     config_file {mustBeTextScalar}
     options.DryRun (1,1) logical = false
+    options.OutputDirectory {mustBeTextScalar} = ""
 end
 
 [requested_cfg, config_metadata] = ...
     kwsim.io.loadConfigJson(config_file);
 
 requested_cfg = resolveProjectPaths(requested_cfg);
+
+if strlength(string(options.OutputDirectory)) > 0
+    requested_cfg.output.directory = ...
+        string(options.OutputDirectory);
+end
 
 [resolved_cfg, preflight] = ...
     validateDimensionConfig(requested_cfg);

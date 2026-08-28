@@ -187,6 +187,55 @@ clear cleanup
 
 end
 
+function testCampaignRelativeOutputIsCanonical(testCase)
+
+temporaryRoot = string(tempname);
+campaignDirectory = fullfile(temporaryRoot, "campaign");
+mkdir(campaignDirectory);
+
+sourceCampaign = fullfile( ...
+    testCase.TestData.repositoryRoot, ...
+    "configs", "campaigns", "swsynth", "smoke", ...
+    "swsynth_heterogeneous_circle_smoke.json");
+source = jsondecode(fileread(sourceCampaign));
+
+campaign = baseCampaign(testCase);
+campaign.campaign_name = "relative_output_explicit_runs_test";
+campaign.base_config = fullfile( ...
+    testCase.TestData.repositoryRoot, ...
+    string(source.base_config));
+campaign.output = struct("directory", "../results/../results");
+campaign.runs = makeRuns("design_a", 300, 101);
+
+campaignFile = fullfile(campaignDirectory, "campaign.json");
+writeJsonAt(campaignFile, campaign);
+
+cleanup = onCleanup(@() cleanupPaths(campaignFile, temporaryRoot));
+
+executor = @(config, backend, runDirectory) ...
+    fakeExecutor(config, backend, runDirectory);
+
+report = simcampaigns.runCampaign( ...
+    campaignFile, ...
+    Resume=true, ...
+    ContinueOnError=false, ...
+    Executor=executor);
+
+expectedDirectory = fullfile( ...
+    temporaryRoot, ...
+    "results", ...
+    campaign.campaign_name);
+
+verifyTrue(testCase, report.success);
+verifyEqual(testCase, report.campaign_directory, expectedDirectory);
+verifyFalse(testCase, contains(report.campaign_directory, ".."));
+verifyFalse(testCase, contains(string(report.runs.run_directory), ".."));
+verifyTrue(testCase, isfolder(expectedDirectory));
+
+clear cleanup
+
+end
+
 
 function testRunProvenancePropagatesThroughExpansion(testCase)
 
@@ -471,6 +520,20 @@ end
 function campaignFile = writeJson(campaign)
 
 campaignFile = string(tempname) + ".json";
+
+fileId = fopen(campaignFile, "w");
+assert(fileId >= 0);
+
+cleanup = onCleanup(@() fclose(fileId));
+
+fprintf(fileId, "%s", ...
+    jsonencode(campaign, PrettyPrint=true));
+
+clear cleanup
+
+end
+
+function writeJsonAt(campaignFile, campaign)
 
 fileId = fopen(campaignFile, "w");
 assert(fileId >= 0);

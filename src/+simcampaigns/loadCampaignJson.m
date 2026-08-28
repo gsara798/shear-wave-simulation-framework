@@ -119,8 +119,11 @@ end
 
 repository_root = resolveRepositoryRoot();
 
-base_config_file = resolveRelativePath( ...
+campaign_directory = string(fileparts(absolutePath(campaign_file)));
+
+base_config_file = resolveCampaignPath( ...
     string(requested.base_config), ...
+    campaign_directory, ...
     repository_root);
 
 if ~isfile(base_config_file)
@@ -539,14 +542,24 @@ repository_root = string(repository_root);
 end
 
 
-function path_value = resolveRelativePath( ...
-        path_value, repository_root)
+function path_value = resolveCampaignPath( ...
+        path_value, campaign_directory, repository_root)
 
-if ~isAbsolutePath(path_value)
-    path_value = fullfile(repository_root, path_value);
+if isAbsolutePath(path_value)
+    path_value = absolutePath(path_value);
+    return
 end
 
-path_value = absolutePath(path_value);
+campaign_candidate = absolutePath( ...
+    fullfile(campaign_directory, path_value));
+
+if isfile(campaign_candidate)
+    path_value = campaign_candidate;
+    return
+end
+
+path_value = absolutePath( ...
+    fullfile(repository_root, path_value));
 
 end
 

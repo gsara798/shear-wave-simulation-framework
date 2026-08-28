@@ -78,6 +78,94 @@ verifyTrue(testCase, ...
 
 end
 
+function testResolvesCampaignLocalBaseConfig(testCase)
+
+source_campaign = fullfile( ...
+    testCase.TestData.repository_root, ...
+    "configs", "campaigns", "swsynth", "smoke", ...
+    "swsynth_homogeneous_smoke.json");
+
+requested = jsondecode(fileread(source_campaign));
+source_base = fullfile( ...
+    testCase.TestData.repository_root, ...
+    string(requested.base_config));
+
+temporary_directory = string(tempname);
+mkdir(temporary_directory);
+cleanup = onCleanup(@() rmdir(temporary_directory, "s"));
+
+local_base = fullfile(temporary_directory, "base_config.json");
+copyfile(source_base, local_base);
+
+requested.base_config = "base_config.json";
+campaign_file = fullfile(temporary_directory, "campaign.json");
+writeJson(campaign_file, requested);
+
+[campaign, metadata] = simcampaigns.loadCampaignJson(campaign_file);
+
+verifyEqual(testCase, campaign.base_config, local_base);
+verifyEqual(testCase, metadata.base_config_file, local_base);
+
+clear cleanup
+
+end
+
+function testFallsBackToRepositoryRootBaseConfig(testCase)
+
+campaign_file = fullfile( ...
+    testCase.TestData.repository_root, ...
+    "configs", "campaigns", "swsynth", "smoke", ...
+    "swsynth_homogeneous_smoke.json");
+
+requested = jsondecode(fileread(campaign_file));
+
+temporary_campaign = string(tempname) + ".json";
+cleanup = onCleanup(@() cleanupFiles(temporary_campaign));
+writeJson(temporary_campaign, requested);
+
+[campaign, metadata] = ...
+    simcampaigns.loadCampaignJson(temporary_campaign);
+
+[~, attributes] = fileattrib(fullfile( ...
+    testCase.TestData.repository_root, ...
+    string(requested.base_config)));
+expected = string(attributes.Name);
+
+verifyEqual(testCase, campaign.base_config, expected);
+verifyEqual(testCase, metadata.base_config_file, expected);
+
+clear cleanup
+
+end
+
+function testSupportsAbsoluteBaseConfig(testCase)
+
+source_campaign = fullfile( ...
+    testCase.TestData.repository_root, ...
+    "configs", "campaigns", "swsynth", "smoke", ...
+    "swsynth_homogeneous_smoke.json");
+
+requested = jsondecode(fileread(source_campaign));
+requested.base_config = fullfile( ...
+    testCase.TestData.repository_root, ...
+    string(requested.base_config));
+
+temporary_campaign = string(tempname) + ".json";
+cleanup = onCleanup(@() cleanupFiles(temporary_campaign));
+writeJson(temporary_campaign, requested);
+
+[campaign, metadata] = ...
+    simcampaigns.loadCampaignJson(temporary_campaign);
+
+[~, attributes] = fileattrib(requested.base_config);
+expected = string(attributes.Name);
+verifyEqual(testCase, campaign.base_config, expected);
+verifyEqual(testCase, metadata.base_config_file, expected);
+
+clear cleanup
+
+end
+
 function testExpandsSwsynthCartesianSweep(testCase)
 
 campaign_file = fullfile( ...
