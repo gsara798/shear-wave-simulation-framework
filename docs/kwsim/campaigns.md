@@ -4,6 +4,11 @@
 
 The campaign system provides a deterministic and resumable way to execute many validated simulations from one existing single-run configuration.
 
+This guide focuses on Cartesian `sweep` campaigns. The backend-neutral
+`simcampaigns` API also supports schema-1.2 explicit `runs` campaigns for named
+or paired scenarios; see the
+[Explicit Campaign Construction API](../campaigns/explicit_campaign_api.md).
+
 A campaign does not introduce a second simulation pipeline. It orchestrates the same configured-run entry point used for an individual simulation:
 
 ```matlab
@@ -57,6 +62,19 @@ Campaigns are appropriate for:
 A campaign is preferable to manually duplicating JSON files whenever the study differs only by a controlled set of parameter values.
 
 A normal single-run JSON should always describe one valid simulation. Arrays of sweep values belong in the campaign JSON, not in the base simulation JSON.
+
+Choose the representation deliberately:
+
+- use the backend CLI with one config JSON for one simulation condition;
+- use campaign `sweep` when parameters vary independently and every Cartesian
+  combination is intended;
+- use campaign `runs` when several parameter values define one named or paired
+  physical scenario and must not be crossed independently.
+
+Both campaign forms pass through `simcampaigns.expandCampaign`, then
+`validateCampaign`, then `runCampaign`. `expandCampaign` is the canonical
+materialization step; do not manually store an expanded sweep as the primary
+scientific definition.
 
 ---
 
