@@ -41,6 +41,8 @@ Recommended starting points:
 - [Terminology](docs/kwsim/terminology.md)
 - [Simulation Parameters](docs/kwsim/simulation_parameters.md)
 - [Outputs and Validation](docs/kwsim/outputs_and_validation.md)
+- [Campaigns and Parameter Sweeps](docs/kwsim/campaigns.md)
+- [Explicit Campaign Construction API](docs/campaigns/explicit_campaign_api.md)
 
 Physics documentation:
 
@@ -119,18 +121,56 @@ These three commands have been verified through the configured dry-run path.
 A dry run resolves and validates the configuration without executing the solver
 or creating outputs.
 
+## Choose the simulation workflow
+
+Choose the source representation from the scientific design:
+
+1. **Single simulation -- one config JSON.** Use the backend CLI directly when
+   there is only one condition:
+
+   ```text
+   config.json -> backend.cli.runConfig -> simulation outputs
+   ```
+
+2. **Cartesian study -- campaign with `sweep`.** Use independent sweep
+   dimensions when every Cartesian combination is intended:
+
+   ```text
+   base_config.json + campaign.json with sweep
+     -> simcampaigns.expandCampaign -> Cartesian run definitions
+     -> validateCampaign -> runCampaign
+   ```
+
+3. **Named or paired scenarios -- campaign with `runs`.** Use explicit runs
+   when parameters jointly define a physical case and must remain coupled:
+
+   ```text
+   base_config.json + campaign.json with runs
+     -> simcampaigns.expandCampaign -> declared run definitions
+     -> validateCampaign -> runCampaign
+   ```
+
+Examples of independent dimensions include SWS x frequency x seed. Examples of
+paired scenarios include directional, intermediate, and diffuse source regimes
+whose source count, in-plane count, angular support, and geometry controls must
+change together. Do not represent paired scenarios as a Cartesian sweep.
+
+`simcampaigns.expandCampaign` is the canonical materialization step for both
+campaign representations. A campaign JSON must contain exactly one of `sweep`
+or `runs`; users should not manually expand a compact sweep.
+
 ## Reproducible simulation campaigns
 
-The campaign system expands one validated base configuration into a
-deterministic Cartesian parameter sweep. Every expanded configuration is
-validated before solver execution, and completed runs can be resumed safely
-without repeating computation.
+The campaign system expands one validated base configuration into deterministic
+run definitions from either a Cartesian sweep or an explicit run list. Every
+expanded configuration is validated before solver execution, and completed
+runs can be resumed safely without repeating computation.
 
 Campaigns are appropriate for:
 
 - material-property sweeps;
 - frequency and seed sweeps;
-- source-regime comparisons;
+- named or paired source-regime comparisons;
 - convergence and sensitivity studies;
 - heterogeneous inclusion studies;
 - REQ validation and Adaptive REQ dataset generation.
@@ -144,9 +184,13 @@ configs/campaigns/kwsim/smoke/homogeneous_generated_angular_n32_p8_smoke.json
 configs/campaigns/kwsim/smoke/heterogeneous_large_sphere_n32_p8_smoke.json
 ```
 
-A campaign contains one existing base configuration and an ordered list of
-parameters to sweep. Multiple sweep parameters are expanded as a deterministic
-Cartesian product, with the last declared parameter varying fastest.
+A Cartesian campaign contains one existing base configuration and an ordered
+list of parameters to sweep. Multiple sweep parameters are expanded as a
+deterministic Cartesian product, with the last declared parameter varying
+fastest. An explicit campaign instead contains an ordered `runs` list; its
+declared run order and paired overrides are preserved. See the
+[explicit campaign API](docs/campaigns/explicit_campaign_api.md) for construction
+and serialization guidance.
 
 Standard nested paths are supported:
 
