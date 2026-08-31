@@ -32,6 +32,7 @@ sample = struct();
 
 sample.schema_name = "wavefield_sample";
 sample.schema_version = "1.0";
+sample.spatial_dimension = 2;
 
 sample.sample_id = "";
 sample.dataset_id = "";
@@ -67,6 +68,10 @@ sample.wavefield.units = string(legacy.units);
 sample.wavefield.phasor_convention = ...
     string(legacy.phasor_convention);
 sample.wavefield.output_convention = "data_zx(z,x)";
+
+sample.measurement = struct();
+sample.measurement.quantity = sample.wavefield.quantity;
+sample.measurement.component = sample.wavefield.component;
 
 sample.truth = struct();
 sample.truth.cs_map_zx = legacy.truth.cs_m_s_zx;
@@ -131,6 +136,7 @@ sample.provenance.result_schema_version = ...
     string(legacy.result_schema_version);
 
 assertSampleContract(sample);
+wavefield.validateSample(sample);
 
 end
 
