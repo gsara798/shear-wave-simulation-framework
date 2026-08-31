@@ -36,6 +36,7 @@ verifyEqual(testCase, sample.wavefield.quantity, "displacement");
 verifyEqual(testCase, sample.wavefield.units, "m");
 verifyEqual(testCase, sample.measurement.component, "axial_total");
 verifyEqual(testCase, sample.measurement.quantity, "displacement");
+verifyEqual(testCase, sample.measurement.axis_xyz, [0, 0, 1]);
 verifyEqual(testCase, sample.coordinates.array_order, "zx");
 verifyEqual(testCase, sample.coordinates.observation_y_m, 0);
 
@@ -73,6 +74,7 @@ verifyEqual(testCase, sample.spatial_dimension, 2);
 verifyEqual(testCase, sample.propagation.source_dimension, 3);
 verifyEqual(testCase, sample.propagation.direction_space, ...
     "three_dimensional");
+verifyEqual(testCase, sample.measurement.axis_xyz, [0, 0, 1]);
 verifySize(testCase, sample.wavefield.data_zx, [3, 4]);
 verifyEqual(testCase, wavefield.validateSample(sample).spatial_dimension, 2);
 
@@ -97,6 +99,7 @@ sample = kwsim.samples.buildWavefieldSample( ...
 
 verifyEqual(testCase, sample.wavefield.quantity, "velocity");
 verifyEqual(testCase, sample.measurement.quantity, "velocity");
+verifyEqual(testCase, sample.measurement.axis_xyz, [0, 0, 1]);
 verifyEqual(testCase, sample.wavefield.units, "m/s");
 verifyEqual( ...
     testCase, ...
