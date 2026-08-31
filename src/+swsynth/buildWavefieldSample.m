@@ -25,6 +25,7 @@ sample = struct();
 
 sample.schema_name = "wavefield_sample";
 sample.schema_version = "1.0";
+sample.spatial_dimension = 2;
 
 sample.sample_id = "";
 sample.dataset_id = "";
@@ -60,6 +61,10 @@ sample.wavefield.units = "arbitrary_displacement";
 sample.wavefield.phasor_convention = ...
     "u(t) = real{U exp(i 2*pi*f*t)}";
 sample.wavefield.output_convention = "data_zx(z,x)";
+
+sample.measurement = struct();
+sample.measurement.quantity = sample.wavefield.quantity;
+sample.measurement.component = sample.wavefield.component;
 
 sample.truth = struct();
 sample.truth.cs_map_zx = result.truth.cs_map_zx;
@@ -203,6 +208,8 @@ sample.provenance.run_id = "";
 sample.provenance.campaign_id = "";
 sample.provenance.source_path = "";
 sample.provenance.created_utc = "";
+
+wavefield.validateSample(sample);
 
 end
 
