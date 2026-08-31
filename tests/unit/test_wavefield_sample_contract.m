@@ -65,6 +65,16 @@ verifyError(testCase, @() wavefield.validateSample(sample), ...
 
 end
 
+function testExtraNonSingletonDimensionIsRejected(testCase)
+
+sample = make3DSample();
+sample.wavefield.data_zyx = complex(ones(4, 3, 5, 2));
+
+verifyError(testCase, @() wavefield.validateSample(sample), ...
+    "wavefield:SpatialSizeMismatch");
+
+end
+
 function testDimensionAndArrayOrderMustAgree(testCase)
 
 sample = make3DSample();
