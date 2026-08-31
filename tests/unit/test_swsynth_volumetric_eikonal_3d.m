@@ -15,10 +15,12 @@ cfg.sources.amplitude_jitter_fraction = 0;
 
 analyticCfg = cfg;
 analyticCfg.propagation.model = "plane_wave";
+analyticCfg.propagation.phase_model = "homogeneous_analytic";
 analytic = swsynth.run3D(analyticCfg);
 
 eikonalCfg = cfg;
-eikonalCfg.propagation.model = "volumetric_eikonal";
+eikonalCfg.propagation.model = "plane_wave";
+eikonalCfg.propagation.phase_model = "volumetric_eikonal";
 eikonal = swsynth.run3D(eikonalCfg);
 
 relativeError = norm( ...
@@ -26,7 +28,8 @@ relativeError = norm( ...
     max(norm(analytic.wavefield.U_zyx(:)), eps);
 
 verifyLessThan(testCase, relativeError, 1e-5);
-verifyEqual(testCase, eikonal.sample.propagation.model, "volumetric_eikonal");
+verifyEqual(testCase, eikonal.sample.propagation.model, "plane_wave");
+verifyEqual(testCase, eikonal.sample.propagation.phase_model, "volumetric_eikonal");
 verifyEqual(testCase, eikonal.sample.spatial_dimension, 3);
 verifyEqual(testCase, eikonal.sample.coordinates.array_order, "zyx");
 
@@ -35,7 +38,8 @@ end
 function testSphereHeterogeneityProducesValidVolumetricSample(testCase)
 
 cfg = compactConfig();
-cfg.propagation.model = "volumetric_eikonal";
+cfg.propagation.model = "plane_wave";
+cfg.propagation.phase_model = "volumetric_eikonal";
 cfg.directions.count = 1;
 cfg.directions.sampling_method = "explicit";
 cfg.directions.explicit_xyz = [1 0 0];
@@ -65,7 +69,8 @@ end
 function testHeterogeneityChangesFieldRelativeToHomogeneous(testCase)
 
 base = compactConfig();
-base.propagation.model = "volumetric_eikonal";
+base.propagation.model = "plane_wave";
+base.propagation.phase_model = "volumetric_eikonal";
 base.directions.count = 1;
 base.directions.sampling_method = "explicit";
 base.directions.explicit_xyz = [1 0 0];
@@ -91,10 +96,11 @@ verifyGreaterThan(testCase, relativeDifference, 1e-3);
 
 end
 
-function testAnalyticalPlaneWaveRejectsHeterogeneousMedium(testCase)
+function testHomogeneousAnalyticRejectsHeterogeneousMedium(testCase)
 
 cfg = compactConfig();
 cfg.propagation.model = "plane_wave";
+cfg.propagation.phase_model = "homogeneous_analytic";
 box = struct();
 box.type = "box";
 box.cs_m_s = 2.5;
@@ -103,7 +109,7 @@ box.size_xyz_m = [0.002 0.002 0.002];
 cfg.medium.objects = {box};
 
 verifyError(testCase, @() swsynth.run3D(cfg), ...
-    "swsynth:PlaneWave3DRequiresHomogeneousMedium");
+    "swsynth:HomogeneousAnalytic3DRequiresUniformMedium");
 
 end
 
