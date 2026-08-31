@@ -98,7 +98,6 @@ diagnostics.grid_size_zyx = [Nz Ny Nx];
 end
 
 function candidate = localUpwindUpdate3D(neighbors, spacings, slowness)
-
 finiteMask = isfinite(neighbors);
 candidate = Inf;
 indices = find(finiteMask);
@@ -124,12 +123,15 @@ for subsetCode = 1:(2^numel(indices)-1)
         candidate = min(candidate, root);
     end
 end
-
 end
 
 function validateInputs(slowness, dxM, dyM, dzM, initialTime, fixedMask)
-validateattributes(slowness, {'numeric'}, ...
-    {'3d','nonempty','real','finite','nonnegative'});
+if ~isnumeric(slowness) || isempty(slowness) || ndims(slowness) ~= 3 || ...
+        ~isreal(slowness) || any(~isfinite(slowness(:))) || ...
+        any(slowness(:) < 0)
+    error("swsynth:InvalidEikonal3DSlowness", ...
+        "slownessZYX must be a finite nonnegative real 3D numeric array.");
+end
 for spacing = [dxM dyM dzM]
     validateattributes(spacing, {'numeric'}, {'scalar','positive','finite'});
 end
