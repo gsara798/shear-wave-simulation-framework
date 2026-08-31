@@ -13,6 +13,7 @@ sample = result.sample;
 
 verifyEqual(testCase, sample.schema_name, "wavefield_sample");
 verifyEqual(testCase, sample.schema_version, "1.0");
+verifyEqual(testCase, sample.spatial_dimension, 2);
 verifyEqual(testCase, sample.generator.name, "swsynth");
 verifyEqual(testCase, sample.generator.backend, "fast_synthetic");
 
@@ -33,6 +34,9 @@ verifyEqual(testCase, ...
     sample.wavefield.phasor_convention, ...
     "u(t) = real{U exp(i 2*pi*f*t)}");
 
+verifyEqual(testCase, sample.measurement.quantity, sample.wavefield.quantity);
+verifyEqual(testCase, sample.measurement.component, sample.wavefield.component);
+
 verifyEqual( ...
     testCase, ...
     sample.truth.cs_map_zx, ...
@@ -45,6 +49,7 @@ verifyEqual( ...
 
 verifyTrue(testCase, sample.validation.valid);
 verifyTrue(testCase, sample.validation.analysis_ready);
+verifyEqual(testCase, wavefield.validateSample(sample).spatial_dimension, 2);
 
 verifyTrue(testCase, isfield(sample, "metrics"));
 
@@ -95,6 +100,7 @@ sample = result.sample;
 
 effectiveXYZ = double(result.wavefield.directions_xyz);
 
+verifyEqual(testCase, sample.spatial_dimension, 2);
 verifyEqual( ...
     testCase, ...
     sample.directions.xyz, ...
