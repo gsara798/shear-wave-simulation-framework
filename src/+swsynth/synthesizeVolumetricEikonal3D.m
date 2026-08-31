@@ -1,9 +1,9 @@
 function out = synthesizeVolumetricEikonal3D(cfg, maps)
 %SYNTHESIZEVOLUMETRICEIKONAL3D Synthesize a heterogeneous 3D harmonic field.
 %
-% Each directional component solves |grad(T)| = 1/c(x,y,z), then contributes
-% exp(i*omega*T) weighted by shear polarization projected onto the explicit
-% measurement axis. Output orientation is U_zyx(z,y,x).
+% Each directional plane-wave component solves |grad(T)| = 1/c(x,y,z),
+% then contributes exp(i*omega*T) weighted by shear polarization projected
+% onto the explicit measurement axis. Output orientation is U_zyx(z,y,x).
 
 arguments
     cfg (1,1) struct
@@ -11,9 +11,12 @@ arguments
 end
 
 [cfg, ~] = swsynth.validateConfig3D(cfg);
-if cfg.propagation.model ~= "volumetric_eikonal"
-    error("swsynth:IncorrectVolumetricPropagationModel", ...
-        "synthesizeVolumetricEikonal3D requires volumetric_eikonal.");
+if cfg.propagation.model ~= "plane_wave" || ...
+        cfg.propagation.phase_model ~= "volumetric_eikonal"
+    error("swsynth:IncorrectVolumetricPhaseModel", ...
+        ["synthesizeVolumetricEikonal3D requires " + ...
+         "propagation.model='plane_wave' and " + ...
+         "propagation.phase_model='volumetric_eikonal'."]);
 end
 
 requiredMaps = ["x_m","y_m","z_m","cs_map_zyx","dx_m","dy_m","dz_m"];
@@ -108,7 +111,8 @@ out.quantity = cfg.wavefield.quantity;
 out.measurement_axis_xyz = measurementAxis;
 out.phasor_convention = "u(t) = real{U exp(i 2*pi*f*t)}";
 out.output_convention = "U_zyx(z,y,x)";
-out.propagation_model = "volumetric_eikonal";
+out.propagation_model = "plane_wave";
+out.phase_model = "volumetric_eikonal";
 out.travel_time_diagnostics = travelTimeDiagnostics;
 
 end
