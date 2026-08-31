@@ -22,6 +22,7 @@ sample = kwsim.samples.buildWavefieldSample(result);
 
 verifyEqual(testCase, sample.schema_name, "wavefield_sample");
 verifyEqual(testCase, sample.schema_version, "1.0");
+verifyEqual(testCase, sample.spatial_dimension, 2);
 verifyEqual(testCase, sample.generator.name, "kwsim");
 verifyEqual(testCase, sample.generator.backend, "full_wave_kwave");
 
@@ -33,6 +34,8 @@ verifyEqual( ...
 verifyEqual(testCase, sample.wavefield.component, "axial_total");
 verifyEqual(testCase, sample.wavefield.quantity, "displacement");
 verifyEqual(testCase, sample.wavefield.units, "m");
+verifyEqual(testCase, sample.measurement.component, "axial_total");
+verifyEqual(testCase, sample.measurement.quantity, "displacement");
 verifyEqual(testCase, sample.coordinates.array_order, "zx");
 verifyEqual(testCase, sample.coordinates.observation_y_m, 0);
 
@@ -49,6 +52,7 @@ verifyEqual( ...
 verifyEqual(testCase, sample.extraction.method, "native_2d");
 verifyTrue(testCase, sample.validation.valid);
 verifyTrue(testCase, sample.validation.analysis_ready);
+verifyEqual(testCase, wavefield.validateSample(sample).spatial_dimension, 2);
 
 end
 
@@ -65,10 +69,12 @@ expectedField = reshape( ...
 verifyEqual(testCase, sample.wavefield.data_zx, expectedField);
 verifyEqual(testCase, sample.extraction.y_index, 4);
 verifyEqual(testCase, sample.coordinates.observation_y_m, 0.5e-3);
+verifyEqual(testCase, sample.spatial_dimension, 2);
 verifyEqual(testCase, sample.propagation.source_dimension, 3);
 verifyEqual(testCase, sample.propagation.direction_space, ...
     "three_dimensional");
 verifySize(testCase, sample.wavefield.data_zx, [3, 4]);
+verifyEqual(testCase, wavefield.validateSample(sample).spatial_dimension, 2);
 
 end
 
@@ -90,6 +96,7 @@ sample = kwsim.samples.buildWavefieldSample( ...
     Quantity="velocity");
 
 verifyEqual(testCase, sample.wavefield.quantity, "velocity");
+verifyEqual(testCase, sample.measurement.quantity, "velocity");
 verifyEqual(testCase, sample.wavefield.units, "m/s");
 verifyEqual( ...
     testCase, ...
