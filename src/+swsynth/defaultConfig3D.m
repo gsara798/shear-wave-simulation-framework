@@ -1,9 +1,9 @@
 function cfg = defaultConfig3D()
-%DEFAULTCONFIG3D Return default volumetric analytical 3D configuration.
+%DEFAULTCONFIG3D Return default volumetric 3D synthetic configuration.
 %
-% The backend produces one observed axial complex harmonic field with
-% public orientation U(z,y,x). OCE-like simulations use this same 3D
-% physics path and differ only through the measurement model.
+% The backend produces one observed complex harmonic field with public
+% orientation U(z,y,x). OCE-like simulations use this same 3D physics path
+% and differ only through the measurement model.
 
 base = swsynth.defaultConfig();
 
@@ -35,6 +35,9 @@ cfg.measurement.axis_xyz = [0, 0, 1];
 
 cfg.propagation = struct();
 cfg.propagation.model = "plane_wave";
+cfg.propagation.eikonal = struct();
+cfg.propagation.eikonal.maximum_iterations = 200;
+cfg.propagation.eikonal.tolerance_s = 1e-10;
 
 cfg.directions = base.directions;
 cfg.directions.space = "three_dimensional";
