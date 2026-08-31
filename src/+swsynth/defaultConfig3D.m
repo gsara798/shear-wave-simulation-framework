@@ -2,8 +2,8 @@ function cfg = defaultConfig3D()
 %DEFAULTCONFIG3D Return default volumetric analytical 3D configuration.
 %
 % The backend produces one observed axial complex harmonic field with
-% public orientation U(z,y,x). It is intentionally separate from the
-% existing 2D swsynth.run path until volumetric behavior is validated.
+% public orientation U(z,y,x). OCE-like simulations use this same 3D
+% physics path and differ only through the measurement model.
 
 base = swsynth.defaultConfig();
 
@@ -22,7 +22,7 @@ cfg.domain.dz_m = base.domain.dz_m;
 
 cfg.medium = struct();
 cfg.medium.background_cs_m_s = base.medium.background_cs_m_s;
-cfg.medium.combine_mode = "homogeneous";
+cfg.medium.combine_mode = "overlay";
 cfg.medium.objects = {};
 
 cfg.wavefield = struct();
