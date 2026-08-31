@@ -45,20 +45,18 @@ zSingle = single(z_m);
 k0Single = single(k0);
 batchSize = cfg.execution.synthesis_batch_size;
 
-parfor (iz = 1:Nz, parallelCount(cfg.execution.use_parallel))
-    plane = complex(zeros(Ny, Nx));
-    zj = zSingle(iz);
-    for n0 = 1:batchSize:N
-        n1 = min(N, n0 + batchSize - 1);
-        idx = n0:n1;
-        phase = k0Single * ( ...
-            X_yx(:) * double(directions.ux(idx)) + ...
-            Y_yx(:) * double(directions.uy(idx)) + ...
-            double(zj) * double(directions.uz(idx)));
-        plane = plane + reshape( ...
-            exp(1i*phase) * observedWeights(idx).', Ny, Nx);
+if cfg.execution.use_parallel
+    parfor iz = 1:Nz
+        U_zyx(iz,:,:) = synthesizePlane( ...
+            iz, X_yx, Y_yx, zSingle, k0Single, directions, ...
+            observedWeights, batchSize, Ny, Nx, N);
     end
-    U_zyx(iz,:,:) = plane;
+else
+    for iz = 1:Nz
+        U_zyx(iz,:,:) = synthesizePlane( ...
+            iz, X_yx, Y_yx, zSingle, k0Single, directions, ...
+            observedWeights, batchSize, Ny, Nx, N);
+    end
 end
 
 U_zyx = double(U_zyx);
@@ -91,6 +89,24 @@ out.quantity = cfg.wavefield.quantity;
 out.measurement_axis_xyz = measurementAxis;
 out.phasor_convention = "u(t) = real{U exp(i 2*pi*f*t)}";
 out.output_convention = "U_zyx(z,y,x)";
+
+end
+
+function plane = synthesizePlane(iz, X_yx, Y_yx, zSingle, k0Single, ...
+        directions, observedWeights, batchSize, Ny, Nx, N)
+
+plane = complex(zeros(Ny, Nx));
+zj = zSingle(iz);
+for n0 = 1:batchSize:N
+    n1 = min(N, n0 + batchSize - 1);
+    idx = n0:n1;
+    phase = k0Single * ( ...
+        X_yx(:) * double(directions.ux(idx)) + ...
+        Y_yx(:) * double(directions.uy(idx)) + ...
+        double(zj) * double(directions.uz(idx)));
+    plane = plane + reshape( ...
+        exp(1i*phase) * observedWeights(idx).', Ny, Nx);
+end
 
 end
 
@@ -147,12 +163,4 @@ for i = 1:3
 end
 error("swsynth:PolarizationFailure", ...
     "Could not construct a transverse polarization.");
-end
-
-function count = parallelCount(useParallel)
-if useParallel
-    count = Inf;
-else
-    count = 0;
-end
 end
