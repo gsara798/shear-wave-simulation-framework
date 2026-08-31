@@ -72,6 +72,7 @@ sample.wavefield.output_convention = "data_zx(z,x)";
 sample.measurement = struct();
 sample.measurement.quantity = sample.wavefield.quantity;
 sample.measurement.component = sample.wavefield.component;
+sample.measurement.axis_xyz = [0, 0, 1];
 
 sample.truth = struct();
 sample.truth.cs_map_zx = legacy.truth.cs_m_s_zx;
