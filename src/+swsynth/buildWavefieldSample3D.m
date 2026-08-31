@@ -59,6 +59,7 @@ sample.medium.objects = result.config.medium.objects;
 
 sample.propagation = struct();
 sample.propagation.model = result.config.propagation.model;
+sample.propagation.phase_model = result.config.propagation.phase_model;
 sample.propagation.source_dimension = 3;
 sample.propagation.direction_space = result.config.directions.space;
 sample.propagation.direction_count = result.directions.count;
