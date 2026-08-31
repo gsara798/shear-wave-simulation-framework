@@ -3,7 +3,8 @@ function [travelTimeZYX, diagnostics] = computeDirectionalTravelTime( ...
 %COMPUTEDIRECTIONALTRAVELTIME Solve a directional volumetric Eikonal field.
 %
 % Solves |grad(T)| = 1/c(x,y,z) using an incident plane-wave boundary
-% condition. Arrays follow [Nz, Ny, Nx].
+% condition. Travel time is referenced to the common spatial origin
+% (0,0,0). Arrays follow [Nz, Ny, Nx].
 
 if nargin < 7 || isempty(solverOptions)
     solverOptions = struct();
@@ -38,7 +39,6 @@ d = d / norm(d);
 if isUniform && referenceMatches
     [Z, Y, X] = ndgrid(zM, yM, xM);
     travelTimeZYX = (d(1).*X + d(2).*Y + d(3).*Z) ./ referenceCsMps;
-    travelTimeZYX = travelTimeZYX - boundaryDiagnostics.phase_reference_offset_s;
     solverDiagnostics = struct( ...
         "method", "homogeneous_exact_3d", ...
         "converged", true, ...
