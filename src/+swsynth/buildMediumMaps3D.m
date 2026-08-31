@@ -1,13 +1,17 @@
 function maps = buildMediumMaps3D(cfg)
 %BUILDMEDIUMMAPS3D Build volumetric shear-speed and material maps.
 %
-% Public orientation is (z,y,x).
+% Public orientation is (z,y,x). Medium construction is intentionally
+% independent of propagation-backend compatibility; a heterogeneous map is
+% valid even when the caller is only inspecting geometry. Complete runs
+% still enforce propagation compatibility through validateConfig3D.
 
 arguments
     cfg (1,1) struct
 end
 
-[cfg, ~] = swsynth.validateConfig3D(cfg);
+[cfg, ~] = swsynth.validateConfig3D( ...
+    cfg, EnforcePropagationCompatibility=false);
 
 Nx = round(cfg.domain.Lx_m / cfg.domain.dx_m) + 1;
 Ny = round(cfg.domain.Ly_m / cfg.domain.dy_m) + 1;
