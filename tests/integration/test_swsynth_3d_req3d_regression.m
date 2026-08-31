@@ -31,6 +31,50 @@ end
 
 function testDeterministicFibonacciProjectedFieldMatchesREQ3D(testCase)
 
+cfg = baseRegressionConfig();
+cfg.polarization.model = "transverse_preferred";
+cfg.sources.amplitude_jitter_fraction = 0;
+
+[framework, Ulegacy, xLegacy, yLegacy, zLegacy, csLegacy, kLegacy, diagLegacy] = ...
+    runMatchedPair(cfg, 'transverse');
+
+verifyCommonOutputs( ...
+    testCase, framework, Ulegacy, xLegacy, yLegacy, zLegacy, ...
+    csLegacy, kLegacy, diagLegacy, 5e-6);
+
+end
+
+function testRandomTransverseFibonacciFieldMatchesREQ3D(testCase)
+
+% Fibonacci directions consume no random draws after rng(seed), so the
+% random-transverse polarization, amplitude jitter, phase, and noise-free
+% synthesis streams can be compared directly across implementations.
+cfg = baseRegressionConfig();
+cfg.seed = 23;
+cfg.directions.count = 9;
+cfg.polarization.model = "transverse_random";
+cfg.sources.amplitude_jitter_fraction = 0.10;
+
+[framework, Ulegacy, xLegacy, yLegacy, zLegacy, csLegacy, kLegacy, diagLegacy] = ...
+    runMatchedPair(cfg, 'random_transverse');
+
+verifyCommonOutputs( ...
+    testCase, framework, Ulegacy, xLegacy, yLegacy, zLegacy, ...
+    csLegacy, kLegacy, diagLegacy, 8e-6);
+
+verifyEqual(testCase, ...
+    framework.wavefield.source_weights, ...
+    diagLegacy.sources.w, ...
+    AbsTol=2e-7);
+verifyEqual(testCase, ...
+    framework.wavefield.observed_weights, ...
+    diagLegacy.sources.wMeasured, ...
+    AbsTol=2e-7);
+
+end
+
+function cfg = baseRegressionConfig()
+
 cfg = swsynth.defaultConfig3D();
 cfg.seed = 11;
 cfg.domain.Lx_m = 0.006;
@@ -46,12 +90,15 @@ cfg.directions.count = 7;
 cfg.directions.sampling_method = "fibonacci";
 cfg.directions.space = "three_dimensional";
 cfg.directions.support.type = "full_sphere";
-cfg.polarization.model = "transverse_preferred";
 cfg.measurement.axis_xyz = [0, 0, 1];
-cfg.sources.amplitude_jitter_fraction = 0;
 cfg.noise.snr_db = Inf;
 cfg.execution.use_parallel = false;
 cfg.execution.synthesis_batch_size = 4;
+
+end
+
+function [framework, Ulegacy, xLegacy, yLegacy, zLegacy, csLegacy, kLegacy, diagLegacy] = ...
+        runMatchedPair(cfg, legacyPolarizationMode)
 
 framework = swsynth.run3D(cfg);
 
@@ -74,10 +121,16 @@ legacyCfg.UseParfor = false;
 legacyCfg.SynthesisBatchSize = cfg.execution.synthesis_batch_size;
 legacyCfg.MeasurementMode = 'projected';
 legacyCfg.MeasurementAxis = cfg.measurement.axis_xyz;
-legacyCfg.PolarizationMode = 'transverse';
+legacyCfg.PolarizationMode = legacyPolarizationMode;
 
 [Ulegacy, xLegacy, yLegacy, zLegacy, csLegacy, kLegacy, diagLegacy] = ...
     req3d.simulate.simulate_plane_wave_3d(legacyCfg);
+
+end
+
+function verifyCommonOutputs( ...
+        testCase, framework, Ulegacy, xLegacy, yLegacy, zLegacy, ...
+        csLegacy, kLegacy, diagLegacy, fieldTolerance)
 
 verifyEqual(testCase, framework.coordinates.x_m, xLegacy, AbsTol=1e-15);
 verifyEqual(testCase, framework.coordinates.y_m, yLegacy, AbsTol=1e-15);
@@ -108,7 +161,7 @@ relativeFieldError = norm( ...
     framework.wavefield.U_zyx(:) - Ulegacy(:)) / ...
     max(norm(Ulegacy(:)), eps);
 
-verifyLessThan(testCase, relativeFieldError, 5e-6, ...
+verifyLessThan(testCase, relativeFieldError, fieldTolerance, ...
     sprintf("Framework/REQ3D relative field error was %.3g.", ...
     relativeFieldError));
 
