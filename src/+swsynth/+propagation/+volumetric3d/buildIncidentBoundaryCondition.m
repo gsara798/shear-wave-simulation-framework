@@ -4,7 +4,8 @@ function [initialTimeZYX, fixedMaskZYX, diagnostics] = ...
 %
 % The incident field is a plane wave with direction d and reference speed
 % c_ref. Dirichlet values are applied on every upstream domain face touched
-% by d. Arrays follow public orientation [Nz, Ny, Nx].
+% by d. Travel time uses the common spatial phase origin (0,0,0), matching
+% the analytical plane-wave backend. Arrays follow [Nz, Ny, Nx].
 
 xM = double(xM(:).');
 yM = double(yM(:).');
@@ -51,9 +52,6 @@ if ~any(fixedMaskZYX(:))
         "Could not identify an upstream boundary face.");
 end
 
-referenceOffsetS = min(planeTime(fixedMaskZYX));
-planeTime = planeTime - referenceOffsetS;
-
 initialTimeZYX = Inf(Nz, Ny, Nx);
 initialTimeZYX(fixedMaskZYX) = planeTime(fixedMaskZYX);
 
@@ -62,7 +60,7 @@ diagnostics.direction_xyz = d;
 diagnostics.reference_cs_m_s = referenceCsMps;
 diagnostics.fixed_node_count = nnz(fixedMaskZYX);
 diagnostics.fixed_fraction = nnz(fixedMaskZYX) / numel(fixedMaskZYX);
-diagnostics.phase_reference_offset_s = referenceOffsetS;
-diagnostics.phase_reference = "minimum_upstream_boundary_time_zero";
+diagnostics.phase_reference_offset_s = 0;
+diagnostics.phase_reference = "global_origin_x0_y0_z0";
 
 end
