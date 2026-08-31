@@ -1,8 +1,13 @@
-function [cfg, report] = validateConfig3D(cfg)
+function [cfg, report] = validateConfig3D(cfg, options)
 %VALIDATECONFIG3D Validate the volumetric 3D synthetic configuration.
+%
+% EnforcePropagationCompatibility controls cross-field checks that are
+% meaningful for a complete simulation run but should not prevent isolated
+% construction/validation of a medium map.
 
 arguments
     cfg (1,1) struct
+    options.EnforcePropagationCompatibility (1,1) logical = true
 end
 
 defaults = swsynth.defaultConfig3D();
@@ -84,7 +89,9 @@ if directionCfg.directions.space ~= "three_dimensional"
 end
 cfg.directions = directionCfg.directions;
 
-if cfg.propagation.model == "plane_wave" && ~isempty(cfg.medium.objects)
+if options.EnforcePropagationCompatibility && ...
+        cfg.propagation.model == "plane_wave" && ...
+        ~isempty(cfg.medium.objects)
     error("swsynth:PlaneWave3DRequiresHomogeneousMedium", ...
         ["The analytical plane_wave backend is homogeneous. Use " + ...
          "propagation.model='volumetric_eikonal' for heterogeneous media."]);
