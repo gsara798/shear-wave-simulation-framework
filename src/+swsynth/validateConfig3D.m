@@ -1,5 +1,5 @@
 function [cfg, report] = validateConfig3D(cfg)
-%VALIDATECONFIG3D Validate the volumetric analytical 3D configuration.
+%VALIDATECONFIG3D Validate the volumetric 3D synthetic configuration.
 
 arguments
     cfg (1,1) struct
@@ -24,6 +24,10 @@ end
 
 positiveScalar(cfg.medium.background_cs_m_s, ...
     "medium.background_cs_m_s");
+cfg.medium.combine_mode = choice(cfg.medium.combine_mode, ...
+    ["overlay"], "medium.combine_mode");
+cfg.medium.objects = validateMediumObjects(cfg.medium.objects);
+
 positiveScalar(cfg.wavefield.frequency_hz, ...
     "wavefield.frequency_hz");
 
@@ -64,8 +68,7 @@ if ~isscalar(cfg.execution.use_parallel)
 end
 cfg.execution.use_parallel = logical(cfg.execution.use_parallel);
 
-% Reuse the established angular contract by validating only the angular
-% portion through a standard swsynth configuration.
+% Reuse the established angular contract.
 directionCfg = swsynth.defaultConfig();
 directionCfg.seed = cfg.seed;
 directionCfg.directions = cfg.directions;
@@ -84,8 +87,101 @@ report.output_convention = "U(z,y,x), maps(z,y,x)";
 
 end
 
-function out = merge(defaults, requested, location)
+function objects = validateMediumObjects(objects)
 
+if isempty(objects)
+    objects = {};
+    return
+end
+if ~iscell(objects)
+    error("swsynth:Invalid3DMediumObjects", ...
+        "medium.objects must be a cell array of structs.");
+end
+
+for i = 1:numel(objects)
+    object = objects{i};
+    if ~isstruct(object) || ~isscalar(object)
+        error("swsynth:Invalid3DMediumObject", ...
+            "medium.objects{%d} must be a scalar struct.", i);
+    end
+    required(object, "type", i);
+    required(object, "cs_m_s", i);
+    object.type = choice(object.type, ...
+        ["sphere","box","slab","custom"], ...
+        sprintf("medium.objects{%d}.type", i));
+    positiveScalar(object.cs_m_s, ...
+        sprintf("medium.objects{%d}.cs_m_s", i));
+
+    switch object.type
+        case "sphere"
+            required(object, "center_xyz_m", i);
+            required(object, "radius_m", i);
+            object.center_xyz_m = finiteVector3(object.center_xyz_m, ...
+                sprintf("medium.objects{%d}.center_xyz_m", i));
+            positiveScalar(object.radius_m, ...
+                sprintf("medium.objects{%d}.radius_m", i));
+
+        case "box"
+            required(object, "center_xyz_m", i);
+            required(object, "size_xyz_m", i);
+            object.center_xyz_m = finiteVector3(object.center_xyz_m, ...
+                sprintf("medium.objects{%d}.center_xyz_m", i));
+            object.size_xyz_m = positiveVector3(object.size_xyz_m, ...
+                sprintf("medium.objects{%d}.size_xyz_m", i));
+
+        case "slab"
+            required(object, "normal_xyz", i);
+            required(object, "offset_m", i);
+            normal = finiteVector3(object.normal_xyz, ...
+                sprintf("medium.objects{%d}.normal_xyz", i));
+            if norm(normal) <= eps
+                error("swsynth:Invalid3DMediumObject", ...
+                    "Slab normal_xyz must be nonzero.");
+            end
+            object.normal_xyz = normal / norm(normal);
+            if ~isscalar(object.offset_m) || ~isfinite(object.offset_m)
+                error("swsynth:Invalid3DMediumObject", ...
+                    "Slab offset_m must be a finite scalar.");
+            end
+
+        case "custom"
+            required(object, "mask_zyx", i);
+            if ~(islogical(object.mask_zyx) || isnumeric(object.mask_zyx)) || ...
+                    isempty(object.mask_zyx)
+                error("swsynth:Invalid3DMediumObject", ...
+                    "custom mask_zyx must be a nonempty numeric/logical array.");
+            end
+            object.mask_zyx = logical(object.mask_zyx);
+    end
+    objects{i} = object;
+end
+
+end
+
+function required(object, fieldName, index)
+if ~isfield(object, fieldName)
+    error("swsynth:Invalid3DMediumObject", ...
+        "medium.objects{%d}.%s is required.", index, fieldName);
+end
+end
+
+function value = finiteVector3(value, location)
+value = double(value(:)).';
+if numel(value) ~= 3 || any(~isfinite(value))
+    error("swsynth:Invalid3DConfigVector", ...
+        "%s must be a finite 3-vector.", location);
+end
+end
+
+function value = positiveVector3(value, location)
+value = finiteVector3(value, location);
+if any(value <= 0)
+    error("swsynth:Invalid3DConfigVector", ...
+        "%s must contain positive values.", location);
+end
+end
+
+function out = merge(defaults, requested, location)
 out = defaults;
 fields = fieldnames(requested);
 for i = 1:numel(fields)
@@ -106,7 +202,6 @@ for i = 1:numel(fields)
         out.(name) = requested.(name);
     end
 end
-
 end
 
 function value = choice(value, allowed, location)
