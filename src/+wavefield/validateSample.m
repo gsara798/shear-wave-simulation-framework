@@ -163,9 +163,19 @@ end
 
 function assertSpatialSize(value, expectedSize, location)
 
-actualSize = size(value);
-actualSize(end+1:numel(expectedSize)) = 1;
-actualSize = actualSize(1:numel(expectedSize));
+fullSize = size(value);
+spatialDimension = numel(expectedSize);
+
+if numel(fullSize) > spatialDimension && ...
+        any(fullSize((spatialDimension + 1):end) ~= 1)
+    error("wavefield:SpatialSizeMismatch", ...
+        "%s contains non-singleton dimensions beyond the declared spatial layout.", ...
+        location);
+end
+
+actualSize = fullSize;
+actualSize(end+1:spatialDimension) = 1;
+actualSize = actualSize(1:spatialDimension);
 
 if ~isequal(actualSize, expectedSize)
     error("wavefield:SpatialSizeMismatch", ...
