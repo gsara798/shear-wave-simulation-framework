@@ -1,11 +1,15 @@
 function [initialTimeZYX, fixedMaskZYX, diagnostics] = ...
     buildIncidentBoundaryCondition(xM, yM, zM, directionXYZ, referenceCsMps)
-%BUILDINCIDENTBOUNDARYCONDITION Build upstream Dirichlet data for 3D Eikonal.
+%BUILDINCIDENTBOUNDARYCONDITION Build plane-wave Dirichlet data for 3D Eikonal.
 %
 % The incident field is a plane wave with direction d and reference speed
-% c_ref. Dirichlet values are applied on every upstream domain face touched
-% by d. Travel time uses the common spatial phase origin (0,0,0), matching
-% the analytical plane-wave backend. Arrays follow [Nz, Ny, Nx].
+% c_ref. To avoid artificial injection through lateral faces in heterogeneous
+% media, Dirichlet values are imposed on one principal incident face: the
+% upstream face normal to the largest-magnitude direction component.
+%
+% The phase ramp across that face preserves the full incident slowness
+% vector. Travel time uses the common spatial phase origin (0,0,0), matching
+% the analytical plane-wave convention. Arrays follow [Nz, Ny, Nx].
 
 xM = double(xM(:).');
 yM = double(yM(:).');
@@ -27,29 +31,39 @@ d = d / norm(d);
 planeTime = (d(1).*X + d(2).*Y + d(3).*Z) ./ referenceCsMps;
 
 fixedMaskZYX = false(Nz, Ny, Nx);
-tol = 1e-12;
+[~, principalAxis] = max(abs(d));
 
-if d(1) > tol
-    fixedMaskZYX(:,:,1) = true;
-elseif d(1) < -tol
-    fixedMaskZYX(:,:,end) = true;
-end
+switch principalAxis
+    case 1 % x-normal face
+        if d(1) >= 0
+            fixedMaskZYX(:,:,1) = true;
+            incidentFace = "x_min";
+        else
+            fixedMaskZYX(:,:,end) = true;
+            incidentFace = "x_max";
+        end
 
-if d(2) > tol
-    fixedMaskZYX(:,1,:) = true;
-elseif d(2) < -tol
-    fixedMaskZYX(:,end,:) = true;
-end
+    case 2 % y-normal face
+        if d(2) >= 0
+            fixedMaskZYX(:,1,:) = true;
+            incidentFace = "y_min";
+        else
+            fixedMaskZYX(:,end,:) = true;
+            incidentFace = "y_max";
+        end
 
-if d(3) > tol
-    fixedMaskZYX(1,:,:) = true;
-elseif d(3) < -tol
-    fixedMaskZYX(end,:,:) = true;
-end
+    case 3 % z-normal face
+        if d(3) >= 0
+            fixedMaskZYX(1,:,:) = true;
+            incidentFace = "z_min";
+        else
+            fixedMaskZYX(end,:,:) = true;
+            incidentFace = "z_max";
+        end
 
-if ~any(fixedMaskZYX(:))
-    error("swsynth:VolumetricBoundaryConstructionFailure", ...
-        "Could not identify an upstream boundary face.");
+    otherwise
+        error("swsynth:VolumetricBoundaryConstructionFailure", ...
+            "Could not identify a principal incident face.");
 end
 
 initialTimeZYX = Inf(Nz, Ny, Nx);
@@ -58,6 +72,8 @@ initialTimeZYX(fixedMaskZYX) = planeTime(fixedMaskZYX);
 diagnostics = struct();
 diagnostics.direction_xyz = d;
 diagnostics.reference_cs_m_s = referenceCsMps;
+diagnostics.incident_face = incidentFace;
+diagnostics.principal_axis = principalAxis;
 diagnostics.fixed_node_count = nnz(fixedMaskZYX);
 diagnostics.fixed_fraction = nnz(fixedMaskZYX) / numel(fixedMaskZYX);
 diagnostics.phase_reference_offset_s = 0;
