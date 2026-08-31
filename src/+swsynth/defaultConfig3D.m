@@ -33,8 +33,12 @@ cfg.wavefield.observed_component = "axial_total";
 cfg.measurement = struct();
 cfg.measurement.axis_xyz = [0, 0, 1];
 
+% Match the 2D naming convention:
+%   propagation.model       = incident wave geometry/type
+%   propagation.phase_model = method used to evolve phase through medium
 cfg.propagation = struct();
 cfg.propagation.model = "plane_wave";
+cfg.propagation.phase_model = "homogeneous_analytic";
 cfg.propagation.eikonal = struct();
 cfg.propagation.eikonal.maximum_iterations = 200;
 cfg.propagation.eikonal.tolerance_s = 1e-10;
