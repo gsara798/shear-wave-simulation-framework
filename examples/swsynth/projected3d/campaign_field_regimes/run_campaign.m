@@ -2,19 +2,23 @@ function report = run_campaign(options)
 %RUN_CAMPAIGN Validate or execute the projected-3D inclusion field-regime campaign.
 %
 % The campaign compares three wavefield regimes while keeping the medium,
-% frequency, projected-3D Eikonal propagation, and full-sphere angular
-% support fixed:
+% frequency, projected-3D Eikonal propagation, and angular support fixed:
 %   directional  -> 1 direction
 %   intermediate -> 16 directions
 %   diffuse      -> 128 directions
+%
+% Use PlotResults=true with Execute=true to generate the comparison figure
+% automatically after the campaign finishes.
 
 arguments
     options.Execute (1,1) logical = false
+    options.PlotResults (1,1) logical = false
 end
 
 example_root = fileparts(mfilename("fullpath"));
 repo_root = fileparts(fileparts(fileparts(fileparts(example_root))));
 addpath(fullfile(repo_root, "src"));
+addpath(example_root);
 
 campaign_file = fullfile(example_root, "campaign.json");
 
@@ -43,4 +47,8 @@ if ~options.Execute
 end
 
 report = simcampaigns.runCampaign(campaign_file);
+
+if options.PlotResults
+    plot_campaign(report);
+end
 end
