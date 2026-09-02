@@ -2,10 +2,11 @@ function files = generateRunFigures(runDirectory, options)
 %GENERATERUNFIGURES Generate standard scientific figures for one saved run.
 arguments
     runDirectory {mustBeTextScalar}
-    options.Visible (1,1) string = "off"
+    options.Visible = "off"
     options.ResolutionDPI (1,1) double {mustBePositive} = 300
 end
 
+visibility = simviz.normalizeVisible(options.Visible);
 runDirectory = string(runDirectory);
 sampleFile = fullfile(runDirectory,"data","wavefield_sample.mat");
 if ~isfile(sampleFile)
@@ -17,7 +18,7 @@ figDir = fullfile(runDirectory,"figures");
 
 files = simviz.generateSampleFigures( ...
     sample, figDir, ...
-    Visible=options.Visible, ...
+    Visible=visibility, ...
     ResolutionDPI=options.ResolutionDPI);
 
 % k-Wave 3D runs have finite-distance source locations. Preserve that
@@ -28,7 +29,7 @@ if isfile(configFile)
     try
         cfg = jsondecode(fileread(configFile));
         if isfield(cfg,"dimension") && double(cfg.dimension)==3 && isfield(cfg,"source")
-            handles = kwsim.viz.plotSourceGeometry3D(cfg,FigureVisible=options.Visible);
+            handles = kwsim.viz.plotSourceGeometry3D(cfg,FigureVisible=visibility);
             files.source_geometry = fullfile(figDir,"source_geometry.png");
             exportgraphics(handles.figure,files.source_geometry,"Resolution",options.ResolutionDPI);
             closeIfValid(handles.figure);
