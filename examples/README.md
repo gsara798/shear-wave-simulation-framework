@@ -1,10 +1,10 @@
 # Examples
 
-These examples are intentionally small, user-facing entry points to the public simulation APIs.
+Each example is self-contained: the MATLAB entry point and the JSON configuration it executes live in the same folder. This is intentional so that a new user can open one example directory and see exactly what is being simulated.
 
 ## Setup
 
-Add the repository source directory to MATLAB. The example functions do this automatically when called from the repository checkout.
+The example functions add `src/` automatically when called from a repository checkout.
 
 For k-Wave examples, install k-Wave 1.4.1 outside this repository and set:
 
@@ -12,31 +12,87 @@ For k-Wave examples, install k-Wave 1.4.1 outside this repository and set:
 setenv('KWSIM_KWAVE_PATH', '/absolute/path/to/k-wave-toolbox-version-1.4.1')
 ```
 
-## k-Wave
+## Synthetic wavefield examples
 
-```matlab
-outcome = run_homogeneous_2d();
-outcome = run_homogeneous_3d();
+### Homogeneous
+
+Folder:
+
+```text
+examples/swsynth/homogeneous/
+  config.json
+  run_example.m
 ```
 
-Both examples run a configured simulation, retain the framework's physical validation report, save the configured field figures, and display a validation-check plot.
-
-## Synthetic wavefields
+Run from that folder or add it to the MATLAB path:
 
 ```matlab
-outcome = run_swsynth_homogeneous();
+outcome = run_example();
 ```
 
-This executes the analytical synthetic-wavefield backend and returns the generated standardized wavefield sample.
+### Circular inclusion
 
-## Validation plots
+```text
+examples/swsynth/inclusion/
+  config.json
+  run_example.m
+```
 
-`plot_validation_checks(report)` visualizes the pass/fail state of the physical validation checks returned by the k-Wave framework. These checks validate the simulation itself; downstream estimator validation belongs outside this repository.
+This example uses `projected3d_eikonal` so that the heterogeneous SWS map changes the propagation physics.
 
-## Run all examples
+### Bilayer
+
+```text
+examples/swsynth/bilayer/
+  config.json
+  run_example.m
+```
+
+This also uses `projected3d_eikonal` and shows refraction/phase-delay changes across a two-material interface.
+
+The three single-run synthetic examples display a compact validation figure containing the ground-truth SWS map, `real(U)`, and `|U|` using `plot_wavefield_sample`.
+
+## Campaign example
+
+```text
+examples/swsynth/campaign/
+  base_config.json
+  campaign.json
+  run_campaign.m
+```
+
+Validate and inspect the expanded campaign without executing it:
 
 ```matlab
-results = run_all();
+report = run_campaign();
 ```
 
-By default `run_all` performs dry runs for the k-Wave examples so that the entry point remains quick. Set `RunKWave=true` to execute the k-Wave solvers.
+Execute all runs:
+
+```matlab
+report = run_campaign(Execute=true);
+```
+
+The example campaign sweeps SWS, frequency, direction count, and seed. Its output directory is local to the example folder.
+
+## k-Wave examples
+
+The k-Wave examples follow the same self-contained pattern:
+
+```text
+examples/kwave/homogeneous_2d/
+  config.json
+  run_example.m
+
+examples/kwave/homogeneous_3d/
+  config.json
+  run_example.m
+```
+
+They retain the framework's physical validation report and can display `plot_validation_checks(report)` after a full solver run.
+
+## Notes
+
+- `config.json` or `base_config.json` is the configuration actually executed by that example.
+- Downstream estimator validation does not belong in this repository.
+- The examples are intentionally small enough to be understandable and modifiable rather than reproducing full research campaigns.
