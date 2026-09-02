@@ -26,7 +26,76 @@ examples/
         └── bilayer/
 ```
 
-Each example folder contains the JSON configuration next to the MATLAB runner.
+Each single-run example contains a `config.json`. The recommended workflow is to run the JSON from the repository root rather than changing into the example directory.
+
+## Setup once per MATLAB session
+
+From the repository root:
+
+```matlab
+setup
+```
+
+For k-Wave, either set `KWSIM_KWAVE_PATH` in the shell or configure it explicitly:
+
+```matlab
+setup(KWavePath="/absolute/path/to/k-wave-toolbox-version-1.4.1")
+```
+
+`setup` adds only the framework source directory. It does not recursively add example folders, which avoids collisions between the many files named `run_example.m`.
+
+## Unified single-run interface
+
+Run any public JSON with the same function:
+
+```matlab
+outcome = run_simulation("examples/swsynth/volumetric3d/inclusion/config.json");
+```
+
+```matlab
+outcome = run_simulation("examples/kwave/2d/inclusion/config.json");
+```
+
+Validate without executing:
+
+```matlab
+outcome = run_simulation( ...
+    "examples/kwave/3d/bilayer/config.json", ...
+    DryRun=true);
+```
+
+Generate the PDF report as part of the run:
+
+```matlab
+outcome = run_simulation( ...
+    "examples/swsynth/volumetric3d/bilayer/config.json", ...
+    GeneratePdf=true);
+```
+
+From a terminal the equivalent entry point is:
+
+```bash
+bash scripts/sim-run examples/kwave/2d/inclusion/config.json
+```
+
+The older `scripts/kwsim-run` and `scripts/swsynth-run` remain as compatibility wrappers around `scripts/sim-run`.
+
+## Standard single-run output contract
+
+By default a run is saved next to its JSON:
+
+```text
+<example>/outputs/<scenario>_<timestamp>/
+├── config/
+├── data/
+│   ├── wavefield_sample.mat
+│   └── run_summary.json
+├── figures/
+├── validation/
+└── report/              # when a PDF is requested
+```
+
+Both backends use this layout. k-Wave may additionally save its native result MAT files and solver-specific metadata inside the same run.
 
 ## Dimensionality
 
@@ -55,68 +124,25 @@ Volumetric samples additionally generate orthogonal XY/XZ/YZ views and four cros
 
 Synthetic samples may also generate `directions.png`. k-Wave 3D runs additionally generate physical source geometry when available.
 
-## Volumetric synthetic examples
+## Geometry examples
+
+The volumetric synthetic inclusion uses a spherical 3 m/s region in a 2 m/s background. The volumetric synthetic bilayer uses a planar slab interface. Heterogeneous volumetric examples use `phase_model="volumetric_eikonal"`.
+
+The k-Wave 2D bilayer is represented explicitly by a rectangular second layer. The k-Wave 3D bilayer uses the native planar bilayer geometry. k-Wave 3D inclusions use the native spherical material primitive.
+
+## Field-regime campaigns
+
+Campaigns remain separate from the single-run interface because they expand one base configuration into multiple related runs. For example:
 
 ```matlab
-cd examples/swsynth/volumetric3d/homogeneous
-result = run_example();
+cd examples/swsynth/projected3d/campaign_field_regimes
+report = run_campaign(Execute=true,PlotRuns=true);
 ```
 
-```matlab
-cd examples/swsynth/volumetric3d/inclusion
-result = run_example();
-```
-
-```matlab
-cd examples/swsynth/volumetric3d/bilayer
-result = run_example();
-```
-
-The inclusion uses a spherical 3 m/s region in a 2 m/s background. The bilayer uses a planar slab interface. Heterogeneous volumetric examples use `phase_model="volumetric_eikonal"`.
-
-## Projected-3D field-regime campaign
-
-The campaign keeps the inclusion and propagation physics fixed while increasing the number of independent 3D propagation directions:
+The example convention is:
 
 - `directional`: 1 direction
 - `intermediate`: 16 directions
 - `diffuse`: 128 directions
 
-Validate only:
-
-```matlab
-cd examples/swsynth/projected3d/campaign_field_regimes
-report = run_campaign();
-```
-
-Execute:
-
-```matlab
-report = run_campaign(Execute=true,PlotRuns=true);
-```
-
-These labels are an example convention for increasing angular complexity, not universal thresholds.
-
-## k-Wave examples
-
-Install k-Wave 1.4.1 outside this repository and set:
-
-```matlab
-setenv('KWSIM_KWAVE_PATH','/absolute/path/to/k-wave-toolbox-version-1.4.1')
-```
-
-For either dimension, choose `homogeneous`, `inclusion`, or `bilayer`:
-
-```matlab
-cd examples/kwave/2d/inclusion
-outcome = run_example();
-```
-
-```matlab
-cd examples/kwave/3d/bilayer
-outcome = run_example();
-```
-
-All public k-Wave examples save a standardized `wavefield_sample` and then use the same `simviz` plotting functions as the synthetic examples. The 2D bilayer is represented explicitly by a rectangular second layer; the 3D bilayer uses the native planar bilayer geometry.
-
-Use `DryRun=true` to validate a k-Wave configuration without executing the solver.
+These are example settings for increasing angular complexity, not universal physical thresholds.
