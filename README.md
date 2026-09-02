@@ -217,6 +217,10 @@ Expand a campaign without executing simulations:
 ```matlab
 addpath("src");
 
+> **Campaign API:** New code should use the backend-neutral
+> `simcampaigns` package. The older `kwsim.campaigns` namespace is
+> retained temporarily for compatibility with existing k-Wave workflows.
+
 [runs, expansion] = simcampaigns.expandCampaign( ...
     "configs/campaigns/kwsim/smoke/homogeneous_partial_3d_n8_p2_smoke.json");
 
@@ -594,14 +598,164 @@ Configured runs may evaluate:
 
 - configuration and resource preflight;
 - grid resolution and points per wavelength;
-- source fundamental-frequency content;
+- source fundamental-frequency fraction;
 - finite harmonic fields;
 - P/S energy ratio;
-- steady-state convergence;
-- homogeneous speed recovery;
-- heterogeneous truth-region composition;
-- source-bank geometry and directional coverage;
-- REQ readiness when requested.
+- cross-polarization and longitudinal leakage;
+- harmonic steady-state change;
+- homogeneous SWS agreement;
+- source-bank angular properties;
+- geometry containment and discretization;
+- repeatability;
+- REQ readiness.
 
-A completed solver run is not automatically a valid scientific result. Always
-inspect the resolved configuration and validation report before interpretation.
+Validation thresholds are scenario-specific.
+
+A solver completing successfully does not automatically mean that the result is
+scientifically valid.
+
+Always inspect:
+
+```text
+data/validation_summary.txt
+config/resolved_config.json
+diagnostic figures
+truth maps
+```
+
+See:
+
+[Outputs and Validation](docs/kwsim/outputs_and_validation.md)
+
+## Output structure
+
+A configured run is saved under:
+
+```text
+outputs/<timestamp>_<run_name>/
+```
+
+Typical structure:
+
+```text
+<run_directory>/
+├── config/
+│   ├── requested_config.mat
+│   ├── resolved_config.json
+│   └── resolved_config.mat
+├── data/
+│   ├── result.mat
+│   ├── summary.mat
+│   ├── validation_report.mat
+│   └── validation_summary.txt
+├── figures/
+└── manifest.txt
+```
+
+Some 3D cases can also save:
+
+```text
+data/req_validation_sample.mat
+```
+
+The full time series is disabled by default to prevent accidental
+multi-gigabyte outputs.
+
+Enable it only when required:
+
+```matlab
+cfg.output.save_time_series = true;
+```
+
+New outputs belong under `outputs/`, which is excluded by `.gitignore`.
+
+## Heterogeneous truth interpretation
+
+For heterogeneous sliding-window analysis, windows should be classified using
+the material ID truth map:
+
+```text
+background-pure
+inclusion-pure
+mixed
+```
+
+Mixed windows do not have one unique local ground-truth SWS.
+
+A displayed map can contain visible background and inclusion while still
+providing no background-pure placements for a selected analysis window.
+
+Do not claim background accuracy or contrast recovery unless the region
+composition supports those claims.
+
+See:
+
+[Heterogeneous Materials](docs/kwsim/physics/heterogeneous_materials.md)
+
+## Tests
+
+From MATLAB:
+
+```matlab
+addpath('/absolute/path/to/k-wave_simulations/tests');
+results = run_all_tests();
+```
+
+Unit tests are designed to run quickly.
+
+Integration tests execute compact k-Wave simulations and take longer.
+
+## Citation
+
+When using this repository in research, cite both this software and the k-Wave
+toolbox.
+
+Repository citation metadata are provided in:
+
+[CITATION.cff](CITATION.cff)
+
+## License
+
+This project is distributed under the [Apache License 2.0](LICENSE).
+
+## Contributing
+
+Bug reports, validation cases, documentation improvements, and numerical tests
+are welcome.
+
+See:
+
+[CONTRIBUTING.md](CONTRIBUTING.md)
+
+## Dependency: k-Wave Toolbox
+
+This repository builds upon the open-source k-Wave MATLAB Toolbox for
+time-domain acoustic and elastic-wave simulations.
+
+The k-Wave toolbox is developed and maintained by Bradley E. Treeby and Ben T.
+Cox.
+
+Please cite the original k-Wave publications when using this repository in
+research.
+
+### k-Wave references
+
+Treeby BE, Cox BT.
+
+*K-Wave: MATLAB toolbox for the simulation and reconstruction of photoacoustic
+wave fields.*
+
+Journal of Biomedical Optics, 15(2), 021314, 2010.
+
+Treeby BE, Jaros J, Rendell AP, Cox BT.
+
+*Modeling nonlinear ultrasound propagation in heterogeneous media with power
+law absorption using a k-space pseudospectral method.*
+
+Journal of the Acoustical Society of America, 131(6), 4324-4336, 2012.
+
+Official website:
+
+```text
+https://www.k-wave.org
+```
