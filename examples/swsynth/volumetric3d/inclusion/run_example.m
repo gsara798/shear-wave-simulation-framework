@@ -1,8 +1,9 @@
-function result = run_example(options)
-%RUN_EXAMPLE Run a volumetric 3D synthetic spherical-inclusion example.
+function outcome = run_example(options)
+%RUN_EXAMPLE Run and persist a volumetric 3D synthetic spherical inclusion.
 arguments
     options.PlotFigures (1,1) logical = true
     options.FigureVisible (1,1) string = "off"
+    options.GeneratePdf (1,1) logical = false
 end
 
 example_root = fileparts(mfilename("fullpath"));
@@ -13,11 +14,10 @@ config = jsondecode(fileread(fullfile(example_root,"config.json")));
 if isstruct(config.medium.objects)
     config.medium.objects = num2cell(config.medium.objects);
 end
-result = swsynth.run3D(config);
-
-if options.PlotFigures
-    result.figure_files = simviz.generateSampleFigures( ...
-        result.sample, fullfile(example_root,"figures"), ...
-        Visible=options.FigureVisible);
-end
+outcome = simcampaigns.runSingle( ...
+    config,"swsynth", ...
+    OutputRoot=fullfile(example_root,"outputs"), ...
+    PlotFigures=options.PlotFigures, ...
+    FigureVisible=options.FigureVisible, ...
+    GeneratePdf=options.GeneratePdf);
 end
