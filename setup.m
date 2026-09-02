@@ -20,6 +20,9 @@ if ~isfolder(sourceDirectory)
         "Could not find the repository src directory: %s",sourceDirectory);
 end
 
+% Keep the public root entry points (setup/run_simulation) and package
+% source available even after the user changes the MATLAB working folder.
+addpath(repositoryRoot);
 addpath(sourceDirectory);
 
 kWavePath = string(options.KWavePath);
