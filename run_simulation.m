@@ -21,6 +21,14 @@ if ~contains(path,sourceDirectory)
     addpath(sourceDirectory);
 end
 
+configFile = string(configFile);
+if ~isfile(configFile) && ~isAbsolutePath(configFile)
+    repositoryRelative = fullfile(repositoryRoot,configFile);
+    if isfile(repositoryRelative)
+        configFile = repositoryRelative;
+    end
+end
+
 outcome = simrunner.runConfig( ...
     configFile, ...
     Backend=options.Backend, ...
@@ -29,4 +37,13 @@ outcome = simrunner.runConfig( ...
     PlotFigures=options.PlotFigures, ...
     FigureVisible=options.FigureVisible, ...
     GeneratePdf=options.GeneratePdf);
+end
+
+function tf = isAbsolutePath(value)
+characters = char(string(value));
+if ispc
+    tf = ~isempty(regexp(characters,'^[A-Za-z]:[\\/]|^\\\\','once'));
+else
+    tf = startsWith(characters,filesep);
+end
 end
