@@ -41,7 +41,7 @@
     "require_in_plane": false,
     "in_plane_count": 0,
     "support": {
-      "type": "full_sphere",
+      "type": "solid_angle_cap",
       "axis_xyz": [1, 0, 0],
       "solid_angle_sr": 12.566370614359172,
       "half_angle_deg": 180,
