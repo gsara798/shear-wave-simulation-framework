@@ -24,6 +24,21 @@ verifyEqual(testCase, map(1, :), [1, 1, 1], "AbsTol", 1e-12);
 verifyEqual(testCase, map(end, :), theme.rgb.teal.main, "AbsTol", 1e-12);
 end
 
+function testPurpleYellowMapsUseMainPaletteColors(testCase)
+addSourcePath();
+
+theme = simviz.paperTheme();
+sequential = simviz.sequentialColormap("blue", 64, EndRole="yellow");
+diverging = simviz.divergingColormap(257, ...
+    NegativeRole="blue", PositiveRole="yellow");
+
+verifyEqual(testCase, sequential(1, :), theme.rgb.blue.main, "AbsTol", 1e-12);
+verifyEqual(testCase, sequential(end, :), theme.rgb.yellow.main, "AbsTol", 1e-12);
+verifyEqual(testCase, diverging(1, :), theme.rgb.blue.main, "AbsTol", 1e-12);
+verifyEqual(testCase, diverging(129, :), [1, 1, 1], "AbsTol", 1e-12);
+verifyEqual(testCase, diverging(end, :), theme.rgb.yellow.main, "AbsTol", 1e-12);
+end
+
 function addSourcePath()
 root = fileparts(fileparts(fileparts(mfilename("fullpath"))));
 addpath(fullfile(root, "src"));
