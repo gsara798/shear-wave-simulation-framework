@@ -14,10 +14,6 @@ function outcome = runConfig(configFile, options)
 %       validation/
 %       report/        (when GeneratePdf=true)
 %
-% Examples:
-%   simrunner.runConfig("examples/kwave/2d/inclusion/config.json")
-%   simrunner.runConfig("examples/swsynth/volumetric3d/inclusion/config.json")
-%
 arguments
     configFile {mustBeTextScalar}
     options.Backend {mustBeTextScalar} = "auto"
@@ -64,6 +60,7 @@ outcome = simcampaigns.runSingle( ...
 outcome.config_file = configFile;
 outcome.backend = backend;
 outcome.output_root = outputRoot;
+outcome = ensureStandardArtifacts(outcome,config,backend);
 
 fprintf("\nUnified simulation run completed.\n");
 fprintf("Backend: %s\n",backend);
@@ -71,7 +68,6 @@ fprintf("Run:     %s\n",outcome.run_directory);
 end
 
 function outcome = validateOnly(configFile,config,backend,outputRoot)
-
 switch backend
     case "kwsim"
         outcome = kwsim.cli.runConfig( ...
@@ -103,7 +99,6 @@ end
 end
 
 function config = normalizeConfigForExecution(config,backend)
-
 switch backend
     case "kwsim"
         if ~isfield(config,"output") || ~isstruct(config.output)
@@ -122,6 +117,59 @@ if isfield(config,"medium") && isfield(config.medium,"objects") && ...
         isstruct(config.medium.objects) && ~isempty(config.medium.objects)
     config.medium.objects = num2cell(config.medium.objects);
 end
+end
+
+function outcome = ensureStandardArtifacts(outcome,config,backend)
+runDirectory = string(outcome.run_directory);
+for folder = ["config","data","figures","validation"]
+    pathValue = fullfile(runDirectory,folder);
+    if ~isfolder(pathValue), mkdir(pathValue); end
+end
+
+summaryPath = fullfile(runDirectory,"data","run_summary.json");
+if ~isfile(summaryPath)
+    summary = buildStandardSummary(outcome,config,backend);
+    writeJson(summaryPath,summary);
+end
+outcome.paths.run_summary = summaryPath;
+end
+
+function summary = buildStandardSummary(outcome,config,backend)
+summary = struct();
+summary.schema_version = "1.0";
+summary.backend = backend;
+summary.status = string(outcome.status);
+summary.scenario = textField(config,"scenario","");
+
+if backend == "kwsim"
+    summary.spatial_dimension = numericField(config,"dimension",NaN);
+    summary.frequency_hz = nestedNumeric(config,["source","f0_hz"]);
+    summary.background_cs_m_s = nestedNumeric(config,["medium","cs_m_s"]);
+    if isfield(outcome,"result") && isfield(outcome.result,"runtime_s")
+        summary.elapsed_solver_time_s = double(outcome.result.runtime_s);
+    else
+        summary.elapsed_solver_time_s = NaN;
+    end
+    if isfield(outcome,"report") && isfield(outcome.report,"valid")
+        summary.valid = logical(outcome.report.valid);
+    else
+        summary.valid = true;
+    end
+else
+    if isfield(config,"domain") && isfield(config.domain,"Ly_m")
+        summary.spatial_dimension = 3;
+    else
+        summary.spatial_dimension = 2;
+    end
+    summary.frequency_hz = nestedNumeric(config,["wavefield","frequency_hz"]);
+    summary.background_cs_m_s = nestedNumeric(config,["medium","background_cs_m_s"]);
+    if isfield(outcome,"validation") && isfield(outcome.validation,"valid")
+        summary.valid = logical(outcome.validation.valid);
+    else
+        summary.valid = true;
+    end
+end
+summary.run_directory = string(outcome.run_directory);
 end
 
 function backend = resolveBackend(config,requested)
@@ -153,9 +201,7 @@ end
 
 function value = absolutePath(value)
 value = string(value);
-if isAbsolutePath(value)
-    return
-end
+if isAbsolutePath(value), return, end
 value = string(fullfile(pwd,value));
 end
 
@@ -166,4 +212,41 @@ if ispc
 else
     tf = startsWith(characters,filesep);
 end
+end
+
+function value = textField(s,name,defaultValue)
+if isstruct(s) && isfield(s,name)
+    value = string(s.(name));
+else
+    value = string(defaultValue);
+end
+end
+
+function value = numericField(s,name,defaultValue)
+if isstruct(s) && isfield(s,name)
+    value = double(s.(name));
+else
+    value = double(defaultValue);
+end
+end
+
+function value = nestedNumeric(s,path)
+value = NaN;
+current = s;
+for name = path
+    if ~isstruct(current) || ~isfield(current,name), return, end
+    current = current.(name);
+end
+if (isnumeric(current) || islogical(current)) && isscalar(current)
+    value = double(current);
+end
+end
+
+function writeJson(pathValue,value)
+fileId = fopen(pathValue,"w");
+if fileId < 0
+    error("simrunner:OutputWriteFailed","Could not write %s",pathValue);
+end
+cleanup = onCleanup(@() fclose(fileId));
+fprintf(fileId,"%s",jsonencode(value,PrettyPrint=true));
 end
