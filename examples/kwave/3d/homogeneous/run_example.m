@@ -1,26 +1,21 @@
 function outcome = run_example(options)
-%RUN_EXAMPLE Run the self-contained 3D homogeneous k-Wave example.
+%RUN_EXAMPLE Run the k-Wave 3D homogeneous example through the unified runner.
 arguments
     options.DryRun (1,1) logical = false
     options.PlotFigures (1,1) logical = true
-    options.FigureVisible (1,1) string = "off"
-    options.ShowValidationPlot (1,1) logical = false
+    options.FigureVisible = "off"
+    options.GeneratePdf (1,1) logical = false
 end
 
-example_dir = fileparts(mfilename("fullpath"));
-repo_root = fileparts(fileparts(fileparts(example_dir)));
-addpath(fullfile(repo_root,"src"));
-addpath(fullfile(repo_root,"examples"));
+exampleDir = string(fileparts(mfilename("fullpath")));
+repositoryRoot = fileparts(fileparts(fileparts(fileparts(exampleDir))));
+addpath(repositoryRoot);
+setup(Quiet=true);
 
-outcome = kwsim.cli.runConfig( ...
-    fullfile(example_dir,"config.json"), ...
-    DryRun=options.DryRun);
-
-if ~options.DryRun && options.PlotFigures
-    outcome.standard_figure_files = simviz.generateRunFigures( ...
-        outcome.paths.run, Visible=options.FigureVisible);
-end
-if ~options.DryRun && options.ShowValidationPlot
-    plot_validation_checks(outcome.report);
-end
+outcome = run_simulation( ...
+    fullfile(exampleDir,"config.json"), ...
+    DryRun=options.DryRun, ...
+    PlotFigures=options.PlotFigures, ...
+    FigureVisible=options.FigureVisible, ...
+    GeneratePdf=options.GeneratePdf);
 end
