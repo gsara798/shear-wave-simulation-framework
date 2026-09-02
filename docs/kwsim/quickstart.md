@@ -16,12 +16,21 @@ The current framework requires:
 - Python 3, used by the command-line wrapper to resolve file paths;
 - a Bash-compatible terminal.
 
-The current development and validation environment uses k-Wave 1.4.1.
+The current development and validation environment uses k-Wave 1.4.1. k-Wave
+is an external dependency and is not included in this repository. Point the
+framework to the toolbox root with:
+
+```bash
+export KWSIM_KWAVE_PATH="/absolute/path/to/k-Wave"
+```
+
+The path must contain the k-Wave toolbox files such as `kWaveGrid.m`,
+`pstdElastic2D.m`, and `makeDisc.m`.
 
 Run all commands from the repository root:
 
 ```bash
-cd /absolute/path/to/k-wave_simulations
+cd /absolute/path/to/shear-wave-simulation-framework
 ```
 
 ## 2. Check the command-line interface
@@ -44,7 +53,8 @@ Options:
   -h, --help   Show this message.
 
 Environment:
-  MATLAB_BIN   Optional path to the MATLAB executable.
+  MATLAB_BIN        Optional path to the MATLAB executable.
+  KWSIM_KWAVE_PATH  Path to the external k-Wave toolbox root.
 ```
 
 ## 3. Run a dry run first
