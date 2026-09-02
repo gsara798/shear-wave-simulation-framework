@@ -1,19 +1,20 @@
 function outcome = run_example(options)
-%RUN_EXAMPLE Run and persist a volumetric 3D synthetic homogeneous example.
+%RUN_EXAMPLE Run the volumetric homogeneous example through the unified runner.
 arguments
+    options.DryRun (1,1) logical = false
     options.PlotFigures (1,1) logical = true
-    options.FigureVisible (1,1) string = "off"
+    options.FigureVisible = "off"
     options.GeneratePdf (1,1) logical = false
 end
 
-example_root = fileparts(mfilename("fullpath"));
-repo_root = fileparts(fileparts(fileparts(fileparts(example_root))));
-addpath(fullfile(repo_root,"src"));
+exampleDir = string(fileparts(mfilename("fullpath")));
+repositoryRoot = fileparts(fileparts(fileparts(fileparts(exampleDir))));
+addpath(repositoryRoot);
+setup(Quiet=true);
 
-config = jsondecode(fileread(fullfile(example_root,"config.json")));
-outcome = simcampaigns.runSingle( ...
-    config,"swsynth", ...
-    OutputRoot=fullfile(example_root,"outputs"), ...
+outcome = run_simulation( ...
+    fullfile(exampleDir,"config.json"), ...
+    DryRun=options.DryRun, ...
     PlotFigures=options.PlotFigures, ...
     FigureVisible=options.FigureVisible, ...
     GeneratePdf=options.GeneratePdf);
