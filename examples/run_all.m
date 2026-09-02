@@ -1,25 +1,37 @@
 function results = run_all(options)
-%RUN_ALL Run the user-facing framework examples.
-%
-% k-Wave examples default to dry-run mode because full 3D solver execution
-% can be expensive. Set RunKWave=true to execute them.
+%RUN_ALL Run or dry-run the self-contained public examples.
 
 arguments
+    options.RunSwsynth (1,1) logical = true
     options.RunKWave (1,1) logical = false
-    options.ShowValidationPlots (1,1) logical = true
 end
 
 examples_root = fileparts(mfilename("fullpath"));
-addpath(examples_root);
-addpath(fullfile(examples_root, "kwave"));
-addpath(fullfile(examples_root, "swsynth"));
+repo_root = fileparts(examples_root);
+addpath(fullfile(repo_root,"src"));
 
 results = struct();
-results.swsynth = run_swsynth_homogeneous();
-results.kwave_2d = run_homogeneous_2d( ...
-    DryRun=~options.RunKWave, ...
-    ShowValidationPlot=options.ShowValidationPlots);
-results.kwave_3d = run_homogeneous_3d( ...
-    DryRun=~options.RunKWave, ...
-    ShowValidationPlot=options.ShowValidationPlots);
+
+synthetic_names = ["homogeneous","inclusion","bilayer"];
+for index = 1:numel(synthetic_names)
+    name = synthetic_names(index);
+    config_file = fullfile( ...
+        examples_root,"swsynth",name,"config.json");
+    results.swsynth.(name) = swsynth.cli.runConfig( ...
+        config_file, DryRun=~options.RunSwsynth);
+end
+
+kwave_names = ["homogeneous_2d","homogeneous_3d"];
+for index = 1:numel(kwave_names)
+    name = kwave_names(index);
+    config_file = fullfile( ...
+        examples_root,"kwave",name,"config.json");
+    results.kwave.(name) = kwsim.cli.runConfig( ...
+        config_file, DryRun=~options.RunKWave);
+end
+
+campaign_file = fullfile( ...
+    examples_root,"swsynth","campaign","campaign.json");
+[~,results.campaign_validation] = ...
+    simcampaigns.validateCampaign(campaign_file);
 end
