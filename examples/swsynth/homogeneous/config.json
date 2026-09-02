@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0",
+  "scenario": "example_swsynth_homogeneous",
+  "seed": 3101,
+  "domain": {
+    "Lx_m": 0.05,
+    "Lz_m": 0.05,
+    "dx_m": 0.0005,
+    "dz_m": 0.0005,
+    "observation_y_m": 0.0
+  },
+  "medium": {
+    "background_cs_m_s": 2.0,
+    "combine_mode": "overlay",
+    "objects": []
+  },
+  "wavefield": {
+    "frequency_hz": 500,
+    "observed_component": "axial"
+  },
+  "propagation": {
+    "model": "plane_wave"
+  },
+  "directions": {
+    "count": 16,
+    "space": "two_dimensional",
+    "sampling_method": "fibonacci",
+    "require_in_plane": true,
+    "support": {
+      "type": "full_circle",
+      "axis_xyz": [-1, 0, 0],
+      "half_angle_deg": 180,
+      "band_half_width_deg": 90,
+      "phi_range_rad": [0, 6.283185307179586],
+      "theta_range_rad": [0, 3.141592653589793],
+      "angle_range_2d_rad": [0, 6.283185307179586]
+    }
+  },
+  "sources": {
+    "radius_range_m": [],
+    "phase_policy": "random_uniform",
+    "amplitude_jitter_fraction": 0.05
+  },
+  "polarization": {
+    "model": "in_plane_sv"
+  },
+  "amplitude": {
+    "geometric_decay_exponent": 0.0
+  },
+  "noise": {
+    "snr_db": 1000
+  },
+  "execution": {
+    "use_parallel": false
+  }
+}
