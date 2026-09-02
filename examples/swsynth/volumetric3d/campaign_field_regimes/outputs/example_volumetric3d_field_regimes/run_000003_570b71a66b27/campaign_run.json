@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "status": "completed",
+  "ordinal": 3,
+  "design_id": "diffuse",
+  "condition_id": "diffuse",
+  "realization_id": 1,
+  "run_id": "run_000003_570b71a66b27",
+  "backend": "swsynth",
+  "hash_sha256": "570b71a66b27dd51618a2414b149a9cc5e27d6b2f8c7f06f1c78f1741dfa28c2",
+  "outcome_status": "completed_valid",
+  "completed": "2026-09-02 14:48:28 *"
+}

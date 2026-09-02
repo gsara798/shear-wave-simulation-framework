@@ -1,8 +1,8 @@
 function report = run_campaign(options)
 %RUN_CAMPAIGN Validate or execute the small volumetric-3D field-regime campaign.
 arguments
-    options.Execute (1,1) logical = false
-    options.PlotRuns (1,1) logical = false
+    options.Execute (1,1) logical = true
+    options.PlotRuns (1,1) logical = true
     options.GenerateReports (1,1) logical = false
 end
 exampleRoot=fileparts(mfilename("fullpath"));

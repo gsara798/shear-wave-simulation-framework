@@ -1,25 +1,42 @@
 function fig = plotSws(sample, options)
-%PLOTSWS Plot the ground-truth shear-wave-speed map or central 3D slice.
+%PLOTSWS Plot the ground-truth shear-wave-speed map.
+
 arguments
     sample (1,1) struct
     options.Visible (1,1) string = "off"
 end
 
-[x,z,~,cs,~] = simviz.displayPlane(sample);
+if double(sample.spatial_dimension) == 3
+    fig = simviz.plotVolumetricSwsSlices( ...
+        sample, ...
+        Visible=options.Visible);
+    return
+end
+
+[x_mm, z_mm, ~, cs, ~] = ...
+    simviz.displayPlane(sample);
+
 theme = simviz.paperTheme();
-fig = figure("Visible",char(options.Visible),"Color","w","Position",[100 100 760 620]);
+
+fig = figure( ...
+    "Visible", char(options.Visible), ...
+    "Color", "w", ...
+    "Position", [100, 100, 760, 620]);
+
 ax = axes(fig);
-imagesc(ax,x,z,cs);
-axis(ax,"image");
-set(ax,"YDir","normal");
-xlabel(ax,"x [mm]");
-ylabel(ax,"z [mm]");
+
+imagesc(ax, x_mm, z_mm, cs);
+axis(ax, "image");
+set(ax, "YDir", "normal");
+
+xlabel(ax, "x [mm]");
+ylabel(ax, "z [mm]");
 
 cb = colorbar(ax);
-ylabel(cb,"SWS [m/s]");
+ylabel(cb, "SWS [m/s]");
 
-% Match the k-Wave SWS-map convention used in REQ-ML validation.
-colormap(ax,turbo(256));
+colormap(ax, simviz.colormapSws(256));
 
-simviz.applyFigureStyle(fig,theme);
+simviz.applyFigureStyle(fig, theme);
+
 end

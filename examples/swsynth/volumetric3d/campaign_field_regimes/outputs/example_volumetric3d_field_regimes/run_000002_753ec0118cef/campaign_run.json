@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "status": "completed",
+  "ordinal": 2,
+  "design_id": "intermediate",
+  "condition_id": "intermediate",
+  "realization_id": 1,
+  "run_id": "run_000002_753ec0118cef",
+  "backend": "swsynth",
+  "hash_sha256": "753ec0118cef943c018b5030499c71b99fc067efdc3643d22be8de9b532b9bc5",
+  "outcome_status": "completed_valid",
+  "completed": "2026-09-02 14:48:28 *"
+}

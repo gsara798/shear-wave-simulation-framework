@@ -1,0 +1,6 @@
+{
+  "valid": true,
+  "spatial_dimension": 3,
+  "array_order": "zyx",
+  "output_convention": "U(z,y,x), maps(z,y,x)"
+}

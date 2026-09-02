@@ -1,8 +1,8 @@
 function report = run_campaign(options)
 %RUN_CAMPAIGN Validate or execute the projected-3D inclusion field-regime campaign.
 arguments
-    options.Execute (1,1) logical = false
-    options.PlotRuns (1,1) logical = false
+    options.Execute (1,1) logical = true
+    options.PlotRuns (1,1) logical = true
     options.GenerateReports (1,1) logical = false
     options.PlotComparison (1,1) logical = false
 end

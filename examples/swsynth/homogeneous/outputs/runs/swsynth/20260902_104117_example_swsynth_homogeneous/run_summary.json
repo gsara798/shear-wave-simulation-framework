@@ -1,0 +1,32 @@
+{
+  "schema_name": "swsynth_run_summary",
+  "schema_version": 1,
+  "backend": "swsynth",
+  "scenario": "example_swsynth_homogeneous",
+  "seed": 3101,
+  "propagation_model": "plane_wave",
+  "frequency_hz": 500,
+  "requested_direction_count": 16,
+  "solid_angle_sr": 12.566370614359172,
+  "requested_in_plane_count": 0,
+  "direction_support_type": "full_circle",
+  "geometry_family": "homogeneous",
+  "background_cs_m_s": 2,
+  "medium_object_count": 0,
+  "runtime_s": 0.08038270833333333,
+  "output_directory": "outputs/runs/swsynth/20260902_104117_example_swsynth_homogeneous",
+  "files": {
+    "requested_config": "config/requested_config.json",
+    "resolved_config": "config/resolved_config.json",
+    "wavefield_sample": "data/wavefield_sample.mat",
+    "validation_report": "validation/validation_report.json",
+    "manifest": "manifest.txt"
+  },
+  "retained_direction_count": 16,
+  "retained_in_plane_count": 16,
+  "retained_in_plane_fraction": 1,
+  "angular_entropy": 0.81820851302888065,
+  "angular_effective_bins": 18.766356185384595,
+  "radial_entropy": 0.078077498051137159,
+  "radial_effective_bins": 1.2816322895670251
+}
