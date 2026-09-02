@@ -1,14 +1,7 @@
 {
   "schema_version": "1.0",
   "campaign_name": "homogeneous_partial_3d_n8_p2_smoke",
-  "base_config": "configs/kwsim/three_d/homogeneous_partial_3d_n8_p2_req_validation.json",
-  "output": {
-    "directory": "outputs/campaigns"
-  },
-  "sweep": [
-    {
-      "path": "medium.cs_m_s",
-      "values": [2.0, 3.0]
-    }
-  ]
+  "base_config": "configs/kwsim/three_d/homogeneous_partial_3d_n8_p2.json",
+  "output": {"directory": "outputs/campaigns"},
+  "sweep": [{"path": "medium.cs_m_s", "values": [2.0, 3.0]}]
 }
