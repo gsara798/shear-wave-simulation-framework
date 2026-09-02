@@ -1,20 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -lt 1 ]]; then
-  echo "Usage: scripts/swsynth-run <config.json> [output_directory]"
-  exit 2
-fi
+SCRIPT_DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-CONFIG_FILE="$1"
-OUTPUT_DIRECTORY="${2:-}"
-
-MATLAB_BIN="${MATLAB_BIN:-/Applications/MATLAB_R2025a.app/bin/matlab}"
-
-if [[ -n "$OUTPUT_DIRECTORY" ]]; then
-  "$MATLAB_BIN" -batch \
-    "addpath('src'); swsynth.cli.runConfig('$CONFIG_FILE',OutputDirectory='$OUTPUT_DIRECTORY');"
-else
-  "$MATLAB_BIN" -batch \
-    "addpath('src'); swsynth.cli.runConfig('$CONFIG_FILE');"
-fi
+echo "Note: scripts/swsynth-run is a compatibility wrapper; use scripts/sim-run for new workflows." >&2
+exec bash "$SCRIPT_DIRECTORY/sim-run" "$@"
