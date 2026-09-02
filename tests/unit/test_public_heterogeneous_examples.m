@@ -55,8 +55,7 @@ end
 
 function pathValue = examplePath(varargin)
 root = repositoryRoot();
-parts = string(varargin);
-pathValue = fullfile(root,"examples",parts{:},"config.json");
+pathValue = fullfile(root,"examples",varargin{:},"config.json");
 end
 
 function addSourcePath()
