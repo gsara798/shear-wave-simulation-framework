@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0",
-  "scenario": "example_swsynth_campaign_base",
-  "seed": 7001,
+  "scenario": "example_projected3d_inclusion_field_regimes",
+  "seed": 7101,
   "domain": {
-    "Lx_m": 0.03,
-    "Lz_m": 0.03,
+    "Lx_m": 0.05,
+    "Lz_m": 0.05,
     "dx_m": 0.0005,
     "dz_m": 0.0005,
     "observation_y_m": 0.0
@@ -12,23 +12,38 @@
   "medium": {
     "background_cs_m_s": 2.0,
     "combine_mode": "overlay",
-    "objects": []
+    "objects": [
+      {
+        "type": "circle",
+        "cs_m_s": 3.0,
+        "center_xz_m": [0.025, 0.025],
+        "radius_m": 0.008,
+        "edge_sigma_m": 0.0
+      }
+    ]
   },
   "wavefield": {
-    "frequency_hz": 400,
+    "frequency_hz": 250,
     "observed_component": "axial"
   },
   "propagation": {
-    "model": "plane_wave"
+    "model": "projected3d_eikonal",
+    "phase_model": "local_k_distance",
+    "nonpropagating_policy": "filter",
+    "phase_tolerance_rad": 0.03,
+    "maximum_refinement_depth": 10
   },
   "directions": {
-    "count": 4,
-    "space": "two_dimensional",
+    "count": 1,
+    "space": "three_dimensional",
     "sampling_method": "fibonacci",
-    "require_in_plane": true,
+    "explicit_xyz": [],
+    "require_in_plane": false,
+    "in_plane_count": 0,
     "support": {
-      "type": "full_circle",
-      "axis_xyz": [-1, 0, 0],
+      "type": "full_sphere",
+      "axis_xyz": [1, 0, 0],
+      "solid_angle_sr": 12.566370614359172,
       "half_angle_deg": 180,
       "band_half_width_deg": 90,
       "phi_range_rad": [0, 6.283185307179586],
@@ -42,7 +57,7 @@
     "amplitude_jitter_fraction": 0.05
   },
   "polarization": {
-    "model": "in_plane_sv"
+    "model": "transverse_random"
   },
   "amplitude": {
     "geometric_decay_exponent": 0.0

@@ -1,37 +1,47 @@
 function results = run_all(options)
-%RUN_ALL Run or dry-run the self-contained public examples.
+%RUN_ALL Run lightweight public examples from the reorganized tree.
 
 arguments
-    options.RunSwsynth (1,1) logical = true
     options.RunKWave (1,1) logical = false
+    options.ShowPlots (1,1) logical = true
 end
 
 examples_root = fileparts(mfilename("fullpath"));
-repo_root = fileparts(examples_root);
-addpath(fullfile(repo_root,"src"));
 
 results = struct();
+results.swsynth_2d = call_example( ...
+    fullfile(examples_root,"swsynth","2d","homogeneous"), ...
+    @() run_example(ShowPlot=options.ShowPlots));
 
-synthetic_names = ["homogeneous","inclusion","bilayer"];
-for index = 1:numel(synthetic_names)
-    name = synthetic_names(index);
-    config_file = fullfile( ...
-        examples_root,"swsynth",name,"config.json");
-    results.swsynth.(name) = swsynth.cli.runConfig( ...
-        config_file, DryRun=~options.RunSwsynth);
+results.projected3d_inclusion = call_example( ...
+    fullfile(examples_root,"swsynth","projected3d","inclusion"), ...
+    @() run_example(ShowPlot=options.ShowPlots));
+
+results.projected3d_bilayer = call_example( ...
+    fullfile(examples_root,"swsynth","projected3d","bilayer"), ...
+    @() run_example(ShowPlot=options.ShowPlots));
+
+results.volumetric3d = call_example( ...
+    fullfile(examples_root,"swsynth","volumetric3d","homogeneous"), ...
+    @() run_example(ShowPlot=options.ShowPlots));
+
+results.field_regime_campaign = call_example( ...
+    fullfile(examples_root,"swsynth","projected3d","campaign_field_regimes"), ...
+    @() run_campaign(Execute=false));
+
+if options.RunKWave
+    results.kwave_2d = call_example( ...
+        fullfile(examples_root,"kwave","2d","homogeneous"), ...
+        @() run_example(DryRun=false,ShowValidationPlot=options.ShowPlots));
+
+    results.kwave_3d = call_example( ...
+        fullfile(examples_root,"kwave","3d","homogeneous"), ...
+        @() run_example(DryRun=false,ShowValidationPlot=options.ShowPlots));
+end
 end
 
-kwave_names = ["homogeneous_2d","homogeneous_3d"];
-for index = 1:numel(kwave_names)
-    name = kwave_names(index);
-    config_file = fullfile( ...
-        examples_root,"kwave",name,"config.json");
-    results.kwave.(name) = kwsim.cli.runConfig( ...
-        config_file, DryRun=~options.RunKWave);
-end
-
-campaign_file = fullfile( ...
-    examples_root,"swsynth","campaign","campaign.json");
-[~,results.campaign_validation] = ...
-    simcampaigns.validateCampaign(campaign_file);
+function value = call_example(folder,callback)
+addpath(folder);
+cleanup = onCleanup(@() rmpath(folder)); %#ok<NASGU>
+value = callback();
 end
