@@ -5,8 +5,8 @@ function [maps, metadata] = buildGeometry(cfg)
 %
 % Inputs use physical [x,z] coordinates in metres. Outputs use k-Wave's
 % internal [Nx,Nz] orientation and are converted to public [Nz,Nx] maps only
-% by the run adapter. The 2D geometry rasterizer supports circles; unknown object types fail
-% explicitly instead of being silently ignored.
+% by the run adapter. Supported object types are circle and rectangle;
+% unknown object types fail explicitly instead of being silently ignored.
 
 arguments
     cfg struct
@@ -31,6 +31,13 @@ for index = 1:numel(objects)
             mask = (X_m - object.center_m_xz(1)).^2 + ...
                 (Z_m - object.center_m_xz(2)).^2 <= object.radius_m^2;
             requested_area_m2 = pi*object.radius_m^2;
+
+        case "rectangle"
+            half_size = 0.5 * double(object.size_m_xz);
+            mask = abs(X_m - object.center_m_xz(1)) <= half_size(1) + 10*eps(half_size(1)) & ...
+                abs(Z_m - object.center_m_xz(2)) <= half_size(2) + 10*eps(half_size(2));
+            requested_area_m2 = prod(double(object.size_m_xz));
+
         otherwise
             error('kwsim:UnsupportedGeometry', ...
                 'Unsupported 2D geometry type: %s', string(object.type));
@@ -47,6 +54,7 @@ for index = 1:numel(objects)
     info.name = string(object.name);
     info.center_m_xz = object.center_m_xz;
     info.radius_m = object.radius_m;
+    info.size_m_xz = object.size_m_xz;
     info.material_id = object.material_id;
     info.cs_m_s = object.cs_m_s;
     info.rho_kg_m3 = object.rho_kg_m3;
@@ -71,7 +79,8 @@ end
 
 function info = emptyObjectMetadata()
 info = struct('type', "", 'name', "", 'center_m_xz', [NaN, NaN], ...
-    'radius_m', NaN, 'material_id', uint16(0), 'cs_m_s', NaN, ...
+    'radius_m', NaN, 'size_m_xz', [NaN, NaN], ...
+    'material_id', uint16(0), 'cs_m_s', NaN, ...
     'rho_kg_m3', NaN, 'requested_area_m2', NaN, ...
     'discrete_area_m2', NaN, 'area_relative_error', NaN, ...
     'grid_point_count', 0);
