@@ -7,7 +7,6 @@ file=fullfile(repoRoot(),"examples","swsynth","2d","campaign_field_regimes","cam
 [runs,validation]=simcampaigns.validateCampaign(file);
 verifyTrue(testCase,validation.valid);
 verifyEqual(testCase,numel(runs),3);
-verifyEqual(testCase,[runs.config], [runs.config]); %#ok<NBRAK>
 verifyEqual(testCase,sort(arrayfun(@(r) r.config.directions.count,runs)),[1 16 128]);
 verifyTrue(testCase,all(arrayfun(@(r) r.config.directions.space=="two_dimensional",runs)));
 end
