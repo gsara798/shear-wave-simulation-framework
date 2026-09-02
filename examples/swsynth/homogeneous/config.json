@@ -51,6 +51,6 @@
     "snr_db": 1000
   },
   "execution": {
-    "use_parallel": false
+    "use_parallel": true
   }
 }
