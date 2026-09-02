@@ -1,8 +1,9 @@
 function theme = paperTheme(options)
 %PAPERTHEME Shared publication-style colors and typography.
 %
-% The palette mirrors the public REQ-ML paper theme so figures across the
-% simulation and estimator repositories use consistent visual semantics.
+% The semantic palette mirrors reqml.viz.paperTheme and uses Flat UI Colors
+% Australian. Plotting functions should consume main colors unless a lighter
+% variant is explicitly required for non-data decoration.
 
 arguments
     options.FontName (1,1) string = "Times New Roman"
@@ -19,6 +20,7 @@ colors = struct( ...
     "green", struct("main","#6AB04C","light","#BADC58"), ...
     "teal", struct("main","#22A6B3","light","#7ED6DF"), ...
     "orange", struct("main","#F0932B","light","#FFBE76"), ...
+    "yellow", struct("main","#F9CA24","light","#F6E58D"), ...
     "gray", struct("main","#535C68","light","#95AFC0","dark","#130F40"));
 
 roles = string(fieldnames(colors));
@@ -35,7 +37,7 @@ end
 
 theme = struct();
 theme.schema_name = "simulation_paper_theme";
-theme.schema_version = "1.0";
+theme.schema_version = "1.1";
 theme.colors = colors;
 theme.rgb = rgb;
 theme.fills = fills;
