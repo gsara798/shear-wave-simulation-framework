@@ -26,17 +26,25 @@ object_metadata = repmat(emptyObjectMetadata(), numel(objects), 1);
 object_masks_xz = cell(numel(objects), 1);
 for index = 1:numel(objects)
     object = objects(index);
-    switch lower(string(object.type))
+    object_type = lower(string(object.type));
+    switch object_type
         case "circle"
             mask = (X_m - object.center_m_xz(1)).^2 + ...
                 (Z_m - object.center_m_xz(2)).^2 <= object.radius_m^2;
             requested_area_m2 = pi*object.radius_m^2;
+            size_m_xz = [NaN, NaN];
 
         case "rectangle"
-            half_size = 0.5 * double(object.size_m_xz);
+            if ~isfield(object,"size_m_xz") || numel(object.size_m_xz) ~= 2 || ...
+                    any(~isfinite(object.size_m_xz)) || any(object.size_m_xz <= 0)
+                error('kwsim:InvalidGeometry', ...
+                    '2D rectangle geometry requires positive size_m_xz = [width, height].');
+            end
+            size_m_xz = double(object.size_m_xz(:)).';
+            half_size = 0.5 * size_m_xz;
             mask = abs(X_m - object.center_m_xz(1)) <= half_size(1) + 10*eps(half_size(1)) & ...
                 abs(Z_m - object.center_m_xz(2)) <= half_size(2) + 10*eps(half_size(2));
-            requested_area_m2 = prod(double(object.size_m_xz));
+            requested_area_m2 = prod(size_m_xz);
 
         otherwise
             error('kwsim:UnsupportedGeometry', ...
@@ -53,15 +61,14 @@ for index = 1:numel(objects)
     info.type = string(object.type);
     info.name = string(object.name);
     info.center_m_xz = object.center_m_xz;
-    info.radius_m = object.radius_m;
-    info.size_m_xz = object.size_m_xz;
+    if isfield(object,"radius_m"), info.radius_m = object.radius_m; end
+    info.size_m_xz = size_m_xz;
     info.material_id = object.material_id;
     info.cs_m_s = object.cs_m_s;
     info.rho_kg_m3 = object.rho_kg_m3;
     info.requested_area_m2 = requested_area_m2;
     info.discrete_area_m2 = discrete_area_m2;
-    info.area_relative_error = abs(discrete_area_m2 - requested_area_m2) / ...
-        requested_area_m2;
+    info.area_relative_error = abs(discrete_area_m2 - requested_area_m2) / requested_area_m2;
     info.grid_point_count = nnz(mask);
     object_metadata(index) = info;
 end
