@@ -1,6 +1,6 @@
 {
   "dimension": 3,
-  "scenario": "example_kwave_homogeneous_3d",
+  "scenario": "homogeneous_directional_3d",
   "seed": 1001,
   "grid": {
     "Nx": 32,
@@ -49,6 +49,7 @@
     "save_config_mat": true,
     "save_config_json": true,
     "save_time_series": false,
+    "save_wavefield_sample": true,
     "save_figures": true,
     "save_matlab_figures": true
   }
