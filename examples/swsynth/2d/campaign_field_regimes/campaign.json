@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.2",
+  "backend": "swsynth",
+  "campaign_name": "example_2d_field_regimes",
+  "base_config": "base_config.json",
+  "output": {"directory": "outputs"},
+  "runs": [
+    {
+      "design_id": "directional",
+      "condition_id": "directional",
+      "realization_id": 1,
+      "overrides": [
+        {"path": "directions.count", "value": 1},
+        {"path": "seed", "value": 4101}
+      ]
+    },
+    {
+      "design_id": "intermediate",
+      "condition_id": "intermediate",
+      "realization_id": 1,
+      "overrides": [
+        {"path": "directions.count", "value": 16},
+        {"path": "seed", "value": 4201}
+      ]
+    },
+    {
+      "design_id": "diffuse",
+      "condition_id": "diffuse",
+      "realization_id": 1,
+      "overrides": [
+        {"path": "directions.count", "value": 128},
+        {"path": "seed", "value": 4301}
+      ]
+    }
+  ]
+}
