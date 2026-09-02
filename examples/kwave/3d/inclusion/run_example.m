@@ -1,21 +1,21 @@
 function outcome = run_example(options)
-%RUN_EXAMPLE Run the 3D k-Wave spherical-inclusion example.
+%RUN_EXAMPLE Run the k-Wave 3D inclusion example through the unified runner.
 arguments
     options.DryRun (1,1) logical = false
     options.PlotFigures (1,1) logical = true
-    options.FigureVisible (1,1) string = "off"
+    options.FigureVisible = "off"
+    options.GeneratePdf (1,1) logical = false
 end
 
-example_dir = fileparts(mfilename("fullpath"));
-repo_root = fileparts(fileparts(fileparts(example_dir)));
-addpath(fullfile(repo_root,"src"));
+exampleDir = string(fileparts(mfilename("fullpath")));
+repositoryRoot = fileparts(fileparts(fileparts(fileparts(exampleDir))));
+addpath(repositoryRoot);
+setup(Quiet=true);
 
-outcome = kwsim.cli.runConfig( ...
-    fullfile(example_dir,"config.json"), ...
-    DryRun=options.DryRun);
-
-if ~options.DryRun && options.PlotFigures
-    outcome.standard_figure_files = simviz.generateRunFigures( ...
-        outcome.paths.run, Visible=options.FigureVisible);
-end
+outcome = run_simulation( ...
+    fullfile(exampleDir,"config.json"), ...
+    DryRun=options.DryRun, ...
+    PlotFigures=options.PlotFigures, ...
+    FigureVisible=options.FigureVisible, ...
+    GeneratePdf=options.GeneratePdf);
 end
