@@ -1,194 +1,148 @@
 # Outputs and Validation
 
-A configured simulation run stores enough information to reconstruct what was requested, what was executed, and whether the result passed the framework's physical and numerical checks.
+Both backends expose a common public output layout through `run_simulation` and `run_campaign`.
 
-## Run directory
+## Standard single-run layout
 
-A typical k-Wave run contains:
+By default, a single run is created next to the selected configuration JSON:
 
 ```text
-outputs/<timestamp>_<run_name>/
+<config-folder>/outputs/<scenario>_<timestamp>/
 ├── config/
-│   ├── requested_config.mat
-│   ├── resolved_config.json
-│   └── resolved_config.mat
 ├── data/
-│   ├── result.mat
-│   ├── summary.mat
-│   ├── validation_report.mat
-│   ├── validation_summary.txt
-│   └── wavefield_sample.mat        optional
+│   ├── wavefield_sample.mat
+│   └── run_summary.json
 ├── figures/
-└── manifest.txt
+├── validation/
+└── report/              # created when a PDF is requested
 ```
 
-The exact files depend on scenario and output settings.
+This directory structure is the backend-neutral public contract. k-Wave may retain additional native MAT files and metadata inside the same run.
 
-## Requested configuration
+## `config/`
 
-`config/requested_config.mat` records the user's requested configuration before all defaults and derived values are resolved.
-
-It answers:
-
-```text
-What did the user ask the framework to run?
-```
-
-## Resolved configuration
-
-`config/resolved_config.json` and `config/resolved_config.mat` record the complete resolved simulation configuration.
-
-They can contain defaults, derived timing, generated source placement, material geometry, solver settings, validation thresholds, and output settings.
-
-They answer:
-
-```text
-What configuration was actually prepared for execution?
-```
+The resolved configuration records the values actually used after defaults, derived timing, geometry resolution, and operational settings are applied. k-Wave can also retain requested and resolved MAT representations.
 
 The resolved configuration is a core reproducibility artifact.
 
-## Simulation result
+## `data/wavefield_sample.mat`
 
-`data/result.mat` contains the main simulation result. Depending on the scenario it may include:
+The file contains a variable named `wavefield_sample` using the common backend-neutral contract.
 
-- complex harmonic fields;
-- motion components;
-- coordinate vectors;
-- grid metadata;
-- material maps;
-- truth maps;
-- source and sensor metadata;
-- diagnostics.
-
-Inspect file contents before assuming every scenario exposes identical fields.
-
-```matlab
-whos('-file', 'data/result.mat')
-```
-
-## Summary
-
-`data/summary.mat` provides a smaller run-level summary for quick inspection and batch aggregation.
-
-## Structured validation
-
-`data/validation_report.mat` contains the programmatic validation report. Checks may contain:
+For planar data:
 
 ```text
-name
-pass/fail
-measured value
-threshold
-meaning
+spatial_dimension = 2
+coordinates.array_order = "zx"
+wavefield.data_zx(z,x)
 ```
 
-`data/validation_summary.txt` is the human-readable counterpart.
-
-A solver can complete successfully while the resulting simulation fails one or more scientific checks. Therefore:
+For volumetric data:
 
 ```text
-solver completed
-!=
-scientifically valid simulation
+spatial_dimension = 3
+coordinates.array_order = "zyx"
+wavefield.data_zyx(z,y,x)
 ```
 
-## Physical validation checks
+Truth maps, when available, use the same spatial dimensions and suffix convention as the wavefield.
 
-Depending on the scenario, the framework can evaluate quantities such as:
+See [`../contracts/wavefield_sample_v1.md`](../contracts/wavefield_sample_v1.md).
+
+## `data/run_summary.json`
+
+This is the compact backend-neutral run summary. It records basic identity, status, dimensionality, physical configuration, and other run-level metadata available from the backend.
+
+k-Wave may additionally retain native files such as `result.mat` and `summary.mat` for solver-specific inspection.
+
+## `validation/`
+
+Simulation validation belongs to this framework. Depending on the backend and scenario, validation can include:
 
 - configuration and resource preflight;
-- shear points per wavelength;
-- source fundamental-frequency fraction;
-- finite-field checks;
-- P/S energy ratio;
-- cross-polarization or longitudinal leakage;
-- steady-state change;
+- points per wavelength and CFL checks;
+- finite harmonic fields;
+- source-frequency content;
+- steady-state behavior;
+- P/S or cross-polarization diagnostics;
 - homogeneous shear-speed recovery;
-- heterogeneous material-region composition;
-- source-bank geometry and angular coverage;
-- deterministic repeatability.
+- heterogeneous material/truth checks;
+- source geometry and angular coverage.
 
-Thresholds are part of the scenario contract and are not universal constants. Do not change thresholds merely to make a failing case pass.
+A completed solver run is not automatically a scientifically valid run. Validation thresholds are part of each configured scenario and are not universal constants.
 
-## Validation plot
+k-Wave retains its detailed solver-specific validation artifacts under `validation/`. Synthetic runs store their validation report there as JSON.
 
-The public examples provide a compact pass/fail visualization:
+## `figures/`
+
+The shared `simviz` layer generates standard figures from `wavefield_sample`.
+
+Planar samples normally include:
+
+```text
+sws.png
+wavefield_real.png
+wavefield_phase.png
+wavefield_amplitude.png
+```
+
+Volumetric samples additionally include:
+
+```text
+sws_crossplanes.png
+wavefield_real_crossplanes.png
+wavefield_phase_crossplanes.png
+wavefield_amplitude_crossplanes.png
+```
+
+Synthetic fields may include `directions.png`. k-Wave 3D runs may include `source_geometry.png` because those sources have physical finite-distance locations.
+
+## `report/`
+
+For a single run, request a PDF with:
 
 ```matlab
-addpath('examples')
-plot_validation_checks(outcome.report)
+outcome = run_simulation( ...
+    "path/to/config.json", ...
+    GeneratePdf=true);
 ```
 
-This plot complements the detailed numerical report; it does not replace it.
+The `report/` directory is optional and is not created when no PDF is requested.
 
-## Diagnostic figures
+## Campaign outputs
 
-Configured runs can save figures for the propagated field, motion components, source geometry, material geometry, or 3D volume slices depending on the scenario.
-
-Use figures to inspect physical plausibility and numerical metrics to decide whether configured validation criteria passed.
-
-## Standardized wavefield sample
-
-When enabled, `data/wavefield_sample.mat` stores the backend-neutral complex harmonic wavefield contract for downstream analysis.
-
-The sample can include:
-
-- complex 2D or 3D harmonic field;
-- frequency;
-- coordinate vectors and spatial spacing;
-- measurement quantity and component metadata;
-- material or shear-speed truth maps when available.
-
-The simulation framework does not evaluate downstream estimators. Estimator-specific validation belongs in the downstream analysis repository.
-
-## Failure interpretation
-
-When a validation check fails:
+Campaigns contain aggregate files plus one standard directory per run:
 
 ```text
-1. Identify the failing metric.
-2. Compare its value with the configured threshold.
-3. Inspect the resolved configuration.
-4. Inspect the relevant diagnostic figures.
-5. Determine whether the cause is numerical, physical, or operational.
-6. Modify the model only after understanding the cause.
+<campaign-output>/<campaign_name>/
+├── campaign_summary.json
+├── campaign_runs.csv
+├── <run_id>/
+│   ├── config/
+│   ├── data/
+│   ├── figures/
+│   └── validation/
+└── ...
 ```
 
-Typical examples include insufficient points per wavelength, excessive compressional contamination, inadequate settling, boundary effects, or unsuitable source polarization.
-
-## Recommended review sequence
-
-After a solver run:
-
-```text
-1. Read the terminal summary.
-2. Inspect validation_summary.txt.
-3. Confirm overall validity.
-4. Review failed or marginal checks.
-5. Inspect field/source/material figures.
-6. Inspect resolved_config.json.
-7. Inspect result.mat fields.
-8. Record the output directory and software commit.
-9. Only then begin downstream analysis.
-```
+`campaign_summary.json` records campaign execution state. `campaign_runs.csv` provides one row per expanded simulation.
 
 ## Reproducibility
 
 For a scientific result, preserve at least:
 
 ```text
-requested configuration
+input JSON
 resolved configuration
-simulation result
-validation report
+wavefield_sample.mat
+run_summary.json
+validation artifacts
 seed
 software commit
-analysis code version
 ```
 
-A figure alone is not sufficient for reproducibility.
+Backend-native files may also be retained when they are needed for detailed solver diagnostics.
 
-## Interpretation
+## Downstream analysis
 
-A valid run establishes that the simulation passed the checks defined for its configured scenario. It does not automatically establish experimental realism, physiological material parameters, realistic actuator coupling, realistic ultrasound readout, or universal downstream algorithm performance.
+The simulation repository stops at validated wavefield generation and export. Estimator-specific processing is intentionally outside this repository. The simulation output should therefore remain estimator-neutral.
