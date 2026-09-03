@@ -7,46 +7,49 @@ The repository provides two simulation backends:
 - **k-Wave** for 2D and 3D elastic time-domain simulations;
 - **swsynth** for analytical and Eikonal-based synthetic wavefields.
 
-Both backends are designed around explicit configuration, reproducible outputs, physical validation, and a common backend-neutral `wavefield_sample` contract for downstream analysis.
+Both backends use JSON configuration files, standardized output folders, physical validation, and a common backend-neutral `wavefield_sample` contract for downstream analysis.
 
-## Scope
+## What this repository does
 
-The framework is responsible for:
+The framework is responsible for generating and validating shear-wave fields. It supports homogeneous and heterogeneous media, directional and multi-source excitation, deterministic simulation campaigns, harmonic extraction from k-Wave time-domain data, and standardized 2D/3D wavefield export.
 
-- generating shear-wave fields;
-- defining homogeneous and heterogeneous media;
-- configuring directional, multi-source, and angular source geometries;
-- reducing k-Wave time-domain simulations to complex harmonic fields;
-- validating simulation physics and numerical consistency;
-- running deterministic parameter campaigns;
-- exporting standardized wavefield samples.
-
-Estimator-specific processing and estimator validation intentionally live outside this repository.
+Estimator-specific processing intentionally lives outside this repository.
 
 ## Requirements
 
 - MATLAB
-- k-Wave 1.4.1 for the `kwsim` backend
+- k-Wave 1.4.1 only when using the `kwsim` backend
 
-k-Wave is an **external dependency** and is not vendored in this repository.
+k-Wave is an external dependency and is not included in this repository.
 
-## Quick start
+## 1. Set up MATLAB
 
-From the repository root, configure the MATLAB session once:
-
-```matlab
-setup
-```
-
-This keeps the repository entry points and `src/` on the MATLAB path even if the working directory changes later.
-
-For k-Wave, either set `KWSIM_KWAVE_PATH` in the environment or configure it through setup:
+Clone the repository, open MATLAB from the repository root, and configure the framework once per MATLAB session:
 
 ```matlab
-setup(KWavePath="/absolute/path/to/k-wave-toolbox-version-1.4.1")
+setup_simulation_framework
 ```
 
-Run any single JSON configuration with the same public entry point:
+If you want to run k-Wave simulations, provide the external toolbox path:
+
+```matlab
+setup_simulation_framework( ...
+    KWavePath="/absolute/path/to/k-wave-toolbox-version-1.4.1")
+```
+
+Alternatively, set the environment variable `KWSIM_KWAVE_PATH` before starting MATLAB.
+
+After setup, the public entry points remain available even if you change the working directory.
+
+## 2. Run one simulation
+
+Every public single-run example contains a `config.json`. Run any configuration with:
+
+```matlab
+outcome = run_simulation("path/to/config.json");
+```
+
+Examples:
 
 ```matlab
 outcome = run_simulation( ...
@@ -58,7 +61,9 @@ outcome = run_simulation( ...
     "examples/kwave/2d/inclusion/config.json");
 ```
 
-Validate without executing a solver:
+The backend and dimensionality are inferred from the JSON configuration.
+
+### Validate without executing the solver
 
 ```matlab
 outcome = run_simulation( ...
@@ -66,7 +71,7 @@ outcome = run_simulation( ...
     DryRun=true);
 ```
 
-Generate the standard figures and a PDF report as part of the run:
+### Optional single-run controls
 
 ```matlab
 outcome = run_simulation( ...
@@ -75,32 +80,117 @@ outcome = run_simulation( ...
     GeneratePdf=true);
 ```
 
-The equivalent terminal entry point is:
+Useful options are:
 
-```bash
-bash scripts/sim-run examples/kwave/2d/inclusion/config.json
-```
+- `DryRun=true`: validate only;
+- `PlotFigures=false`: skip standard figures;
+- `GeneratePdf=true`: create a run PDF report;
+- `OutputRoot="..."`: override the default output location.
 
-## Standard single-run output
+### Single-run output
 
-The unified runner writes outputs next to the selected JSON by default:
+By default, outputs are written next to the selected JSON configuration:
 
 ```text
 <config-folder>/outputs/<scenario>_<timestamp>/
 ├── config/
+│   └── resolved_config.json
 ├── data/
 │   ├── wavefield_sample.mat
 │   └── run_summary.json
 ├── figures/
 ├── validation/
-└── report/              # created when a PDF is requested
+└── report/              # when a PDF is requested
 ```
 
-Backend-specific artifacts may also be retained inside the same run, but the folders above form the common public contract.
+Backend-specific files may also be stored in the same run directory, but the folders above form the common public output contract.
+
+## 3. Run a campaign
+
+A campaign JSON references one base configuration and defines multiple runs through either a parameter sweep or explicit run overrides.
+
+Run a campaign with the same style of public entry point:
+
+```matlab
+report = run_campaign("path/to/campaign.json");
+```
+
+For example:
+
+```matlab
+report = run_campaign( ...
+    "examples/swsynth/projected3d/campaign_field_regimes/campaign.json");
+```
+
+### Validate the entire campaign first
+
+```matlab
+report = run_campaign( ...
+    "examples/swsynth/projected3d/campaign_field_regimes/campaign.json", ...
+    DryRun=true);
+```
+
+A campaign dry run expands every requested run and validates all of them without executing a solver or creating simulation outputs.
+
+### Resume a campaign
+
+Campaigns resume completed runs by default:
+
+```matlab
+report = run_campaign("path/to/campaign.json", Resume=true);
+```
+
+Useful options are:
+
+- `DryRun=true`: validate every expanded run only;
+- `Resume=true`: skip already completed runs with matching identities;
+- `ContinueOnError=true`: continue after an individual failed run;
+- `PlotFigures=false`: skip standard figures after completed runs.
+
+Use a Cartesian `sweep` when parameters are independent and every combination is desired. Use explicit `runs` when parameter values jointly define named physical conditions and must remain paired.
+
+### Campaign output
+
+The campaign JSON controls its output root. A completed campaign contains a summary plus one standardized directory per run:
+
+```text
+<campaign-output>/<campaign-name>/
+├── campaign_summary.json
+├── campaign_runs.csv
+├── <run-id-1>/
+│   ├── config/
+│   ├── data/
+│   ├── figures/
+│   └── validation/
+├── <run-id-2>/
+│   └── ...
+└── ...
+```
+
+Each run preserves deterministic identifiers, allowing interrupted campaigns to resume without repeating completed simulations.
+
+## Terminal entry points
+
+The same workflows are available from a shell:
+
+```bash
+bash scripts/sim-run examples/kwave/2d/inclusion/config.json
+```
+
+```bash
+bash scripts/campaign-run examples/swsynth/projected3d/campaign_field_regimes/campaign.json
+```
+
+Validate without running:
+
+```bash
+bash scripts/sim-run examples/kwave/2d/inclusion/config.json --dry-run
+bash scripts/campaign-run examples/swsynth/projected3d/campaign_field_regimes/campaign.json --dry-run
+```
 
 ## Examples
 
-Examples are organized explicitly by simulation dimensionality and geometry:
+User-facing examples are organized by backend and dimensionality:
 
 ```text
 examples/
@@ -113,25 +203,9 @@ examples/
     └── 3d/
 ```
 
-Single-run examples contain a `config.json` and can all be executed through `run_simulation`. Thin `run_example.m` wrappers remain for interactive use but are not required.
+Single-run examples contain a `config.json`. Campaign examples contain a campaign JSON plus a colocated base configuration.
 
-See [`examples/README.md`](examples/README.md) for the full example tree and plotting/output conventions.
-
-## Physical validation
-
-Simulation validation belongs to the framework. Depending on the scenario, checks can include:
-
-- grid and resource preflight;
-- source-frequency content;
-- finite harmonic-field checks;
-- P/S energy or polarization diagnostics;
-- steady-state convergence;
-- homogeneous wave-speed recovery;
-- heterogeneous truth-region composition;
-- source-bank geometry and directional coverage;
-- deterministic repeatability.
-
-The validation report is returned by the public run interface. k-Wave also retains its detailed solver-specific validation artifacts inside the standardized run directory.
+See [`examples/README.md`](examples/README.md) for the full example tree and visualization conventions.
 
 ## Wavefield contract
 
@@ -159,112 +233,69 @@ Public 3D volumes use:
 suffix: _zyx
 ```
 
-k-Wave solver orientation is handled internally by the adapter layer.
+k-Wave solver orientation is handled internally by the adapter layer. The standardized sample carries coordinates, spacing, complex harmonic wavefield data, frequency, measurement metadata, and truth maps when available.
 
-The standardized sample carries coordinates, spatial spacing, complex harmonic wavefield data, frequency, measurement metadata, and truth maps when available.
+## Physical validation
 
-## k-Wave backend
+Simulation validation belongs to this framework. Depending on the scenario, checks can include grid/resource preflight, source-frequency content, finite harmonic fields, P/S energy or polarization diagnostics, steady-state convergence, homogeneous wave-speed recovery, heterogeneous truth-region composition, source geometry, directional coverage, and deterministic repeatability.
 
-The active `kwsim` package supports:
+## Backends
 
-- 2D and 3D elastic simulations;
-- homogeneous and heterogeneous materials;
-- finite-contact sources;
-- single-contact and multi-source fields;
-- generated angular source banks;
-- circular/rectangular 2D geometry;
-- spherical inclusions, finite cylinders, bilayers, and combined 3D geometry;
-- harmonic extraction from time-domain sensor data;
-- physical validation and diagnostic figures;
-- standardized 2D and volumetric 3D `wavefield_sample` export.
+### k-Wave
 
-The baseline reduced-compressional-speed option is an explicit computational approximation. It reduces simulation cost while preserving an admissible elastic model; it is not a claim about physical tissue compressional speed.
+The active `kwsim` backend supports 2D and 3D elastic simulations, homogeneous and heterogeneous materials, finite-contact sources, multi-source fields, angular source banks, harmonic extraction, physical validation, and standardized 2D/3D `wavefield_sample` export.
 
-## Synthetic backend
+The reduced-compressional-speed option is an explicit computational approximation used to reduce simulation cost; it is not a claim about physical tissue compressional speed.
 
-The `swsynth` package supports fast controlled wavefields with analytical and Eikonal propagation models. It includes homogeneous and heterogeneous media, configurable propagation directions, reproducible seeds, standardized wavefield output, projected-3D observations, and true volumetric 3D generation.
+### swsynth
 
-## Campaigns
-
-`simcampaigns` is the canonical campaign API for both backends.
-
-Use a Cartesian `sweep` when independent parameters should form every combination. Use explicit `runs` when parameters jointly define named physical scenarios and must remain paired.
-
-Example:
-
-```matlab
-[runs, expansion] = simcampaigns.expandCampaign( ...
-    'configs/campaigns/kwsim/smoke/homogeneous_partial_3d_n8_p2_smoke.json');
-
-disp(expansion.run_count)
-```
-
-Validate a campaign before execution:
-
-```matlab
-[~, validation] = simcampaigns.validateCampaign( ...
-    'configs/campaigns/kwsim/smoke/homogeneous_partial_3d_n8_p2_smoke.json');
-
-assert(validation.valid)
-```
-
-Execute or resume:
-
-```matlab
-report = simcampaigns.runCampaign( ...
-    'configs/campaigns/kwsim/smoke/homogeneous_partial_3d_n8_p2_smoke.json', ...
-    Resume=true, ...
-    ContinueOnError=true);
-```
-
-Campaign runs receive deterministic identifiers and can be resumed without repeating completed simulations.
+The `swsynth` backend supports fast analytical and Eikonal-based synthetic fields, homogeneous and heterogeneous media, configurable propagation directions, reproducible seeds, projected-3D observations, and true volumetric 3D generation.
 
 ## Repository layout
 
 ```text
-setup.m                 session setup
-run_simulation.m        unified single-run entry point
+setup_simulation_framework.m   configure the MATLAB session
+run_simulation.m               public single-run entry point
+run_campaign.m                 public campaign entry point
 
 src/
-├── +kwsim/             k-Wave simulation backend
-├── +swsynth/           analytical/Eikonal synthetic backend
-├── +simrunner/         backend-neutral single-run dispatch
-├── +simcampaigns/      backend-neutral campaign system
-├── +simviz/            shared scientific visualization
-├── +simreport/         PDF run/campaign reports
-└── +wavefield/         backend-neutral wavefield validation
+├── +kwsim/                    k-Wave backend
+├── +swsynth/                  analytical/Eikonal backend
+├── +simrunner/                backend-neutral single-run dispatch
+├── +simcampaigns/             backend-neutral campaign system
+├── +simviz/                   shared visualization
+├── +simreport/                PDF reporting
+└── +wavefield/                wavefield contract validation
 
-configs/
-├── kwsim/
-├── swsynth/
-└── campaigns/
-
-examples/               user-facing JSON workflows
-scripts/                terminal entry points
-benchmarks/             reproducible physics benchmarks
-tests/                  unit and integration tests
-docs/                   detailed documentation
-archive/                retained historical development material
+configs/                       reusable configurations and campaigns
+examples/                      user-facing workflows
+scripts/                       terminal entry points
+tests/                         active unit and integration tests
+docs/                          detailed documentation
+archive/                       historical development material
 ```
 
 ## Tests
 
-Run the complete active suite from MATLAB:
+After setup, run the active unit tests with:
 
 ```matlab
-addpath('tests')
+r = runtests("tests/unit");
+assertSuccess(r)
+```
+
+Run the complete active suite, including integration tests, with:
+
+```matlab
+addpath("tests")
 results = run_all_tests();
 ```
 
-The test runner adds `src` and `benchmarks` automatically and runs all active tests recursively.
-
-Tests that execute the k-Wave backend require a valid external k-Wave installation.
+Integration tests that execute the k-Wave backend require a valid external k-Wave installation.
 
 ## Documentation
 
-Detailed documentation is available under `docs/`.
-
-Recommended starting points:
+Detailed documentation is available under `docs/`. Recommended starting points are:
 
 - [`docs/kwsim/quickstart.md`](docs/kwsim/quickstart.md)
 - [`docs/kwsim/configuration_guide.md`](docs/kwsim/configuration_guide.md)
@@ -275,4 +306,4 @@ Recommended starting points:
 - [`docs/kwsim/physics/heterogeneous_materials.md`](docs/kwsim/physics/heterogeneous_materials.md)
 - [`docs/kwsim/physics/harmonic_analysis_and_ps_separation.md`](docs/kwsim/physics/harmonic_analysis_and_ps_separation.md)
 
-Historical scripts and retired interfaces are retained under `archive/` as development provenance and are not part of the active public API.
+Historical scripts and retired interfaces remain under `archive/` for provenance and are not part of the active public API.
