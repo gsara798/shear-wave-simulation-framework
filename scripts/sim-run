@@ -13,7 +13,7 @@ Options:
   -h, --help      Show this message.
 
 Environment:
-  MATLAB_BIN      Optional MATLAB executable path.
+  MATLAB_BIN        Optional MATLAB executable path.
   KWSIM_KWAVE_PATH  External k-Wave installation for kwsim configs.
 EOF
 }
@@ -74,4 +74,4 @@ export SIMRUN_GENERATE_PDF="$GENERATE_PDF"
 cd "$REPOSITORY_ROOT"
 
 "$MATLAB_BIN" -batch \
-'setup(Quiet=true); run_simulation(getenv("SIMRUN_CONFIG"), DryRun=strcmp(getenv("SIMRUN_DRY_RUN"),"1"), PlotFigures=strcmp(getenv("SIMRUN_PLOT_FIGURES"),"1"), GeneratePdf=strcmp(getenv("SIMRUN_GENERATE_PDF"),"1"));'
+'setup_simulation_framework(Quiet=true); run_simulation(getenv("SIMRUN_CONFIG"), DryRun=strcmp(getenv("SIMRUN_DRY_RUN"),"1"), PlotFigures=strcmp(getenv("SIMRUN_PLOT_FIGURES"),"1"), GeneratePdf=strcmp(getenv("SIMRUN_GENERATE_PDF"),"1"));'
