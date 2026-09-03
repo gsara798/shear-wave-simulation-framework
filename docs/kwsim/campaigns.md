@@ -1,168 +1,132 @@
 # Reproducible Simulation Campaigns
 
-`simcampaigns` is the backend-neutral orchestration layer for reproducible groups of simulations.
+Campaigns run reproducible groups of simulations through the same framework used for single runs.
 
-A campaign does not introduce a second solver pipeline. Each expanded run is still executed through the normal backend public interface.
+The public user interface is:
+
+```matlab
+report = run_campaign("path/to/campaign.json");
+```
+
+The internal `simcampaigns` package performs expansion, validation, deterministic run identity, execution, resume logic, and campaign summaries. Users normally do not need to call that package directly.
 
 ## When to use a campaign
 
-Campaigns are appropriate for:
+Use a campaign for repeated conditions such as frequency, shear-wave speed, seed, source count, source regime, geometry, or resolution studies. Use `run_simulation` when only one configuration is needed.
 
-- shear-wave-speed sweeps;
-- frequency sweeps;
-- seed sweeps;
-- grid-resolution studies;
-- source-count and source-regime studies;
-- heterogeneous material studies;
-- convergence and sensitivity analyses;
-- reproducible benchmark datasets.
+## Campaign JSON
 
-Use a single JSON configuration when there is only one simulation condition.
+A campaign points to one base configuration and defines either a Cartesian `sweep` or explicit `runs`.
 
-## Two campaign representations
+Use `sweep` when every cross-combination is scientifically intended. Use explicit `runs` when values belong together as named physical conditions.
 
-Use `sweep` when parameters vary independently and every Cartesian combination is scientifically intended.
-
-Use explicit `runs` when several values jointly define one named physical scenario and must remain paired.
-
-Both forms pass through:
-
-```text
-campaign JSON
-→ simcampaigns.expandCampaign
-→ simcampaigns.validateCampaign
-→ simcampaigns.runCampaign
-→ standard backend outputs
-```
-
-## Cartesian sweep example
+Example explicit campaign:
 
 ```json
 {
-  "schema_version": "1.0",
-  "campaign_name": "homogeneous_directional_2d_sweep",
-  "base_config": "configs/kwsim/two_d/homogeneous_directional_cli.json",
+  "schema_version": "1.2",
+  "backend": "swsynth",
+  "campaign_name": "example_field_regimes",
+  "base_config": "base_config.json",
   "output": {
-    "directory": "outputs/campaigns"
+    "directory": "outputs"
   },
-  "sweep": [
+  "runs": [
     {
-      "path": "medium.cs_m_s",
-      "values": [2.0, 2.5, 3.0]
-    },
-    {
-      "path": "source.f0_hz",
-      "values": [400, 500]
-    },
-    {
-      "path": "seed",
-      "values": [1001, 1002]
+      "design_id": "directional_r1",
+      "condition_id": "directional",
+      "realization_id": 1,
+      "overrides": [
+        {"path": "directions.count", "value": 1},
+        {"path": "seed", "value": 7101}
+      ]
     }
   ]
 }
 ```
 
-This produces 12 deterministic run definitions.
-
-## Sweep paths
-
-Nested configuration values use dot notation:
+A complete public example is available at:
 
 ```text
-medium.cs_m_s
-source.f0_hz
-grid.dx_m
-seed
+examples/swsynth/projected3d/campaign_field_regimes/campaign.json
 ```
 
-Indexed paths can address existing array elements:
+## Validate before execution
+
+Validate every expanded run without executing a solver:
+
+```matlab
+report = run_campaign( ...
+    "examples/swsynth/projected3d/campaign_field_regimes/campaign.json", ...
+    DryRun=true);
+```
+
+A successful validation reports that all expanded runs are valid. No simulation output directories are created by the dry run.
+
+## Execute
+
+```matlab
+report = run_campaign( ...
+    "examples/swsynth/projected3d/campaign_field_regimes/campaign.json");
+```
+
+The default public behavior is:
 
 ```text
-geometry.objects[1].cs_m_s
-geometry.objects[1].radius_m
-source.vibrators[5].weight
+Resume = true
+ContinueOnError = true
+PlotFigures = true
+FigureVisible = "off"
 ```
 
-Indices are one-based and must refer to elements already present in the base configuration. Campaign expansion does not create missing fields or append array elements implicitly.
+Completed matching runs are skipped when `Resume=true`. Existing directories that cannot be verified as the same completed run are blocked instead of being silently overwritten.
 
-## Explicit runs
+## Campaign output
 
-Use explicit runs for named or paired scenarios, for example when source count, angular support, in-plane contributors, and geometry constraints must change together.
-
-Do not encode such cases as independent sweep dimensions unless every cross-combination is physically intended.
-
-See [`../campaigns/explicit_campaign_api.md`](../campaigns/explicit_campaign_api.md) for the explicit-run construction API.
-
-## Expansion
-
-```matlab
-[runs, expansion] = simcampaigns.expandCampaign( ...
-    'configs/campaigns/kwsim/scientific/homogeneous_directional_2d_sweep.json');
-
-disp(expansion.run_count)
-disp(string({runs.run_id})')
-```
-
-Expansion is deterministic. The declared parameter order is preserved and the last Cartesian sweep dimension varies fastest.
-
-## Validation before execution
-
-Validate all expanded configurations before launching solver work:
-
-```matlab
-[~, validation] = simcampaigns.validateCampaign( ...
-    'configs/campaigns/kwsim/scientific/homogeneous_directional_2d_sweep.json');
-
-disp(validation.summary)
-assert(validation.valid)
-```
-
-If an expanded configuration is invalid, campaign execution should be corrected before expensive simulations are started.
-
-## Execute and resume
-
-```matlab
-report = simcampaigns.runCampaign( ...
-    'configs/campaigns/kwsim/scientific/homogeneous_directional_2d_sweep.json', ...
-    Resume=true, ...
-    ContinueOnError=true);
-```
-
-Each run receives a deterministic identifier derived from its expansion order and configuration hash.
-
-With `Resume=true`, completed matching runs are skipped rather than recomputed. Existing directories that cannot be verified as matching completed runs are blocked rather than overwritten automatically.
-
-## Campaign outputs
-
-A campaign output directory has the general structure:
+The campaign JSON controls the campaign output root. A typical campaign contains:
 
 ```text
-outputs/campaigns/<campaign_name>/
+<campaign-output>/<campaign_name>/
 ├── campaign_summary.json
 ├── campaign_runs.csv
-├── run_000001_<hash>/
-├── run_000002_<hash>/
+├── <run_id>/
+│   ├── config/
+│   ├── data/
+│   │   ├── wavefield_sample.mat
+│   │   └── run_summary.json
+│   ├── figures/
+│   └── validation/
 └── ...
 ```
 
-Each run directory contains the normal outputs of its backend, such as resolved configuration, simulation result, physical validation report, optional standardized wavefield sample, figures, and manifest.
+`campaign_summary.json` records aggregate state. `campaign_runs.csv` provides one row per expanded run. Each completed run uses the same backend-neutral `wavefield_sample` contract as a single run.
 
-`campaign_summary.json` records aggregate execution state. `campaign_runs.csv` provides one row per expanded simulation for downstream aggregation.
+## Terminal interface
 
-## Backend neutrality
+```bash
+bash scripts/campaign-run path/to/campaign.json
+```
 
-The campaign layer orchestrates backends; it does not own their physics. Backend-specific configuration validation, simulation execution, physical validation, and output generation remain inside `kwsim` or `swsynth`.
+Validate only:
 
-This separation keeps campaigns reproducible while allowing the same campaign machinery to be reused across simulation backends.
+```bash
+bash scripts/campaign-run path/to/campaign.json --dry-run
+```
+
+## Internal API
+
+Advanced developers may use `simcampaigns.expandCampaign`, `simcampaigns.validateCampaign`, and `simcampaigns.runCampaign` directly. These are implementation-level interfaces; user documentation and examples should prefer `run_campaign`.
 
 ## Recommended workflow
 
 ```text
-1. Verify one single-run base configuration.
-2. Define the scientific sweep or explicit run list.
-3. Expand the campaign and inspect run count.
-4. Validate all expanded configurations.
-5. Execute with deterministic output paths.
-6. Resume interrupted campaigns rather than duplicating runs.
-7. Aggregate campaign-level summaries only after checking run status.
+1. Verify the base configuration with run_simulation(..., DryRun=true).
+2. Execute one representative single run.
+3. Define the campaign sweep or explicit run list.
+4. Validate the whole campaign with run_campaign(..., DryRun=true).
+5. Execute with run_campaign(...).
+6. Resume interrupted work rather than duplicating completed runs.
+7. Check campaign_summary.json before downstream aggregation.
 ```
+
+For the campaign schema details, see [`../contracts/campaign_configuration_v1.md`](../contracts/campaign_configuration_v1.md) and [`../campaigns/explicit_campaign_api.md`](../campaigns/explicit_campaign_api.md).
