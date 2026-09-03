@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0",
+  "backend": "swsynth",
+  "status": "completed_valid",
+  "spatial_dimension": 2,
+  "scenario": "example_swsynth_circular_inclusion",
+  "seed": 5301,
+  "frequency_hz": 250,
+  "background_cs_m_s": 2,
+  "medium_object_count": 1,
+  "direction_count": 16,
+  "retained_direction_count": 16,
+  "requested_in_plane_count": 4,
+  "retained_in_plane_count": 4,
+  "retained_in_plane_fraction": 0.25,
+  "direction_support_type": "solid_angle_cap",
+  "solid_angle_sr": 3.1415926535897931,
+  "geometry_family": "circular_inclusion",
+  "propagation_model": "projected3d_eikonal",
+  "phase_model": "local_k_distance",
+  "elapsed_solver_time_s": 0.34552679166666667,
+  "valid": true,
+  "wavefield_size": [
+    101,
+    101
+  ],
+  "angular_entropy": 0.7121101133522163,
+  "angular_effective_bins": 12.830948157102497,
+  "radial_entropy": 0.24531164464029864,
+  "radial_effective_bins": 2.1806295333477919
+}

@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0",
+  "scenario": "example_swsynth_circular_inclusion",
+  "seed": 5301,
+  "domain": {
+    "Lx_m": 0.05,
+    "Lz_m": 0.05,
+    "dx_m": 0.0005,
+    "dz_m": 0.0005,
+    "observation_y_m": 0
+  },
+  "medium": {
+    "background_cs_m_s": 2,
+    "combine_mode": "overlay",
+    "objects": [
+      {
+        "type": "circle",
+        "cs_m_s": 3,
+        "center_xz_m": [
+          0.025,
+          0.025
+        ],
+        "radius_m": 0.008,
+        "edge_sigma_m": 0
+      }
+    ]
+  },
+  "wavefield": {
+    "frequency_hz": 250,
+    "observed_component": "axial"
+  },
+  "propagation": {
+    "model": "projected3d_eikonal",
+    "phase_model": "local_k_distance",
+    "nonpropagating_policy": "filter",
+    "phase_tolerance_rad": 0.03,
+    "maximum_refinement_depth": 10
+  },
+  "directions": {
+    "count": 16,
+    "space": "three_dimensional",
+    "sampling_method": "fibonacci",
+    "explicit_xyz": [],
+    "require_in_plane": false,
+    "in_plane_count": 4,
+    "support": {
+      "type": "solid_angle_cap",
+      "axis_xyz": [
+        1,
+        0,
+        0
+      ],
+      "solid_angle_sr": 3.1415926535897931,
+      "half_angle_deg": 180,
+      "band_half_width_deg": 90,
+      "phi_range_rad": [
+        0,
+        6.2831853071795862
+      ],
+      "theta_range_rad": [
+        0,
+        3.1415926535897931
+      ],
+      "angle_range_2d_rad": [
+        0,
+        6.2831853071795862
+      ]
+    }
+  },
+  "sources": {
+    "radius_range_m": [
+      0.045000000000000005,
+      0.05
+    ],
+    "phase_policy": "random_uniform",
+    "amplitude_jitter_fraction": 0.05
+  },
+  "polarization": {
+    "model": "transverse_random"
+  },
+  "amplitude": {
+    "geometric_decay_exponent": 0
+  },
+  "noise": {
+    "snr_db": 1000
+  },
+  "execution": {
+    "use_parallel": true
+  }
+}

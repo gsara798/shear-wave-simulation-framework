@@ -1,0 +1,20 @@
+{
+  "valid": true,
+  "schema_version": "1.0",
+  "grid_size_zx": [
+    101,
+    101
+  ],
+  "output_convention": "U(z,x)",
+  "direction_count": 16,
+  "direction_space": "three_dimensional",
+  "in_plane_direction_count": 4,
+  "direction_support_type": "solid_angle_cap",
+  "direction_solid_angle_sr": 3.1415926535897931,
+  "propagation_model": "projected3d_eikonal",
+  "phase_model": "local_k_distance",
+  "nonpropagating_policy": "filter",
+  "phase_tolerance_rad": 0.03,
+  "maximum_refinement_depth": 10,
+  "medium_object_count": 1
+}

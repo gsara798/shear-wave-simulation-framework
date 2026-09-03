@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "backend": "kwsim",
+  "status": "completed_valid",
+  "scenario": "example_kwave_inclusion_2d",
+  "spatial_dimension": 2,
+  "frequency_hz": 500,
+  "background_cs_m_s": 2,
+  "elapsed_solver_time_s": 33.545700541666669,
+  "valid": true,
+  "run_directory": "/Users/sara/local/shear-wave-simulation-framework/examples/kwave/2d/inclusion/outputs/example_kwave_inclusion_2d_20260903_124440_450"
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "backend": "kwsim",
+  "status": "completed_valid",
+  "scenario": "heterogeneous_bilayer_example_3d",
+  "spatial_dimension": 3,
+  "frequency_hz": 500,
+  "background_cs_m_s": 2,
+  "elapsed_solver_time_s": 28.150889416666665,
+  "valid": true,
+  "run_directory": "/Users/sara/local/shear-wave-simulation-framework/examples/kwave/3d/bilayer/outputs/heterogeneous_bilayer_example_3d_20260903_124614_549"
+}

@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "backend": "swsynth",
+  "status": "completed_valid",
+  "spatial_dimension": 3,
+  "scenario": "example_swsynth_volumetric3d_bilayer",
+  "seed": 8301,
+  "frequency_hz": 300,
+  "background_cs_m_s": 2,
+  "medium_object_count": 1,
+  "direction_count": 16,
+  "retained_direction_count": 16,
+  "requested_in_plane_count": 0,
+  "retained_in_plane_count": 1,
+  "retained_in_plane_fraction": 0.0625,
+  "direction_support_type": "full_sphere",
+  "solid_angle_sr": 12.566370614359172,
+  "geometry_family": "slab",
+  "propagation_model": "plane_wave",
+  "phase_model": "volumetric_eikonal",
+  "elapsed_solver_time_s": 1.64588875,
+  "valid": true,
+  "wavefield_size": [
+    21,
+    21,
+    21
+  ]
+}

@@ -1,0 +1,34 @@
+Shear Wave Simulation Framework
+================================
+
+Created: 2026-09-03 12:45:14 *
+Scenario: example_kwave_inclusion_2d
+Dimension: 2
+
+Solver
+------
+Name: not available
+k-Wave root: /Users/sara/local/k-wave-toolbox-version-1.4.1
+Elapsed solver time: 33.5457005 s
+
+Grid
+----
+Size [Nx Nz]: [96 96]
+Spacing [dx dz]: [0.0005 0.0005] m
+
+Medium
+------
+Shear speed: 2 m/s
+Compression speed: 30 m/s
+Density: 1000 kg/m^3
+
+Excitation and analysis
+-----------------------
+Frequency: 500 Hz
+Harmonic method: least_squares
+Temporal window: none
+Saved native time series: false
+
+Output
+------
+Directory: /Users/sara/local/shear-wave-simulation-framework/examples/kwave/2d/inclusion/outputs/example_kwave_inclusion_2d_20260903_124440_450

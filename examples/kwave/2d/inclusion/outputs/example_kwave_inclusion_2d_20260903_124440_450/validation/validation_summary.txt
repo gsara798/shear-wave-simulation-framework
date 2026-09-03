@@ -1,0 +1,13 @@
+KWSIM VALIDATION REPORT
+=======================
+
+valid=1, source fundamental=1.000000, P/S energy=9.699e-05, steady change=0.0001002, geometry objects=1
+
+Overall valid: 1
+
+Check                                  Pass   Value          Threshold      Meaning
+preflight                              1      1              1              All configuration and resource checks must pass.
+shear_ppw                              1      8              8              Shear wavelength is under-resolved.
+source_fundamental_fraction            1      1              0.999          The stationary source contains excessive non-fundamental energy.
+finite_fields                          1      1              1              One or more phasor fields contain NaN or Inf values.
+steady_state_change                    1      0.000100243    0.01           The recorded field has not reached a stable harmonic state.
