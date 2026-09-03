@@ -19,6 +19,18 @@ verifyEqual(testCase,string(outcome.status),"dry_run_valid");
 verifyEqual(testCase,double(outcome.dimension),2);
 end
 
+function testPublicCampaignDryRun(testCase)
+root = addFrameworkPath();
+addpath(root);
+campaignFile = fullfile(root,"examples","swsynth","projected3d", ...
+    "campaign_field_regimes","campaign.json");
+report = run_campaign(campaignFile,DryRun=true);
+verifyTrue(testCase,report.valid);
+verifyEqual(testCase,string(report.backend),"swsynth");
+verifyEqual(testCase,double(report.run_count),6);
+verifyEqual(testCase,double(report.failed_count),0);
+end
+
 function testVisibilityNormalization(testCase)
 addFrameworkPath();
 verifyEqual(testCase,simviz.normalizeVisible(true),"on");
