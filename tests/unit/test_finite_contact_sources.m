@@ -6,11 +6,10 @@ end
 function setupOnce(~)
 root = fileparts(fileparts(fileparts(mfilename('fullpath'))));
 addpath(fullfile(root, 'src'));
-addpath(fullfile(root, 'benchmarks'));
 end
 
 function testReferenceContactGeometryAndDrive(testCase)
-cfg = kwsim_benchmarks.finite_contacts_2d.config("directional");
+cfg = finiteContactFixture("directional");
 [cfg, preflight] = kwsim.two_d.validateConfig(cfg);
 bank = cfg.source.resolved_bank;
 verifyTrue(testCase, preflight.valid);
@@ -27,7 +26,7 @@ verifyLessThanOrEqual(testCase, bank.drive_power_relative_error, 1e-14);
 end
 
 function testDenseFiniteContactIsRejected(testCase)
-cfg = kwsim_benchmarks.finite_contacts_2d.config("diffuse");
+cfg = finiteContactFixture("diffuse");
 cfg.source.contact_radius_m = 1.5e-3;
 cfg.source.contact_node_spacing_points = 3;
 verifyError(testCase, @() kwsim.two_d.validateConfig(cfg), ...
@@ -35,7 +34,7 @@ verifyError(testCase, @() kwsim.two_d.validateConfig(cfg), ...
 end
 
 function testArbitraryCardinalOrientation(testCase)
-cfg = kwsim_benchmarks.finite_contacts_2d.config("directional");
+cfg = finiteContactFixture("directional");
 cfg.source.target_angle_deg = 90;
 [cfg, ~] = kwsim.two_d.validateConfig(cfg);
 vibrators = cfg.source.resolved_bank.vibrators;
@@ -47,7 +46,7 @@ verifyEqual(testCase, vertcat(vibrators.polarization_xz), ...
 end
 
 function testObliqueDirectionUsesGeometricPhaseGradient(testCase)
-cfg = kwsim_benchmarks.finite_contacts_2d.config("directional");
+cfg = finiteContactFixture("directional");
 cfg.source.target_angle_deg = 35;
 [cfg, ~] = kwsim.two_d.validateConfig(cfg);
 vibrators = cfg.source.resolved_bank.vibrators;
@@ -65,25 +64,25 @@ verifyEqual(testCase, exp(1i*[vibrators.phase_rad].'), ...
     expected_complex_phase, 'AbsTol', 1e-12);
 end
 
-function testContactModelComparison(testCase)
-x_m = (0:9)*0.5e-3;
-z_m = (0:7)*0.5e-3;
-[X, Z] = meshgrid(x_m, z_m);
-field = exp(-1i*2*pi*(X + 0.2*Z)/4e-3);
-point = syntheticResult("point", field, x_m, z_m, 0);
-finite = syntheticResult("finite_segment", 2i*field, x_m, z_m, 4e-3);
-comparison = kwsim_benchmarks.finite_contacts_2d.compareModels(point, finite);
-verifyEqual(testCase, comparison.correlation_magnitude, 1, 'AbsTol', 1e-12);
-verifyLessThanOrEqual(testCase, ...
-    comparison.optimal_scaled_shape_relative_error, 1e-12);
-verifyEqual(testCase, comparison.rms_amplitude_ratio_finite_to_point, 2, ...
-    'AbsTol', 1e-12);
+function cfg = finiteContactFixture(regime)
+arguments
+    regime (1,1) string {mustBeMember(regime, ...
+        ["directional","partially_diffuse","diffuse"])} = "directional"
 end
-
-function result = syntheticResult(model, field, x_m, z_m, span_m)
-result = struct();
-result.source.contact_model = model;
-result.axes = struct('x_m', x_m, 'z_m', z_m, 'f0_hz', 500);
-result.fields.displacement.axial_total_zx = field;
-result.diagnostics.metrics.contact.requested_contact_span_m = span_m;
+cfg = kwsim.two_d.defaultConfig();
+cfg.scenario = "finite_contact_unit_fixture_" + regime;
+cfg.seed = 1002;
+if regime == "directional"
+    vibratorCount = 8;
+else
+    vibratorCount = 16;
+end
+if regime == "diffuse"
+    cfg.time.settling_cycles = 6;
+end
+cfg = kwsim.sources.configureVibratorBank(cfg,regime,vibratorCount);
+cfg = kwsim.sources.configureFiniteContact( ...
+    cfg,ContactRadiusM=2e-3,NodeSpacingPoints=4,Profile="raised_cosine");
+cfg.source.ramp_cycles = 3;
+cfg.sensor.boundary_margin_m = 4e-3;
 end
