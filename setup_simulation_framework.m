@@ -51,7 +51,9 @@ if ~options.Quiet
     else
         fprintf("k-Wave:     not configured (set KWSIM_KWAVE_PATH or use setup_simulation_framework(KWavePath=...))\n");
     end
-    fprintf("\nRun any JSON configuration with:\n");
-    fprintf('  outcome = run_simulation("path/to/config.json");\n\n');
+    fprintf("\nSingle simulation:\n");
+    fprintf('  outcome = run_simulation("path/to/config.json");\n');
+    fprintf("Campaign:\n");
+    fprintf('  report = run_campaign("path/to/campaign.json");\n\n');
 end
 end
