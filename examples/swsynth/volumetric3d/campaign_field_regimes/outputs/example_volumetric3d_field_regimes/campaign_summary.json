@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0",
+  "campaign_file": "/Users/sara/local/shear-wave-simulation-framework/examples/swsynth/volumetric3d/campaign_field_regimes/campaign.json",
+  "campaign_name": "example_volumetric3d_field_regimes",
+  "backend": "swsynth",
+  "campaign_directory": "/Users/sara/local/shear-wave-simulation-framework/examples/swsynth/volumetric3d/campaign_field_regimes/outputs/example_volumetric3d_field_regimes",
+  "run_count": 3,
+  "completed_count": 0,
+  "skipped_count": 3,
+  "failed_count": 0,
+  "blocked_count": 0,
+  "pending_count": 0,
+  "running_count": 0,
+  "success": true,
+  "runs": [
+    {
+      "ordinal": 1,
+      "design_id": "directional",
+      "condition_id": "directional",
+      "realization_id": 1,
+      "run_id": "run_000001_2fb955643726",
+      "hash_sha256": "2fb955643726f95b899451dee19fca70b6f0b46a016394fae505968105bd165a",
+      "status": "skipped_completed",
+      "outcome_status": "completed_valid",
+      "run_directory": "/Users/sara/local/shear-wave-simulation-framework/examples/swsynth/volumetric3d/campaign_field_regimes/outputs/example_volumetric3d_field_regimes/run_000001_2fb955643726",
+      "error_identifier": "",
+      "error_message": ""
+    },
+    {
+      "ordinal": 2,
+      "design_id": "intermediate",
+      "condition_id": "intermediate",
+      "realization_id": 1,
+      "run_id": "run_000002_753ec0118cef",
+      "hash_sha256": "753ec0118cef943c018b5030499c71b99fc067efdc3643d22be8de9b532b9bc5",
+      "status": "skipped_completed",
+      "outcome_status": "completed_valid",
+      "run_directory": "/Users/sara/local/shear-wave-simulation-framework/examples/swsynth/volumetric3d/campaign_field_regimes/outputs/example_volumetric3d_field_regimes/run_000002_753ec0118cef",
+      "error_identifier": "",
+      "error_message": ""
+    },
+    {
+      "ordinal": 3,
+      "design_id": "diffuse",
+      "condition_id": "diffuse",
+      "realization_id": 1,
+      "run_id": "run_000003_570b71a66b27",
+      "hash_sha256": "570b71a66b27dd51618a2414b149a9cc5e27d6b2f8c7f06f1c78f1741dfa28c2",
+      "status": "skipped_completed",
+      "outcome_status": "completed_valid",
+      "run_directory": "/Users/sara/local/shear-wave-simulation-framework/examples/swsynth/volumetric3d/campaign_field_regimes/outputs/example_volumetric3d_field_regimes/run_000003_570b71a66b27",
+      "error_identifier": "",
+      "error_message": ""
+    }
+  ],
+  "updated": "2026-09-02 14:57:38 *",
+  "summary": "Campaign: 0 completed, 3 resumed, 0 failed, 0 blocked, 0 pending."
+}

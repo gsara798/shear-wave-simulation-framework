@@ -1,667 +1,219 @@
 # Terminology
 
-This glossary defines the operational, numerical, and physical terminology used
-throughout the shear-wave simulation framework.
+This glossary defines the main operational and physical terms used by the active simulation framework.
 
-The goal is to keep configuration files, validation reports, examples, and user
-documentation consistent.
+## Backend
 
-## Analysis cycles
+The solver or generator used to create a wavefield.
 
-The number of complete excitation cycles used to estimate the harmonic field at
-the source frequency.
+- `kwsim`: k-Wave elastic time-domain simulations.
+- `swsynth`: analytical or Eikonal-based synthetic wavefields.
 
-These cycles are analyzed after the settling interval. Increasing the number of
-analysis cycles can improve harmonic estimation but also increases simulation
-time.
+The root-level `run_simulation` function dispatches to the correct backend from the JSON configuration.
 
-Configuration field:
+## Campaign
 
-```text
-time.analysis_cycles
+A reproducible collection of related simulations defined by one campaign JSON. Campaigns can use Cartesian parameter sweeps or explicit named runs.
+
+Public interface:
+
+```matlab
+report = run_campaign("path/to/campaign.json");
 ```
 
-## Angular source bank
+## Config / configuration
 
-A multi-source configuration designed from target propagation directions rather
-than from a single boundary face.
-
-The framework maps requested directions to finite contacts on valid domain
-faces and assigns transverse source polarizations.
-
-Examples include:
-
-```text
-generated angular N8 P2
-generated angular N32 P8
-generated angular N128 P8
-```
-
-An angular source bank is not automatically an ideal diffuse field. Its angular
-coverage must be assessed from the realized source geometry and field metrics.
-
-## Background material
-
-The material that fills the domain before heterogeneous objects or bilayers are
-applied.
-
-Typical background properties include:
-
-```text
-shear-wave speed
-compressional-wave speed
-density
-material ID
-```
-
-In the current 3D geometry implementation, heterogeneous regions are applied
-over this background according to the configured geometry precedence.
-
-## Bilayer
-
-A two-material geometry separated by a plane.
-
-The interface is defined by:
-
-```text
-a point on the plane
-a normal vector
-a material on the negative side
-a material on the positive side
-```
-
-The normal vector determines the orientation of the interface.
-
-## CLI
-
-Command-line interface.
-
-The framework CLI is:
-
-```bash
-./scripts/kwsim-run CONFIG.json
-```
-
-It loads a JSON configuration, resolves and validates the simulation, runs the
-solver when requested, evaluates the result, and saves outputs.
-
-## Configured run
-
-A simulation launched from a JSON configuration through the CLI.
-
-Example:
-
-```bash
-./scripts/kwsim-run   configs/kwsim/three_d/homogeneous_directional_req_validation.json
-```
-
-A configured run differs from calling low-level MATLAB functions manually
-because it follows the standard configuration, validation, output, and
-provenance workflow.
-
-## Contact
-
-The boundary region where prescribed particle velocity is applied.
-
-A contact may be:
-
-```text
-a point contact
-a finite segment in 2D
-a finite disk on a 3D boundary face
-```
-
-A contact is a numerical representation of an external actuator. It is not a
-complete mechanical model of the actuator, coupling layer, or stress transfer.
-
-## Contact radius
-
-The requested physical half-size of a finite source contact.
-
-Configuration field:
-
-```text
-source.contact_radius_m
-```
-
-In 2D, this controls the half-extent of a finite segment.
-
-In 3D, this controls the radius of a finite disk.
-
-The realized contact is discretized on the numerical grid.
-
-## Data contract
-
-The documented agreement that defines:
-
-```text
-field names
-array orientation
-units
-required metadata
-coordinate conventions
-saved-file structure
-```
-
-The data contract prevents physically incorrect interpretation of arrays that
-may otherwise have compatible dimensions.
-
-## Diffuse field
-
-An idealized field with broad and approximately isotropic angular support and
-many incoherent contributors.
-
-A finite simulated multi-source field should not be called fully diffuse only
-because it contains many sources. Angular coverage, directional bias, and field
-statistics must support that interpretation.
-
-## Dimension
-
-The simulation dimensionality.
-
-```text
-dimension = 2
-dimension = 3
-```
-
-In public 2D fields:
-
-```text
-x = lateral coordinate
-z = axial or depth coordinate
-```
-
-In public 3D fields:
-
-```text
-x = lateral coordinate
-y = elevational or out-of-plane coordinate
-z = axial or depth coordinate
-```
+A JSON file describing one simulation. The input JSON records user intent; the resolved configuration records defaults, derived values, generated geometry, and the actual settings used for execution.
 
 ## Directional field
 
-A wavefield dominated by one principal propagation direction.
+A wavefield dominated by one principal propagation direction. Source count alone does not define directionality; the realized angular structure is what matters physically.
 
-The reference directional configuration uses one finite boundary contact with
-source motion transverse to the main propagation direction.
+## Diffuse field
+
+An idealized field with broad angular support and no dominant propagation direction. A many-source simulation should not automatically be called diffuse without checking its realized directional structure.
+
+In public examples, direction counts of 1, 16, and 128 are used as directional/intermediate/diffuse examples. These are not universal thresholds.
 
 ## Dry run
 
-A configuration validation and preflight operation that does not execute the
-k-Wave solver and does not create simulation outputs.
+Validation of a configuration without solver execution or simulation output creation.
 
-Command:
+Single run:
 
-```bash
-./scripts/kwsim-run CONFIG.json --dry-run
+```matlab
+run_simulation("path/to/config.json", DryRun=true)
 ```
 
-A dry run checks that the configuration can be loaded, resolved, and validated.
+Campaign:
 
-A successful dry run does not prove that the eventual physical simulation will
-pass all post-solver validation checks.
-
-## Finite contact
-
-A source applied over a nonzero physical region rather than at one mathematical
-point.
-
-The current framework uses:
-
-```text
-finite_segment in 2D
-finite_disk in 3D
+```matlab
+run_campaign("path/to/campaign.json", DryRun=true)
 ```
-
-Finite contacts are discretized into solver nodes according to the selected
-sampling policy.
-
-## Generated angular bank
-
-A source bank created by selecting target directions and then resolving valid
-finite contacts on the available 3D boundary faces.
-
-The generator attempts to satisfy configured angular and placement constraints.
-
-The realized bank must still be inspected because discretization and boundary
-mapping can modify the requested geometry.
-
-## Grid
-
-The numerical spatial discretization.
-
-Typical fields include:
-
-```text
-Nx, Ny, Nz
-dx_m, dy_m, dz_m
-```
-
-The number of grid points and spatial spacing determine physical domain size,
-points per wavelength, memory use, and computational cost.
 
 ## Harmonic field
 
-The complex field estimated at the excitation frequency after the time-domain
-simulation.
-
-A harmonic field contains amplitude and phase information.
-
-The phasor convention used by the framework is:
-
-```text
-signal(t) = real(phasor * exp(1i * 2*pi*f0*t)) + dc
-```
+A complex wavefield representing amplitude and phase at one temporal frequency. k-Wave runs obtain this field by reducing late-time time-domain sensor data at the configured excitation frequency.
 
 ## Heterogeneous medium
 
-A domain containing more than one material.
+A simulation domain containing more than one material. Public examples include inclusions and bilayers.
 
-Heterogeneity may be introduced through:
+## In-plane / out-of-plane
 
-```text
-spheres
-finite cylinders
-bilayers
-combined geometries
-```
+Terms defined relative to the `x-z` observation plane.
 
-The saved truth maps identify the local material properties.
+- in-plane directions lie primarily in `x-z`;
+- out-of-plane directions include a nonzero `y` component.
 
-## In-plane source
+For `swsynth/projected3d`, directions and polarization are 3D while the observed field remains a 2D `U(z,x)` plane.
 
-A source whose intended contribution lies predominantly in the selected
-acquisition plane.
+## Intermediate field
 
-For the central x-z acquisition plane, in-plane and out-of-plane labels describe
-the intended angular contribution relative to that plane.
+A convenient descriptive label for a field with more angular complexity than a directional field but without claiming ideal diffusivity.
 
-They do not mean that the full 3D field is restricted to two dimensions.
+## k-Wave
 
-## Integration test
+The external MATLAB toolbox used by the `kwsim` backend. It is not vendored in this repository.
 
-A test that verifies multiple components working together.
+## Measurement axis
 
-An integration test may include:
+The physical axis associated with the exported scalar wavefield component. It is stored in `wavefield_sample.measurement.axis_xyz` rather than inferred from array orientation.
 
-```text
-configuration loading
-source construction
-k-Wave execution
-harmonic extraction
-validation
-output generation
-```
+## P wave / compressional wave
 
-Integration tests are slower than unit tests because they may execute the
-solver.
+A longitudinal elastic wave whose particle motion is primarily parallel to propagation direction.
 
-## Material ID
+## P/S contamination
 
-An integer label identifying which material occupies each grid location.
-
-Material IDs allow saved fields to be associated with truth regions without
-reconstructing geometry from floating-point material properties.
-
-## Multiface source bank
-
-A multi-source configuration with contacts distributed across more than one
-boundary face.
-
-Multiface placement broadens the set of available propagation directions
-compared with a single-face bank.
-
-It does not by itself guarantee isotropy or diffusivity.
-
-## N and P notation
-
-Source-bank names use notation such as:
-
-```text
-N8 P2
-N32 P8
-N128 P8
-```
-
-`N` is the total number of sources in the bank.
-
-`P` is the configured number of explicitly in-plane contributors used by the
-current source-bank design.
-
-The remaining contributors provide other 3D angular directions, subject to the
-bank-generation and boundary-placement constraints.
-
-## Out-of-plane source
-
-A source whose intended propagation contribution includes a significant
-component outside the selected acquisition plane.
-
-Out-of-plane contributors help broaden three-dimensional angular support.
-
-## P wave
-
-Compressional or longitudinal wave component.
-
-Particle motion is predominantly parallel to the propagation direction.
-
-The framework estimates compressional contamination rather than assuming it is
-zero.
-
-## P/S energy ratio
-
-The ratio of compressional-field energy to shear-field energy in the analyzed
-region.
-
-A smaller value indicates a more shear-dominant field.
-
-The acceptance threshold depends on the configured validation case and should
-not be treated as universal.
-
-## Partial 3D field
-
-A field with broader three-dimensional angular content than a directional or
-single-face field, but without claiming ideal isotropic diffusivity.
-
-The N8 P2 configuration is a reproducible partial-3D development field.
-
-## Phasor
-
-A complex number or complex array representing the amplitude and phase of a
-harmonic quantity at one frequency.
-
-The magnitude gives harmonic amplitude, and the angle gives harmonic phase.
+A measure of compressional content relative to shear content. The exact diagnostic and acceptance threshold depend on the configured scenario.
 
 ## PML
 
-Perfectly matched layer.
+Perfectly matched layer used to reduce numerical boundary reflections in k-Wave. PML settings affect cost and boundary behavior and should be changed carefully.
 
-The PML is the absorbing numerical boundary region used to reduce reflections
-from the edges of the computational domain.
+## Points per wavelength (PPW)
 
-PML settings strongly affect numerical cost and boundary behavior and should
-not be modified casually.
-
-## Points per wavelength
-
-The number of spatial samples across one wavelength.
-
-For shear waves:
+Number of spatial samples across one wavelength. For shear waves:
 
 ```text
-PPW = lambda_s / dx
 lambda_s = cs / f0
+PPW = lambda_s / spacing
 ```
 
-For anisotropic grids, the relevant spacing must be considered along each axis.
-
-Insufficient points per wavelength can make the simulation inaccurate even when
-the solver completes.
+Insufficient PPW can make a simulation inaccurate even when the solver completes.
 
 ## Preflight
 
-The set of checks performed before solver execution.
+Checks performed before solver execution, such as configuration consistency, grid resolution, geometry, CFL, source/sensor placement, and resource limits.
 
-Preflight may assess:
+## Projected 3D
 
-```text
-configuration consistency
-units
-grid resolution
-CFL
-material admissibility
-geometry placement
-sensor region
-duration
-memory requirements
-```
+A synthetic field generated using three-dimensional propagation directions and polarization but observed on a two-dimensional `x-z` plane.
 
-Preflight success means the requested simulation is operationally acceptable
-for execution. It is not post-solver physical validation.
+It is distinct from both a strictly 2D field and a volumetric 3D field.
 
-## Public orientation
+## Public array orientation
 
-The array orientation exposed by the framework to users and saved outputs.
-
-Public 2D maps use:
+The framework exposes arrays in physical-coordinate order:
 
 ```text
-[Nz, Nx]
-suffix: _zx
+2D: [Nz, Nx]       -> suffix _zx
+3D: [Nz, Ny, Nx]   -> suffix _zyx
 ```
 
-Public 3D volumes use:
+k-Wave internal solver orientation is handled inside the adapter layer.
 
-```text
-[Nz, Ny, Nx]
-suffix: _zyx
-```
+## Run
 
-The internal k-Wave solver orientation is handled inside the adapter layer.
-
-## REQ-ready
-
-A validation-sample status indicating that the exported field satisfies the
-operational input requirements for external REQ processing.
-
-Typical requirements include:
-
-```text
-finite complex field
-known frequency
-known spacing
-sufficient field dimensions
-compatible REQ window
-minimum number of placements
-documented orientation
-```
-
-REQ-ready does not mean that REQ has been executed, that the estimated SWS is
-accurate, or that a scientific validation has passed.
-
-## Requested configuration
-
-The parameters supplied directly by the user in the input JSON.
-
-The requested configuration records the simulation intent.
-
-It may omit defaults and derived values.
-
-## Resolved configuration
-
-The complete configuration after defaults, derived parameters, source geometry,
-material geometry, and operational settings have been resolved.
-
-Configured runs save the resolved configuration because it is the more complete
-record of what was actually executed.
+One simulation condition. A run may be launched directly with `run_simulation` or created as one member of a campaign.
 
 ## Run directory
 
-The timestamped directory containing the products of one configured simulation.
-
-Typical structure:
+The standardized output directory for one completed simulation:
 
 ```text
 config/
 data/
 figures/
-manifest.txt
+validation/
+report/   # optional
 ```
 
-## Run name
+## S wave / shear wave
 
-The descriptive label used in the output directory name.
-
-Configuration field:
-
-```text
-output.run_name
-```
-
-A run name should identify the physical case rather than the person who ran it.
-
-## S wave
-
-Shear or transverse wave component.
-
-Particle motion is predominantly perpendicular to the propagation direction.
+A transverse elastic wave whose particle motion is primarily perpendicular to propagation direction.
 
 ## Scenario
 
-A descriptive identifier for the configured physical and validation case.
-
-Configuration field:
-
-```text
-scenario
-```
-
-The scenario may control which validation logic and figures are used by the CLI.
-
-It should not be changed arbitrarily unless the intended dispatch behavior is
-understood.
+A descriptive identifier in the configuration. It can participate in backend validation and output naming, so it should not be changed casually without understanding the configuration contract.
 
 ## Seed
 
-The integer used to reproduce supported random choices, such as source phases or
-generated source-bank geometry.
+Integer controlling supported deterministic random choices, such as phases or generated directions. Fixed seeds enable reproducible realizations.
 
-Configuration field:
+## Sensor ROI
 
-```text
-seed
-```
-
-The same configuration and seed should reproduce the same deterministic
-realization, subject to the documented software environment.
-
-## Settling cycles
-
-The number of excitation cycles allowed before the harmonic analysis interval.
-
-Configuration field:
-
-```text
-time.settling_cycles
-```
-
-The settling interval allows transients to decay and the field to approach a
-stable harmonic regime.
-
-## Smoke test
-
-A compact end-to-end test that checks whether an important workflow executes and
-produces structurally reasonable outputs.
-
-A smoke test answers:
-
-```text
-Does the pipeline run?
-```
-
-It does not prove broad scientific validity across parameter space.
+The region recorded or retained for analysis. For k-Wave 2D, the public adapter crops truth maps to the sensor ROI when required. For current k-Wave 3D export, the `wavefield_sample` contains the complete sensor volume.
 
 ## Source bank
 
-A collection of independently defined source contacts.
-
-A source bank can include source-specific:
-
-```text
-position
-boundary face
-phase
-amplitude
-polarization
-target direction
-```
+A set of multiple source contacts or directional contributors used to generate a more complex wavefield.
 
 ## Source polarization
 
-The direction of prescribed particle motion at a source.
+Direction of prescribed particle motion. For shear-dominant excitation it should be transverse to the intended propagation direction.
 
-For shear-dominant excitation, polarization is chosen transverse to the intended
-propagation direction.
+## Steady state
 
-## Steady-state change
+A regime in which the harmonic field changes little across late-time analysis intervals. k-Wave validation can use late-cycle comparisons to assess whether transients have sufficiently settled.
 
-A metric comparing harmonic-field estimates from different late-time cycle
-groups.
+## `wavefield_sample`
 
-A small value indicates that the estimated harmonic field is no longer changing
-substantially over the analyzed interval.
-
-The configured threshold is case-specific.
-
-## Unit test
-
-A test that checks one small function or component in isolation.
-
-Examples include testing:
+The backend-neutral interchange object saved as:
 
 ```text
-configuration resolution
-geometry construction
-source masks
-orientation conversion
-metric calculations
+data/wavefield_sample.mat
 ```
 
-Unit tests should generally run without executing a full physical simulation.
+It stores coordinates, complex harmonic wavefield data, frequency, measurement metadata, propagation metadata, truth maps when available, validation state, and provenance.
+
+It is estimator-neutral.
+
+## 2D wavefield sample
+
+```text
+spatial_dimension = 2
+coordinates.array_order = "zx"
+wavefield.data_zx(z,x)
+```
+
+## 3D wavefield sample
+
+```text
+spatial_dimension = 3
+coordinates.array_order = "zyx"
+wavefield.data_zyx(z,y,x)
+```
+
+Current k-Wave 3D export preserves the full sensor volume; it is not reduced to a central 2D slice.
 
 ## Validation
 
-Post-resolution or post-solver checks used to determine whether a result
-satisfies the requirements of its configured case.
+Checks used to determine whether a resolved configuration or completed simulation satisfies its configured numerical and physical requirements.
 
-Validation may include:
+Solver completion alone does not imply validation success.
 
-```text
-finite fields
-source-frequency content
-P/S energy ratio
-steady-state convergence
-speed agreement
-material IDs
-REQ readiness
-```
+## Volumetric 3D
 
-A validation threshold is part of the case definition and should not be treated
-as universal.
+A true three-dimensional field defined over `z-y-x`, exported as `data_zyx`.
 
-## Validation report
+## `x`, `y`, `z`
 
-The structured record of validation metrics, thresholds, pass/fail values, and
-summary status.
-
-Configured runs typically save:
+Public physical coordinates:
 
 ```text
-data/validation_report.mat
-data/validation_summary.txt
+x = lateral
+y = elevational / out-of-plane
+z = axial / depth
 ```
-
-## Vibrator bank
-
-A source bank intended to represent multiple external shear-wave actuators.
-
-The current framework prescribes boundary particle velocity. It does not model
-the complete mechanical actuator, contact stress, or coupling material.
-
-## Wavefield regime
-
-A descriptive class for the angular structure of the field.
-
-Current terminology includes:
-
-```text
-directional
-single-face multi-source
-partial 3D
-generated angular
-broad angular
-diffuse idealization
-```
-
-These labels should be used according to realized geometry and validation
-evidence, not only source count.

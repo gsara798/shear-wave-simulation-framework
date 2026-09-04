@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage:
+  bash scripts/sim-run CONFIG.json [options]
+
+Options:
+  --dry-run       Validate without executing the solver.
+  --no-plots      Do not generate standard figures.
+  --pdf           Generate a single-run PDF report.
+  -h, --help      Show this message.
+
+Environment:
+  MATLAB_BIN        Optional MATLAB executable path.
+  KWSIM_KWAVE_PATH  External k-Wave installation for kwsim configs.
+EOF
+}
+
+CONFIG_FILE=""
+DRY_RUN=0
+PLOT_FIGURES=1
+GENERATE_PDF=0
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dry-run) DRY_RUN=1 ;;
+    --no-plots) PLOT_FIGURES=0 ;;
+    --pdf) GENERATE_PDF=1 ;;
+    -h|--help) usage; exit 0 ;;
+    -*) echo "Unknown option: $1" >&2; usage >&2; exit 2 ;;
+    *)
+      if [[ -n "$CONFIG_FILE" ]]; then
+        echo "Only one configuration file may be supplied." >&2
+        exit 2
+      fi
+      CONFIG_FILE="$1"
+      ;;
+  esac
+  shift
+done
+
+if [[ -z "$CONFIG_FILE" ]]; then
+  usage >&2
+  exit 2
+fi
+
+SCRIPT_DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPOSITORY_ROOT="$(cd "$SCRIPT_DIRECTORY/.." && pwd)"
+
+CONFIG_FILE="$(python3 - "$CONFIG_FILE" <<'PY'
+import os, sys
+print(os.path.abspath(sys.argv[1]))
+PY
+)"
+
+if [[ ! -f "$CONFIG_FILE" ]]; then
+  echo "Configuration file does not exist: $CONFIG_FILE" >&2
+  exit 2
+fi
+
+MATLAB_BIN="${MATLAB_BIN:-/Applications/MATLAB_R2025a.app/bin/matlab}"
+if [[ ! -x "$MATLAB_BIN" ]]; then
+  echo "MATLAB executable was not found: $MATLAB_BIN" >&2
+  exit 2
+fi
+
+export SIMRUN_CONFIG="$CONFIG_FILE"
+export SIMRUN_DRY_RUN="$DRY_RUN"
+export SIMRUN_PLOT_FIGURES="$PLOT_FIGURES"
+export SIMRUN_GENERATE_PDF="$GENERATE_PDF"
+
+cd "$REPOSITORY_ROOT"
+
+"$MATLAB_BIN" -batch \
+'setup_simulation_framework(Quiet=true); run_simulation(getenv("SIMRUN_CONFIG"), DryRun=strcmp(getenv("SIMRUN_DRY_RUN"),"1"), PlotFigures=strcmp(getenv("SIMRUN_PLOT_FIGURES"),"1"), GeneratePdf=strcmp(getenv("SIMRUN_GENERATE_PDF"),"1"));'

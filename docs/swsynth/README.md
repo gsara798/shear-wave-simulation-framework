@@ -1,41 +1,84 @@
-# Synthetic wavefield simulations
+# Synthetic Wavefield Simulations
 
-The `swsynth` backend provides lightweight synthetic shear-wave field
-generation without running the k-Wave numerical solver.
+The `swsynth` backend provides fast synthetic harmonic shear-wave fields without running the k-Wave time-domain solver.
 
-Its current primary use is projected-3D harmonic shear-wave synthesis for:
+It currently supports:
 
-- controlled homogeneous wavefields;
-- heterogeneous phase-only Eikonal propagation;
-- explicit and sampled propagation directions;
-- reproducible REQ and REQ-ML simulation campaigns.
+- 2D analytical plane-wave fields;
+- projected-3D observations `U(z,x)` with 3D directions and polarization;
+- true volumetric 3D fields `U(z,y,x)`;
+- homogeneous media;
+- heterogeneous Eikonal propagation;
+- inclusions and bilayers;
+- explicit or generated propagation directions;
+- deterministic seeds and campaign execution.
 
-## Main interfaces
+## Public interface
 
-Run a resolved synthetic configuration with:
+Use the same public runner as every other backend:
 
 ```matlab
-swsynth.cli.runConfig(config_file)
+outcome = run_simulation( ...
+    "examples/swsynth/volumetric3d/inclusion/config.json");
 ```
 
-Backend-neutral campaigns should be loaded, expanded, validated, and executed
-through the `simcampaigns` package.
+Validate only:
 
-## Relevant documentation
+```matlab
+outcome = run_simulation( ...
+    "examples/swsynth/volumetric3d/inclusion/config.json", ...
+    DryRun=true);
+```
 
-- [Synthetic simulation architecture](../contracts/synthetic_simulation_architecture_plan.md)
-- [Wavefield sample contract](../contracts/wavefield_sample_v1.md)
-- [Campaign configuration v1.1](../contracts/simulation_campaign_configuration_v1_1.md)
-- [Projected-3D clean campaign](../campaigns/homogeneous_projected3d_clean_v1.md)
+For campaigns:
 
-Synthetic configuration files are stored under:
+```matlab
+report = run_campaign( ...
+    "examples/swsynth/projected3d/campaign_field_regimes/campaign.json", ...
+    DryRun=true);
+
+report = run_campaign( ...
+    "examples/swsynth/projected3d/campaign_field_regimes/campaign.json");
+```
+
+Users normally do not need to call `swsynth.*` or `simcampaigns.*` directly.
+
+## Example organization
 
 ```text
-configs/swsynth/
+examples/swsynth/
+├── 2d/
+│   └── homogeneous/
+├── projected3d/
+│   ├── inclusion/
+│   ├── bilayer/
+│   └── campaign_field_regimes/
+└── volumetric3d/
+    ├── homogeneous/
+    ├── inclusion/
+    └── bilayer/
 ```
 
-Synthetic campaigns are stored under:
+`projected3d` means that the propagation directions and polarization live in three dimensions while the observed wavefield is a 2D `x-z` plane. `volumetric3d` produces a true 3D `z-y-x` volume.
+
+## Standard output
+
+Synthetic runs use the same public layout as k-Wave:
 
 ```text
-configs/campaigns/swsynth/
+<config-folder>/outputs/<scenario>_<timestamp>/
+├── config/
+├── data/
+│   ├── wavefield_sample.mat
+│   └── run_summary.json
+├── figures/
+└── validation/
 ```
+
+## Wavefield contract
+
+Synthetic and k-Wave runs export the same backend-neutral `wavefield_sample` contract. See [Wavefield Sample Contract](../contracts/wavefield_sample_v1.md).
+
+## Field-regime example
+
+The public projected-3D campaign uses example direction counts of 1, 16, and 128 to create increasingly complex angular fields labeled directional, intermediate, and diffuse. These counts are example settings, not universal thresholds defining physical diffusivity.

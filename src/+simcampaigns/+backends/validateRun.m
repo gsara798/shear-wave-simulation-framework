@@ -20,7 +20,11 @@ switch backend
         clear cleanup
 
     case "swsynth"
-        [resolved, validation] = swsynth.validateConfig(config);
+        if isVolumetricSwsynthConfig(config)
+            [resolved, validation] = swsynth.validateConfig3D(config);
+        else
+            [resolved, validation] = swsynth.validateConfig(config);
+        end
 
         outcome = struct();
         outcome.status = "dry_run_valid";
@@ -33,6 +37,15 @@ switch backend
             "Unsupported simulation campaign backend: %s", ...
             backend);
 end
+
+end
+
+function tf = isVolumetricSwsynthConfig(config)
+
+tf = isfield(config, "domain") && ...
+    isstruct(config.domain) && ...
+    isfield(config.domain, "Ly_m") && ...
+    isfield(config.domain, "dy_m");
 
 end
 

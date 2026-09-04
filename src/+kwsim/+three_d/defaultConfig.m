@@ -2,14 +2,8 @@ function cfg = defaultConfig()
 %DEFAULTCONFIG Baseline configuration for reusable 3D elastic simulations.
 %
 % All physical values use SI units.
-%
-% Public coordinates:
-%   x: lateral
-%   y: elevational / out-of-plane
-%   z: axial / depth
-%
-% k-Wave solver arrays use [Nx,Ny,Nz]. Public result arrays use [Nz,Ny,Nx]
-% and carry a _zyx suffix.
+% Public coordinates: x lateral, y elevational, z axial/depth.
+% k-Wave solver arrays use [Nx,Ny,Nz]; public result arrays use [Nz,Ny,Nx].
 
 cfg = struct();
 cfg.schema_version = "3.0";
@@ -17,8 +11,6 @@ cfg.dimension = 3;
 cfg.scenario = "homogeneous_directional_3d";
 cfg.seed = 1001;
 
-% Compact baseline: cs=2 m/s and f0=500 Hz give lambda_s=4 mm.
-% A 0.5 mm isotropic grid therefore gives 8 points per shear wavelength.
 cfg.grid = struct();
 cfg.grid.Nx = 48;
 cfg.grid.Ny = 32;
@@ -37,23 +29,15 @@ cfg.medium.reduced_cp_factor = 10;
 cfg.medium.physical_cp_m_s = 1540;
 
 material_template = struct( ...
-    'material_id', uint16(0), ...
-    'cs_m_s', NaN, ...
-    'cp_m_s', NaN, ...
-    'rho_kg_m3', NaN);
-
+    'material_id', uint16(0), 'cs_m_s', NaN, ...
+    'cp_m_s', NaN, 'rho_kg_m3', NaN);
 object_template = struct( ...
-    'type', "", ...
-    'name', "", ...
+    'type', "", 'name', "", ...
     'center_m_xyz', [NaN, NaN, NaN], ...
     'axis_xyz', [NaN, NaN, NaN], ...
-    'radius_m', NaN, ...
-    'length_m', NaN, ...
-    'material_id', uint16(0), ...
-    'cs_m_s', NaN, ...
-    'cp_m_s', NaN, ...
-    'rho_kg_m3', NaN);
-
+    'radius_m', NaN, 'length_m', NaN, ...
+    'material_id', uint16(0), 'cs_m_s', NaN, ...
+    'cp_m_s', NaN, 'rho_kg_m3', NaN);
 bilayer_template = struct( ...
     'enabled', false, ...
     'interface_point_m_xyz', [NaN, NaN, NaN], ...
@@ -68,8 +52,6 @@ cfg.geometry.bilayer = bilayer_template;
 cfg.geometry.minimum_boundary_clearance_m = 2e-3;
 cfg.geometry.require_objects_inside_sensor_roi = true;
 
-% Initial 3D benchmark: one finite surface contact on the left x-face.
-% Polarization is axial (+z), transverse to the principal +x propagation.
 cfg.source = struct();
 cfg.source.layout = "single_contact";
 cfg.source.side = "left";
@@ -88,17 +70,12 @@ cfg.source.target_direction_xyz = [1, 0, 0];
 cfg.source.regime = "single";
 cfg.source.vibrator_count = 1;
 cfg.source.boundary_margin_m = 4e-3;
-
-% Multi-contact source-bank configuration. These fields are inactive when
-% source.layout is single_contact.
 cfg.source.bank_name = "partial_diffuse_8";
 cfg.source.phase_policy = "random_uniform";
 cfg.source.amplitude_policy = "equal_total_rms";
 cfg.source.polarization_policy = "project_axial_transverse";
 cfg.source.minimum_in_plane_sources = 0;
 cfg.source.minimum_out_of_plane_sources = 0;
-
-% Direction-first optimized angular-bank generation.
 cfg.source.geometry_seed = 8202;
 cfg.source.placement_policy = "angular_random_search";
 cfg.source.exact_in_plane_sources = 2;
@@ -110,8 +87,6 @@ cfg.source.maximum_directional_bias = 1;
 cfg.source.minimum_third_angular_eigenvalue = 0;
 cfg.source.minimum_axis_separation_deg = 0;
 cfg.source.maximum_mapping_error_deg = 10;
-% Optional spherical-cap restriction for generated propagation directions.
-% The default 4*pi preserves the historical full-sphere generator.
 cfg.source.angular_support_solid_angle_sr = 4*pi;
 cfg.source.angular_support_axis_xyz = [1, 0, 0];
 
@@ -120,7 +95,6 @@ cfg.time.analysis_cycles = 8;
 cfg.time.settling_cycles = 2;
 cfg.time.end_time_s = [];
 
-% The baseline records a central cuboid ROI, not the entire PML region.
 cfg.sensor = struct();
 cfg.sensor.source_buffer_m = 4e-3;
 cfg.sensor.boundary_margin_m = 2e-3;
@@ -140,46 +114,27 @@ cfg.execution.maximum_memory_bytes = 8e9;
 cfg.execution.fail_on_memory_limit = true;
 
 cfg.output = struct();
-
-% Output organization
 cfg.output.enabled = false;
 cfg.output.directory = "outputs";
 cfg.output.run_name = "";
 cfg.output.append_timestamp = true;
 cfg.output.overwrite = false;
-
-% Saved products
 cfg.output.save_result = true;
 cfg.output.save_summary = true;
 cfg.output.save_config_mat = true;
 cfg.output.save_config_json = true;
 cfg.output.save_time_series = false;
-
-% Export a backend-neutral 2D complex field for downstream estimators.
 cfg.output.save_wavefield_sample = false;
-
-% Export the legacy lightweight field for external REQ validation.
-cfg.output.save_req_validation_sample = false;
+cfg.output.save_figures = true;
+cfg.output.save_matlab_figures = true;
 
 cfg.wavefield_sample = struct();
 cfg.wavefield_sample.quantity = "displacement";
 
-cfg.output.save_figures = true;
-cfg.output.save_matlab_figures = true;
-
-% Temporal reduction from simulated time series to complex fields at f0.
 cfg.analysis = struct();
 cfg.analysis.harmonic_method = "least_squares";
 cfg.analysis.temporal_window = "none";
 cfg.analysis.remove_mean = true;
-
-% Parameters used only to assess whether an exported field is large
-% enough for the external REQ validation pipeline.
-cfg.req_validation = struct();
-cfg.req_validation.quantity = "displacement";
-cfg.req_validation.cs_guess_m_s = 3.0;
-cfg.req_validation.window_wavelengths = 2.0;
-cfg.req_validation.minimum_placements_per_axis = 5;
 
 cfg.attenuation = struct();
 cfg.attenuation.enabled = false;
@@ -195,5 +150,4 @@ cfg.diagnostics.maximum_longitudinal_leakage_ratio = 0.05;
 cfg.diagnostics.maximum_symmetry_error = 0.05;
 cfg.diagnostics.maximum_repeat_relative_error = 1e-7;
 cfg.diagnostics.minimum_source_fundamental_fraction = 0.999;
-
 end

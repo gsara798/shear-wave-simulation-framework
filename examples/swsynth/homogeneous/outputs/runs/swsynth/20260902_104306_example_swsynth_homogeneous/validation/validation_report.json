@@ -1,0 +1,20 @@
+{
+  "valid": true,
+  "schema_version": "1.0",
+  "grid_size_zx": [
+    101,
+    101
+  ],
+  "output_convention": "U(z,x)",
+  "direction_count": 16,
+  "direction_space": "two_dimensional",
+  "in_plane_direction_count": 0,
+  "direction_support_type": "full_circle",
+  "direction_solid_angle_sr": 12.566370614359172,
+  "propagation_model": "plane_wave",
+  "phase_model": "local_k_distance",
+  "nonpropagating_policy": "error",
+  "phase_tolerance_rad": 0.03,
+  "maximum_refinement_depth": 10,
+  "medium_object_count": 0
+}

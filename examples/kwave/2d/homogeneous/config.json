@@ -1,0 +1,26 @@
+{
+  "dimension": 2,
+  "scenario": "example_kwave_homogeneous_2d",
+  "seed": 1001,
+  "medium": {
+    "cs_m_s": 2.0,
+    "rho_kg_m3": 1000,
+    "cp_mode": "reduced",
+    "reduced_cp_factor": 10
+  },
+  "output": {
+    "enabled": true,
+    "directory": "outputs",
+    "run_name": "example_kwave_homogeneous_2d",
+    "append_timestamp": true,
+    "overwrite": false,
+    "save_result": true,
+    "save_summary": true,
+    "save_config_mat": true,
+    "save_config_json": true,
+    "save_time_series": false,
+    "save_wavefield_sample": true,
+    "save_figures": true,
+    "save_matlab_figures": false
+  }
+}

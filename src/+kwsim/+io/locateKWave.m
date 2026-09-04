@@ -1,12 +1,12 @@
 function kwave_root = locateKWave(explicit_path)
-%LOCATEKWAVE Locate and add the pinned k-Wave 1.4.1 dependency.
+%LOCATEKWAVE Locate and add the external k-Wave 1.4.1 dependency.
 %
 % kwave_root = kwsim.io.locateKWave()
 % kwave_root = kwsim.io.locateKWave(explicit_path)
 %
-% The repository-local toolbox is preferred. An explicit path exists for
-% downstream projects that keep k-Wave elsewhere. Only the toolbox root is
-% added; the archived project scripts are never added to the MATLAB path.
+% k-Wave is an external dependency and is not vendored in this repository.
+% Supply the toolbox root explicitly or set the KWSIM_KWAVE_PATH environment
+% variable. Only the toolbox root is added to the MATLAB path.
 
 arguments
     explicit_path {mustBeTextScalar} = ""
@@ -22,9 +22,6 @@ if strlength(environment_path) > 0
     candidates(end + 1, 1) = environment_path;
 end
 
-candidates(end + 1, 1) = fullfile( ...
-    string(kwsim.io.projectRoot()), "k-wave-toolbox-version-1.4.1");
-
 kwave_root = "";
 for candidate = candidates.'
     required = ["kWaveGrid.m", "pstdElastic2D.m", "makeDisc.m"];
@@ -37,8 +34,8 @@ end
 
 if strlength(kwave_root) == 0
     error('kwsim:KWaveNotFound', [ ...
-        'Could not locate k-Wave 1.4.1. Keep the repository-local toolbox ', ...
-        'or set KWSIM_KWAVE_PATH to a toolbox root.']);
+        'Could not locate k-Wave 1.4.1. Set KWSIM_KWAVE_PATH to the ', ...
+        'k-Wave toolbox root or pass the toolbox path explicitly.']);
 end
 
 addpath(char(kwave_root));

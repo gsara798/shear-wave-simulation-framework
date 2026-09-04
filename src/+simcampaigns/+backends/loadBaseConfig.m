@@ -28,19 +28,30 @@ switch backend
         end
 
         requested = normalizeObjects(requested);
-        [config, validation] = swsynth.validateConfig(requested);
+        volumetric = isVolumetric(requested);
+        if volumetric
+            [config, validation] = swsynth.validateConfig3D(requested);
+        else
+            [config, validation] = swsynth.validateConfig(requested);
+        end
 
         metadata = struct();
         metadata.backend = "swsynth";
         metadata.base_config_file = base_config_file;
         metadata.requested = requested;
         metadata.validation = validation;
+        metadata.spatial_dimension = 2 + double(volumetric);
 
     otherwise
         error("simcampaigns:UnsupportedBackend", ...
             "Unsupported campaign backend: %s", backend);
 end
 
+end
+
+function tf = isVolumetric(config)
+tf = isfield(config,"domain") && isstruct(config.domain) && ...
+    isfield(config.domain,"Ly_m") && isfield(config.domain,"dy_m");
 end
 
 function config = normalizeObjects(config)

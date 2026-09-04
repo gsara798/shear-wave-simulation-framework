@@ -7,6 +7,7 @@ function paths = createRunDirectory(cfg, options)
 %     config/
 %     data/
 %     figures/
+%     validation/
 %
 % New configurations may define:
 %
@@ -73,26 +74,23 @@ else
     mkdir(run_directory);
 end
 
-config_directory = fullfile( ...
-    run_directory, "config");
-
-data_directory = fullfile( ...
-    run_directory, "data");
-
-figures_directory = fullfile( ...
-    run_directory, "figures");
+config_directory = fullfile(run_directory, "config");
+data_directory = fullfile(run_directory, "data");
+figures_directory = fullfile(run_directory, "figures");
+validation_directory = fullfile(run_directory, "validation");
 
 ensureDirectory(config_directory);
 ensureDirectory(data_directory);
 ensureDirectory(figures_directory);
+ensureDirectory(validation_directory);
 
 paths = struct();
-
 paths.root = string(root_directory);
 paths.run = string(run_directory);
 paths.config = string(config_directory);
 paths.data = string(data_directory);
 paths.figures = string(figures_directory);
+paths.validation = string(validation_directory);
 
 paths.manifest = string(fullfile( ...
     run_directory, ...
@@ -103,49 +101,26 @@ paths.directory_name = string(directory_name);
 
 end
 
-
 function value = getOutputValue(cfg, field_name, default_value)
-
-if isfield(cfg, "output") && ...
-        isfield(cfg.output, field_name)
+if isfield(cfg, "output") && isfield(cfg.output, field_name)
     value = cfg.output.(field_name);
 else
     value = default_value;
 end
-
 end
 
-
 function clean_name = sanitizeName(name)
-
 clean_name = lower(strtrim(string(name)));
-
-clean_name = regexprep( ...
-    clean_name, ...
-    '[^a-zA-Z0-9_-]+', ...
-    '_');
-
-clean_name = regexprep( ...
-    clean_name, ...
-    '_+', ...
-    '_');
-
-clean_name = regexprep( ...
-    clean_name, ...
-    '^[_-]+|[_-]+$', ...
-    '');
-
+clean_name = regexprep(clean_name,'[^a-zA-Z0-9_-]+','_');
+clean_name = regexprep(clean_name,'_+','_');
+clean_name = regexprep(clean_name,'^[_-]+|[_-]+$','');
 if strlength(clean_name) == 0
     clean_name = "simulation";
 end
-
 end
 
-
 function ensureDirectory(directory)
-
 if ~isfolder(directory)
     mkdir(directory);
 end
-
 end

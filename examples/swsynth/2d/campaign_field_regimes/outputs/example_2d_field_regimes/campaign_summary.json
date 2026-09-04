@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0",
+  "campaign_file": "/Users/sara/local/shear-wave-simulation-framework/examples/swsynth/2d/campaign_field_regimes/campaign.json",
+  "campaign_name": "example_2d_field_regimes",
+  "backend": "swsynth",
+  "campaign_directory": "/Users/sara/local/shear-wave-simulation-framework/examples/swsynth/2d/campaign_field_regimes/outputs/example_2d_field_regimes",
+  "run_count": 3,
+  "completed_count": 3,
+  "skipped_count": 0,
+  "failed_count": 0,
+  "blocked_count": 0,
+  "pending_count": 0,
+  "running_count": 0,
+  "success": true,
+  "runs": [
+    {
+      "ordinal": 1,
+      "design_id": "directional",
+      "condition_id": "directional",
+      "realization_id": 1,
+      "run_id": "run_000001_8a9173c9a915",
+      "hash_sha256": "8a9173c9a91536018d36ace11f6b402b0c86f6aeb6a3f328884e4be51241b431",
+      "status": "completed",
+      "outcome_status": "completed_valid",
+      "run_directory": "/Users/sara/local/shear-wave-simulation-framework/examples/swsynth/2d/campaign_field_regimes/outputs/example_2d_field_regimes/run_000001_8a9173c9a915",
+      "error_identifier": "",
+      "error_message": ""
+    },
+    {
+      "ordinal": 2,
+      "design_id": "intermediate",
+      "condition_id": "intermediate",
+      "realization_id": 1,
+      "run_id": "run_000002_797bcf6e8bc0",
+      "hash_sha256": "797bcf6e8bc0ac8257f6661178d384f40c55857bd487b2aa90ea728bae3fe548",
+      "status": "completed",
+      "outcome_status": "completed_valid",
+      "run_directory": "/Users/sara/local/shear-wave-simulation-framework/examples/swsynth/2d/campaign_field_regimes/outputs/example_2d_field_regimes/run_000002_797bcf6e8bc0",
+      "error_identifier": "",
+      "error_message": ""
+    },
+    {
+      "ordinal": 3,
+      "design_id": "diffuse",
+      "condition_id": "diffuse",
+      "realization_id": 1,
+      "run_id": "run_000003_fdad67b4a939",
+      "hash_sha256": "fdad67b4a939ac2273038528981cfdc2b358dbad70d61a997225e9a5eef5372b",
+      "status": "completed",
+      "outcome_status": "completed_valid",
+      "run_directory": "/Users/sara/local/shear-wave-simulation-framework/examples/swsynth/2d/campaign_field_regimes/outputs/example_2d_field_regimes/run_000003_fdad67b4a939",
+      "error_identifier": "",
+      "error_message": ""
+    }
+  ],
+  "updated": "2026-09-02 13:39:59 *",
+  "summary": "Campaign: 3 completed, 0 resumed, 0 failed, 0 blocked, 0 pending."
+}

@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage:
+  bash scripts/campaign-run CAMPAIGN.json [options]
+
+Options:
+  --dry-run        Validate every expanded run without executing solvers.
+  --no-resume      Do not resume completed runs.
+  --stop-on-error  Stop at the first failed or blocked run.
+  --no-plots       Do not generate standard figures for completed runs.
+  -h, --help       Show this message.
+
+Environment:
+  MATLAB_BIN        Optional MATLAB executable path.
+  KWSIM_KWAVE_PATH  External k-Wave installation for kwsim campaigns.
+EOF
+}
+
+CAMPAIGN_FILE=""
+DRY_RUN=0
+RESUME=1
+CONTINUE_ON_ERROR=1
+PLOT_FIGURES=1
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dry-run) DRY_RUN=1 ;;
+    --no-resume) RESUME=0 ;;
+    --stop-on-error) CONTINUE_ON_ERROR=0 ;;
+    --no-plots) PLOT_FIGURES=0 ;;
+    -h|--help) usage; exit 0 ;;
+    -*) echo "Unknown option: $1" >&2; usage >&2; exit 2 ;;
+    *)
+      if [[ -n "$CAMPAIGN_FILE" ]]; then
+        echo "Only one campaign file may be supplied." >&2
+        exit 2
+      fi
+      CAMPAIGN_FILE="$1"
+      ;;
+  esac
+  shift
+done
+
+if [[ -z "$CAMPAIGN_FILE" ]]; then
+  usage >&2
+  exit 2
+fi
+
+SCRIPT_DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPOSITORY_ROOT="$(cd "$SCRIPT_DIRECTORY/.." && pwd)"
+
+CAMPAIGN_FILE="$(python3 - "$CAMPAIGN_FILE" <<'PY'
+import os, sys
+print(os.path.abspath(sys.argv[1]))
+PY
+)"
+
+if [[ ! -f "$CAMPAIGN_FILE" ]]; then
+  echo "Campaign file does not exist: $CAMPAIGN_FILE" >&2
+  exit 2
+fi
+
+MATLAB_BIN="${MATLAB_BIN:-/Applications/MATLAB_R2025a.app/bin/matlab}"
+if [[ ! -x "$MATLAB_BIN" ]]; then
+  echo "MATLAB executable was not found: $MATLAB_BIN" >&2
+  exit 2
+fi
+
+export SIMCAMPAIGN_FILE="$CAMPAIGN_FILE"
+export SIMCAMPAIGN_DRY_RUN="$DRY_RUN"
+export SIMCAMPAIGN_RESUME="$RESUME"
+export SIMCAMPAIGN_CONTINUE_ON_ERROR="$CONTINUE_ON_ERROR"
+export SIMCAMPAIGN_PLOT_FIGURES="$PLOT_FIGURES"
+
+cd "$REPOSITORY_ROOT"
+
+"$MATLAB_BIN" -batch \
+'setup_simulation_framework(Quiet=true); run_campaign(getenv("SIMCAMPAIGN_FILE"), DryRun=strcmp(getenv("SIMCAMPAIGN_DRY_RUN"),"1"), Resume=strcmp(getenv("SIMCAMPAIGN_RESUME"),"1"), ContinueOnError=strcmp(getenv("SIMCAMPAIGN_CONTINUE_ON_ERROR"),"1"), PlotFigures=strcmp(getenv("SIMCAMPAIGN_PLOT_FIGURES"),"1"));'

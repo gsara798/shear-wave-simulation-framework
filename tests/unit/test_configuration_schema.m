@@ -1,40 +1,34 @@
 function tests = test_configuration_schema
 %TEST_CONFIGURATION_SCHEMA Protect the dimension-independent configuration contract.
-
 tests = functiontests(localfunctions);
-
 end
 
 function setupOnce(~)
-
 root = fileparts(fileparts(fileparts(mfilename('fullpath'))));
 addpath(fullfile(root, 'src'));
-addpath(fullfile(root, 'benchmarks'));
-
 end
 
 function testDefaultConfigurationHasNoStageField(testCase)
-
-cfg = kwsim.two_d.defaultConfig();
-
-verifyFalse(testCase, isfield(cfg, 'stage'));
-verifyTrue(testCase, isfield(cfg, 'scenario'));
-verifyTrue(testCase, isfield(cfg, 'schema_version'));
-
+cfg2 = kwsim.two_d.defaultConfig();
+cfg3 = kwsim.three_d.defaultConfig();
+for cfg = {cfg2,cfg3}
+    verifyFalse(testCase, isfield(cfg{1}, 'stage'));
+    verifyTrue(testCase, isfield(cfg{1}, 'scenario'));
+    verifyTrue(testCase, isfield(cfg{1}, 'schema_version'));
+end
 end
 
-function testBenchmarkConfigurationsHaveNoStageField(testCase)
-
-configurations = {
-    kwsim_benchmarks.directional_homogeneous_2d.config()
-    kwsim_benchmarks.circular_inclusion_2d.config()
-    kwsim_benchmarks.field_regimes_2d.config("directional")
-    kwsim_benchmarks.finite_contacts_2d.config("directional")
-    kwsim_benchmarks.attenuation_power_law_2d.config()
-};
-
-for index = 1:numel(configurations)
-    verifyFalse(testCase, isfield(configurations{index}, 'stage'));
+function testPublicExampleConfigurationsHaveNoStageField(testCase)
+root = fileparts(fileparts(fileparts(mfilename('fullpath'))));
+files = [ ...
+    fullfile(root,"examples","kwave","2d","homogeneous","config.json")
+    fullfile(root,"examples","kwave","2d","inclusion","config.json")
+    fullfile(root,"examples","kwave","2d","bilayer","config.json")
+    fullfile(root,"examples","kwave","3d","homogeneous","config.json")
+    fullfile(root,"examples","kwave","3d","inclusion","config.json")
+    fullfile(root,"examples","kwave","3d","bilayer","config.json")];
+for file = files.'
+    cfg = jsondecode(fileread(file));
+    verifyFalse(testCase,isfield(cfg,'stage'));
 end
-
 end

@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0",
+  "backend": "swsynth",
+  "status": "completed_valid",
+  "spatial_dimension": 2,
+  "scenario": "example_2d_field_regimes",
+  "seed": 4101,
+  "frequency_hz": 500,
+  "background_cs_m_s": 2,
+  "medium_object_count": 0,
+  "direction_count": 1,
+  "retained_direction_count": 1,
+  "requested_in_plane_count": 0,
+  "retained_in_plane_count": 1,
+  "retained_in_plane_fraction": 1,
+  "direction_support_type": "full_circle",
+  "solid_angle_sr": 12.566370614359172,
+  "geometry_family": "homogeneous",
+  "propagation_model": "plane_wave",
+  "phase_model": "local_k_distance",
+  "elapsed_solver_time_s": 0.142291125,
+  "valid": true,
+  "wavefield_size": [
+    101,
+    101
+  ],
+  "angular_entropy": 0.12794883892561257,
+  "angular_effective_bins": 1.5817108654560283,
+  "radial_entropy": 0.019713167132957579,
+  "radial_effective_bins": 1.0646536194594036
+}

@@ -1,0 +1,18 @@
+KWSIM VALIDATION REPORT
+=======================
+
+heterogeneous valid=1, materials expected/actual=[2 3]/[2 3], shear energy=6.77388e-12, compression energy=2.54066e-16, P/S energy ratio=3.751e-05, z-shear fraction=0.8247
+
+Overall valid: 1
+
+Check                                  Pass   Value          Threshold      Meaning
+heterogeneous_truth                    1      1              1              The run must contain at least two realized materials.
+harmonic_component_contract            1      1              1              All six harmonic P/S volumes must exist and have the same dimensions.
+finite_harmonic_fields                 1      1              1              All harmonic component volumes must contain finite values.
+nonzero_shear_energy                   1      6.77388e-12    0              The harmonic result must contain nonzero shear energy.
+truth_map_contract                     1      1              1              cp, cs, density, and material-ID truth maps must be present.
+truth_map_dimensions                   1      1              1              Truth maps must match the public harmonic-volume dimensions.
+positive_finite_material_properties    1      1              1              All material-property voxels must be finite and positive.
+configured_material_ids_present        1      1              1              The sensor ROI must contain exactly the configured material IDs.
+public_truth_orientation               1      1              1              Public truth maps must use [Nz,Ny,Nx] orientation.
+harmonic_frequency_contract            1      0              1e-12          The packaged harmonic frequency must match source.f0_hz.

@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0",
+  "scenario": "example_volumetric3d_field_regimes",
+  "seed": 8101,
+  "domain": {
+    "Lx_m": 0.02,
+    "Ly_m": 0.02,
+    "Lz_m": 0.02,
+    "dx_m": 0.001,
+    "dy_m": 0.001,
+    "dz_m": 0.001
+  },
+  "medium": {
+    "background_cs_m_s": 2.0,
+    "combine_mode": "overlay",
+    "objects": []
+  },
+  "wavefield": {
+    "frequency_hz": 300,
+    "quantity": "velocity",
+    "observed_component": "axial_total"
+  },
+  "measurement": {
+    "axis_xyz": [0, 0, 1]
+  },
+  "propagation": {
+    "model": "plane_wave",
+    "phase_model": "homogeneous_analytic",
+    "eikonal": {
+      "maximum_iterations": 200,
+      "tolerance_s": 1e-10
+    }
+  },
+  "directions": {
+    "count": 1,
+    "space": "three_dimensional",
+    "sampling_method": "fibonacci",
+    "explicit_xyz": [],
+    "require_in_plane": false,
+    "in_plane_count": 0,
+    "support": {
+      "type": "full_sphere",
+      "axis_xyz": [1, 0, 0],
+      "solid_angle_sr": 12.566370614359172
+    }
+  },
+  "sources": {
+    "phase_policy": "random_uniform",
+    "amplitude_jitter_fraction": 0.0
+  },
+  "polarization": {
+    "model": "transverse_random"
+  },
+  "noise": {
+    "snr_db": 1000
+  },
+  "execution": {
+    "use_parallel": true,
+    "synthesis_batch_size": 32
+  }
+}
