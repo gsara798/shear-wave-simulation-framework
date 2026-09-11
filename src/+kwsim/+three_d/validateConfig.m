@@ -3,7 +3,8 @@ function [cfg, preflight] = validateConfig(requested_cfg)
 %
 % This function performs no simulation. It resolves the compressional
 % speed, physical axes, source-contact sampling, sensor ROI, spatial
-% resolution, and memory preflight before invoking k-Wave.
+% resolution, wavefield-sample export layout, and memory preflight before
+% invoking k-Wave.
 
 arguments
     requested_cfg struct
@@ -329,6 +330,31 @@ cfg.derived.sensor_size_xyz = [
 cfg.derived.sensor_points = ...
     prod(cfg.derived.sensor_size_xyz);
 
+%% Resolve wavefield_sample export layout before solver execution
+
+if numel(cfg.sensor.x_indices) < 2 || numel(cfg.sensor.z_indices) < 2
+    error("kwsim:Invalid3DConfig", ...
+        "Wavefield sample export requires at least two x and z samples.");
+end
+
+sample_is_planar = numel(cfg.sensor.y_indices) == 1;
+if sample_is_planar
+    sample_spatial_dimension = 2;
+    sample_array_order = "zx";
+    sample_output_convention = "data_zx(z,x)";
+    sample_observation_y_m = ...
+        cfg.derived.y_full_m(cfg.sensor.y_indices(1));
+else
+    if numel(cfg.sensor.y_indices) < 2
+        error("kwsim:Invalid3DConfig", ...
+            "Volumetric wavefield export requires at least two y samples.");
+    end
+    sample_spatial_dimension = 3;
+    sample_array_order = "zyx";
+    sample_output_convention = "data_zyx(z,y,x)";
+    sample_observation_y_m = NaN;
+end
+
 %% Solver configuration
 
 if ~(islogical(cfg.solver.pml_inside) && ...
@@ -454,6 +480,17 @@ preflight.sensor.size_xyz = cfg.derived.sensor_size_xyz;
 preflight.sensor.point_count = cfg.derived.sensor_points;
 preflight.sensor.actual_source_buffer_m = ...
     actual_source_buffer_m;
+
+preflight.wavefield_sample = struct();
+preflight.wavefield_sample.spatial_dimension = ...
+    sample_spatial_dimension;
+preflight.wavefield_sample.array_order = sample_array_order;
+preflight.wavefield_sample.output_convention = ...
+    sample_output_convention;
+preflight.wavefield_sample.is_planar = sample_is_planar;
+preflight.wavefield_sample.observation_y_m = ...
+    sample_observation_y_m;
+preflight.wavefield_sample.source_dimension = 3;
 
 preflight.public_orientation = "[Nz,Ny,Nx]";
 preflight.internal_orientation = "[Nx,Ny,Nz]";
