@@ -1,9 +1,13 @@
 function sample = buildWavefieldSample(result, options)
 %BUILDWAVEFIELDSAMPLE Convert a k-Wave result to wavefield_sample.
 %
-% 2D results are exported as data_zx(z,x). 3D results are exported as the
-% complete sensor-ROI volume data_zyx(z,y,x). Truth maps and coordinates
-% always describe the same spatial ROI as the exported harmonic field.
+% The exported sample dimension follows the recorded observation, not only
+% the propagation dimension. A 3D simulation recorded on a single y-plane
+% is exported as data_zx(z,x) while retaining source_dimension=3 in the
+% propagation metadata. Full 3D sensor volumes remain data_zyx(z,y,x).
+%
+% Truth maps and coordinates always describe the same spatial observation
+% as the exported harmonic field.
 
 arguments
     result (1,1) struct
@@ -16,13 +20,18 @@ if ~any(quantity == ["displacement", "velocity"])
         "Quantity must be displacement or velocity.");
 end
 
-dimension = resolveDimension(result);
-spatial = extractSpatialData(result, quantity, dimension);
+propagation_dimension = resolveDimension(result);
+spatial = extractSpatialData(result, quantity, propagation_dimension);
+sample_dimension = resolveSampleDimension(spatial, propagation_dimension);
+
+if propagation_dimension == 3 && sample_dimension == 2
+    spatial = collapseSingletonYPlane(spatial, result);
+end
 
 sample = struct();
 sample.schema_name = "wavefield_sample";
 sample.schema_version = "1.0";
-sample.spatial_dimension = dimension;
+sample.spatial_dimension = sample_dimension;
 sample.sample_id = "";
 sample.dataset_id = "";
 
@@ -41,18 +50,22 @@ sample.coordinates.z_m = double(spatial.z_m(:)).';
 sample.coordinates.dx_m = spacingFromAxis(spatial.x_m);
 sample.coordinates.dz_m = spacingFromAxis(spatial.z_m);
 
-if dimension == 3
+if sample_dimension == 3
     sample.coordinates.y_m = double(spatial.y_m(:)).';
     sample.coordinates.dy_m = spacingFromAxis(spatial.y_m);
     sample.coordinates.array_order = "zyx";
 else
     sample.coordinates.array_order = "zx";
     sample.coordinates.observation_plane = "x_z";
-    sample.coordinates.observation_y_m = 0;
+    if isfield(spatial, "observation_y_m")
+        sample.coordinates.observation_y_m = double(spatial.observation_y_m);
+    else
+        sample.coordinates.observation_y_m = 0;
+    end
 end
 
 sample.wavefield = struct();
-if dimension == 3
+if sample_dimension == 3
     sample.wavefield.data_zyx = spatial.field;
     sample.wavefield.output_convention = "data_zyx(z,y,x)";
 else
@@ -73,7 +86,7 @@ sample.measurement.component = "axial_total";
 sample.measurement.axis_xyz = [0, 0, 1];
 
 sample.truth = struct();
-if dimension == 3
+if sample_dimension == 3
     sample.truth.cs_map_zyx = spatial.cs;
     sample.truth.k_map_zyx = cast( ...
         2*pi*spatial.frequency_hz ./ double(spatial.cs), ...
@@ -99,8 +112,9 @@ sample.medium.config = resolveMediumConfig(result);
 
 sample.propagation = struct();
 sample.propagation.model = "full_wave_kwave";
-sample.propagation.source_dimension = dimension;
-sample.propagation.direction_space = resolveDirectionSpace(dimension);
+sample.propagation.source_dimension = propagation_dimension;
+sample.propagation.direction_space = ...
+    resolveDirectionSpace(propagation_dimension);
 sample.propagation.direction_count = resolveDirectionCount(result);
 sample.propagation.direction_sampling_method = "";
 sample.propagation.angular_support = struct();
@@ -117,7 +131,7 @@ sample.validation.analysis_ready = ...
     sample.validation.valid && ...
     all(isfinite(spatial.field(:))) && ...
     any(abs(spatial.field(:)) > 0);
-if dimension == 3
+if sample_dimension == 3
     sample.validation.output_convention = "data_zyx(z,y,x)";
 else
     sample.validation.output_convention = "data_zx(z,x)";
@@ -147,6 +161,49 @@ if ~isscalar(dimension) || ~ismember(dimension, [2,3])
     error("kwsim:InvalidWavefieldDimension", ...
         "Result dimension must be 2 or 3.");
 end
+end
+
+function sample_dimension = resolveSampleDimension(spatial, propagation_dimension)
+sample_dimension = propagation_dimension;
+if propagation_dimension == 3
+    if ~isfield(spatial, "y_m")
+        error("kwsim:MissingWavefieldAxis", ...
+            "A 3D result must provide the recorded y axis.");
+    end
+    if numel(spatial.y_m) == 1
+        sample_dimension = 2;
+    end
+end
+end
+
+function spatial = collapseSingletonYPlane(spatial, result)
+Nz = numel(spatial.z_m);
+Nx = numel(spatial.x_m);
+
+spatial.field = collapseZYX(spatial.field, Nz, Nx, "wavefield");
+spatial.cs = collapseZYX(spatial.cs, Nz, Nx, "truth.cs");
+spatial.rho = collapseZYX(spatial.rho, Nz, Nx, "truth.rho");
+spatial.material_id = ...
+    collapseZYX(spatial.material_id, Nz, Nx, "truth.material_id");
+
+spatial.observation_y_m = double(spatial.y_m(1));
+spatial = rmfield(spatial, "y_m");
+
+spatial.extraction = struct( ...
+    "method", "native_3d_xz_sensor_plane", ...
+    "observation_y_m", spatial.observation_y_m, ...
+    "y_indices", resolveSensorIndices(result, "y_indices"));
+end
+
+function value_zx = collapseZYX(value_zyx, Nz, Nx, name)
+full_size = size(value_zyx);
+full_size(end+1:3) = 1;
+if ~isequal(full_size(1:3), [Nz, 1, Nx]) || ...
+        (numel(full_size) > 3 && any(full_size(4:end) ~= 1))
+    error("kwsim:InvalidPlanarWavefieldSize", ...
+        "%s must have size [Nz,1,Nx] for planar 3D export.", name);
+end
+value_zx = reshape(value_zyx, [Nz, Nx]);
 end
 
 function spatial = extractSpatialData(result, quantity, dimension)
