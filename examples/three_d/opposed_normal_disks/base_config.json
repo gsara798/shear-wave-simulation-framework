@@ -1,0 +1,64 @@
+{
+  "schema_version": "3.0",
+  "dimension": 3,
+  "scenario": "homogeneous_opposed_normal_disks_3d",
+  "seed": 1001,
+  "grid": {
+    "Nx": 131,
+    "Ny": 49,
+    "Nz": 111,
+    "dx_m": 0.0005,
+    "dy_m": 0.0005,
+    "dz_m": 0.0005
+  },
+  "medium": {
+    "cs_m_s": 2,
+    "rho_kg_m3": 1000,
+    "cp_mode": "reduced",
+    "reduced_cp_factor": 10
+  },
+  "source": {
+    "layout": "vibrator_bank",
+    "side": "multiface",
+    "bank_name": "opposed_normal_disks",
+    "regime": "directional",
+    "vibrator_count": 2,
+    "f0_hz": 500,
+    "velocity_amplitude_m_s": 0.000001,
+    "contact_radius_m": 0.003,
+    "contact_node_spacing_points": 3,
+    "boundary_margin_m": 0.002,
+    "phase_rad": 0,
+    "ramp_cycles": 3
+  },
+  "time": {
+    "settling_cycles": 5,
+    "analysis_cycles": 8,
+    "end_time_s": null
+  },
+  "sensor": {
+    "source_buffer_m": 0.003,
+    "boundary_margin_m": 0.008,
+    "save_full_volume": false
+  },
+  "solver": {
+    "pml_size_points": [
+      12,
+      12,
+      12
+    ],
+    "plot_simulation": false
+  },
+  "output": {
+    "enabled": true,
+    "directory": "outputs",
+    "run_name": "opposed_normal_disks_3d",
+    "save_wavefield_sample": true,
+    "save_figures": false,
+    "append_timestamp": true,
+    "overwrite": false
+  },
+  "diagnostics": {
+    "fail_on_invalid": false
+  }
+}

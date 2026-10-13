@@ -15,6 +15,11 @@ end
 bank_name = ...
     lower(string(cfg.source.bank_name));
 
+if bank_name == "opposed_normal_disks"
+    [cfg, source_x] = kwsim.three_d.resolveOpposedNormalDisksConfig(cfg);
+    return
+end
+
 if bank_name == "generated_angular"
     [cfg, source_x] = ...
         kwsim.three_d.resolveGeneratedAngularBankConfig(cfg);

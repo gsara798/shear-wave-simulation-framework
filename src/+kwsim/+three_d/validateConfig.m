@@ -151,6 +151,9 @@ else
             required_side = ...
                 "multiface";
 
+        case "opposed_normal_disks"
+            required_side = "multiface";
+
         otherwise
             required_side = ...
                 source_side;
