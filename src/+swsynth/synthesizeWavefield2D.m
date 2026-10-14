@@ -129,6 +129,18 @@ else
         single(1 + ...
         amplitudeJitter * randn(1, N, "single"));
 
+    % Reject nonpositive Gaussian draws rather than allowing a negative
+    % amplitude to introduce an unintended pi phase shift. Keep the
+    % original random draws unchanged whenever all amplitudes are positive.
+    if amplitudeJitter > 0
+        invalidAmplitude = amplitude <= 0;
+        while any(invalidAmplitude)
+            amplitude(invalidAmplitude) = single(1 + ...
+                amplitudeJitter * randn(1, nnz(invalidAmplitude), "single"));
+            invalidAmplitude = amplitude <= 0;
+        end
+    end
+
     phase = ...
         2*pi * rand(1, N, "single");
 
