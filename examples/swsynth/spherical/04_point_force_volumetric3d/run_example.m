@@ -4,7 +4,7 @@ addpath(fullfile(root,'src'));
 cfg = jsondecode(fileread(fullfile(fileparts(mfilename('fullpath')),'config.json')));
 result = swsynth.run3D(cfg);
 U = result.wavefield.U_zyx;
-fprintf('Volumetric point force U(z,y,x): [%s]\\n',num2str(size(U)));
+fprintf('Volumetric point force U(z,y,x): [%s]\n',num2str(size(U)));
 figure;
 imagesc(result.coordinates.x_m,result.coordinates.z_m, ...
     abs(squeeze(U(:,1,:))));
