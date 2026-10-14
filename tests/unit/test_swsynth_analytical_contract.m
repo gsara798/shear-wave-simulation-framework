@@ -142,6 +142,7 @@ verifyGreaterThan(testCase,norm(double(a.wavefield.U_zx(:))- ...
 end
 function testRandomPhasesWithExcitation(testCase)
 cfg=makeCfg();
+cfg.sources.amplitude_jitter_fraction=0;
 cfg.sources.excitation=struct("force_direction_xyz",[1 0 0], ...
     "relative_amplitude",0.75);
 legacy=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
