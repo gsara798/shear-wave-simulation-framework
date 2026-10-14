@@ -32,6 +32,10 @@ end
 
 configFile = absolutePath(configFile);
 config = jsondecode(fileread(configFile));
+if isfield(config,"simulation") || isfield(config,"observation") || ...
+        (isfield(config,"propagation") && isfield(config.propagation,"wave_type"))
+    config = swsynth.compat.resolveAnalyticalSphericalConfig(config);
+end
 backend = resolveBackend(config,options.Backend);
 
 outputRoot = string(options.OutputRoot);
