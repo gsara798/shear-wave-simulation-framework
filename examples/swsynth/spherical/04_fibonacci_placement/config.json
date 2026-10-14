@@ -1,0 +1,138 @@
+{
+  "schema_version": "1.0",
+  "scenario": "point_force_fibonacci_projected3d",
+  "seed": 5500,
+  "domain": {
+    "Lx_m": 0.04,
+    "Lz_m": 0.036,
+    "dx_m": 0.0005,
+    "dz_m": 0.0005,
+    "observation_y_m": 0
+  },
+  "medium": {
+    "background_cs_m_s": 2,
+    "combine_mode": "overlay",
+    "objects": []
+  },
+  "wavefield": {
+    "frequency_hz": 400,
+    "observed_component": "axial"
+  },
+  "propagation": {
+    "wave_type": "spherical",
+    "model": "point_force_shear_far_field",
+    "phase_model": "local_k_distance"
+  },
+  "sources": {
+    "phase_policy": "random_uniform",
+    "amplitude_jitter_fraction": 0,
+    "geometry": "point",
+    "force_direction_xyz": [
+      1,
+      0,
+      0
+    ],
+    "count": 12,
+    "placement": {
+      "method": "fibonacci",
+      "radius_m": 0.031,
+      "support": {
+        "type": "full_sphere"
+      }
+    },
+    "excitation": {
+      "force_direction_xyz": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "relative_amplitude": [
+        0.7,
+        1,
+        1,
+        0.7,
+        1,
+        1,
+        0.7,
+        1,
+        1,
+        0.7,
+        1,
+        1
+      ]
+    }
+  },
+  "amplitude": {
+    "geometric_decay_exponent": 0
+  },
+  "noise": {
+    "snr_db": 1000
+  },
+  "execution": {
+    "use_parallel": false
+  },
+  "simulation": {
+    "method": "analytical"
+  },
+  "observation": {
+    "geometry": "projected3d",
+    "component": "z"
+  }
+}
