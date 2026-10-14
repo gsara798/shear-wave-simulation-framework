@@ -49,8 +49,17 @@ cfg.sources.position_xyz_m=[NaN 0 0];
 verifyError(testCase,@()swsynth.compat.resolveAnalyticalSphericalConfig(cfg), ...
     "swsynth:InvalidSourcePosition");
 end
+function testMultiSourceExplicitPositionRejected(testCase)
+cfg=makeCfg();
+cfg.directions.count=2;
+cfg.sources.position_xyz_m=[-0.01 0 0.017];
+legacy=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
+verifyError(testCase,@()swsynth.validateConfig(legacy), ...
+    "swsynth:SourcePositionUnsupported");
+end
 function cfg=makeCfg()
 cfg=swsynth.defaultConfig();
+cfg.directions.count=1;
 cfg.simulation=struct("method","analytical");
 cfg.observation=struct("geometry","projected3d","component","z");
 cfg.propagation.model="point_force_shear_far_field";
