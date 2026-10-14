@@ -51,6 +51,8 @@ if options.DryRun
     return;
 end
 
+provenance = swsynth.io.getFrameworkProvenance();
+
 paths = swsynth.io.createRunDirectory( ...
     resolvedConfig, ...
     OutputDirectory=options.OutputDirectory, ...
@@ -76,6 +78,7 @@ runSummary = buildRunSummary( ...
     resolvedConfig, ...
     runtimeS, ...
     paths);
+runSummary.framework = provenance;
 
 writeJson(paths.run_summary, runSummary);
 
@@ -84,7 +87,8 @@ writeManifest( ...
     configFile, ...
     resolvedConfig, ...
     runSummary, ...
-    paths);
+    paths, ...
+    provenance);
 
 outcome.status = "completed";
 outcome.completed = true;
@@ -305,9 +309,7 @@ end
 
 
 function writeManifest( ...
-    manifestPath, configFile, resolvedConfig, runSummary, paths)
-
-gitCommit = resolveGitCommit();
+    manifestPath, configFile, resolvedConfig, runSummary, paths, provenance)
 
 fileId = fopen(manifestPath, "w");
 
@@ -335,7 +337,12 @@ fprintf(fileId, "frequency_hz=%.17g\n", ...
 fprintf(fileId, "requested_direction_count=%d\n", ...
     resolvedConfig.directions.count);
 fprintf(fileId, "runtime_s=%.17g\n", runSummary.runtime_s);
-fprintf(fileId, "git_commit=%s\n", gitCommit);
+fprintf(fileId, "framework_version=%s\n", provenance.version);
+fprintf(fileId, "git_commit=%s\n", provenance.git_commit);
+fprintf(fileId, "git_branch=%s\n", provenance.git_branch);
+fprintf(fileId, "git_tag=%s\n", provenance.git_tag);
+fprintf(fileId, "git_dirty=%d\n", provenance.git_dirty);
+fprintf(fileId, "matlab_version=%s\n", provenance.matlab_version);
 fprintf(fileId, "source_config=%s\n", configFile);
 fprintf(fileId, "run_directory=%s\n", paths.run);
 fprintf(fileId, "requested_config=config/requested_config.json\n");
@@ -344,18 +351,6 @@ fprintf(fileId, "wavefield_sample=data/wavefield_sample.mat\n");
 fprintf(fileId, ...
     "validation_report=validation/validation_report.json\n");
 fprintf(fileId, "run_summary=run_summary.json\n");
-
-end
-
-function commit = resolveGitCommit()
-
-[status, output] = system("git rev-parse HEAD");
-
-if status == 0
-    commit = strtrim(string(output));
-else
-    commit = "unknown";
-end
 
 end
 
