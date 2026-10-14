@@ -27,11 +27,6 @@
     "phase_policy": "random_uniform",
     "amplitude_jitter_fraction": 0,
     "geometry": "point",
-    "force_direction_xyz": [
-      1,
-      0,
-      0
-    ],
     "count": 12,
     "placement": {
       "method": "random",
