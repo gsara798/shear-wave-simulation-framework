@@ -54,14 +54,23 @@ if ~isfield(requested.sources,"geometry") || ...
     error("swsynth:UnsupportedSourceGeometry", ...
         "This adapter currently supports sources.geometry=point only.");
 end
-if ~isfield(requested.sources,"force_direction_xyz")
+if isfield(requested.sources,"force_direction_xyz")
+    f=double(requested.sources.force_direction_xyz(:)');
+elseif isfield(requested.sources,"excitation") && ...
+        isfield(requested.sources.excitation,"force_direction_xyz")
+    forceRows=double(requested.sources.excitation.force_direction_xyz);
+    if size(forceRows,2)~=3 || isempty(forceRows)
+        error("swsynth:InvalidForceDirection", ...
+            "excitation.force_direction_xyz must contain 3-vector rows.");
+    end
+    f=forceRows(1,:);
+else
     error("swsynth:MissingForceDirection", ...
-        "sources.force_direction_xyz is required.");
+        "Provide shared force_direction_xyz or excitation.force_direction_xyz.");
 end
-f=double(requested.sources.force_direction_xyz(:)');
 if numel(f)~=3 || any(~isfinite(f)) || norm(f)<=0
     error("swsynth:InvalidForceDirection", ...
-        "sources.force_direction_xyz must be a finite nonzero 3-vector.");
+        "Force direction must be a finite nonzero 3-vector.");
 end
 if isfield(requested.sources,"position_xyz_m") && ...
         ~isempty(requested.sources.position_xyz_m)
@@ -156,7 +165,10 @@ legacy=requested;
 legacy=rmfield(legacy,["simulation","observation"]);
 legacy.propagation=rmfield(legacy.propagation,"wave_type");
 legacy.propagation.model="spherical_wave";
-legacy.sources=rmfield(legacy.sources,["geometry","force_direction_xyz"]);
+legacy.sources=rmfield(legacy.sources,"geometry");
+if isfield(legacy.sources,"force_direction_xyz")
+    legacy.sources=rmfield(legacy.sources,"force_direction_xyz");
+end
 if isfield(requested.sources,"placement")
     placement=requested.sources.placement;
     method=lower(string(placement.method));
