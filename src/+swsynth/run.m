@@ -48,8 +48,13 @@ switch cfg.propagation.model
             wavefield = swsynth.synthesizeWavefield2D(cfg,maps,requestedDirections);
         end
 
+    case "plane_wave"
+        wavefield = swsynth.propagation.plane_wave.synthesizeObserved2D( ...
+            cfg,maps,requestedDirections);
+
     otherwise
-        wavefield = swsynth.synthesizeWavefield2D(cfg,maps,requestedDirections);
+        error("swsynth:UnsupportedPropagationModel", ...
+            "Unsupported propagation model: %s",cfg.propagation.model);
 end
 
 if isfield(wavefield, "directions_xyz")
