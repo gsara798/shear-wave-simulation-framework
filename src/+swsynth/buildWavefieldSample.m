@@ -173,7 +173,8 @@ excitationFields = [
     "phase_rad"
     "amplitude"
     "polarization_xyz"
-    "polarization_z"];
+    "polarization_z"
+    "source_force_directions_xyz"];
 
 for fieldIndex = 1:numel(excitationFields)
     fieldName = excitationFields(fieldIndex);
