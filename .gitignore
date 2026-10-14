@@ -1,6 +1,7 @@
 .DS_Store
 *.asv
 outputs/*
+**/outputs/
 k-wave-toolbox-version-*/
 
 # Historical simulation data are retained locally for reference, but generated
