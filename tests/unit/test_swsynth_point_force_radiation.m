@@ -187,6 +187,32 @@ verifyEqual(testCase, pointForce.wavefield.phase_rad, ...
 
 end
 
+function testLargeAmplitudeJitterNeverProducesNegativeAmplitudes(testCase)
+
+cfg = compactConfig();
+cfg.sources.radiation.model = "point_force_shear_far_field";
+cfg.sources.amplitude_jitter_fraction = 5;
+
+for seed = 1:12
+    cfg.seed = seed;
+    result = swsynth.run(cfg);
+    verifyGreaterThan(testCase, result.wavefield.amplitude, ...
+        zeros(size(result.wavefield.amplitude)));
+    verifyTrue(testCase, all(isfinite(result.wavefield.U_zx), "all"));
+end
+
+end
+
+function testZeroAmplitudeJitterKeepsNominalAmplitude(testCase)
+
+cfg = compactConfig();
+cfg.sources.amplitude_jitter_fraction = 0;
+result = swsynth.run(cfg);
+verifyEqual(testCase, result.wavefield.amplitude, ...
+    ones(cfg.directions.count, 1));
+
+end
+
 function testIntegratedSourceXAndSourceZSymmetry(testCase)
 
 sourceXCfg = singleSourceConfig([1, 0, 0]);
