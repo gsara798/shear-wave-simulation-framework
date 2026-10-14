@@ -65,7 +65,11 @@ out.x_m = x.'; out.y_m = y.'; out.z_m = z.';
 out.dx_m = cfg.domain.dx_m;
 out.dy_m = cfg.domain.dy_m;
 out.dz_m = cfg.domain.dz_m;
-out.directions = struct('count',N,'space',"three_dimensional");
+% Retain the full direction metadata contract used by 3D samples.
+directionCfg = swsynth.defaultConfig();
+directionCfg.seed = cfg.seed;
+directionCfg.directions = cfg.directions;
+out.directions = swsynth.generateDirections(directionCfg);
 out.source_positions_xyz_m = positions;
 out.force_directions_xyz = forces;
 out.source_weights = weights;
