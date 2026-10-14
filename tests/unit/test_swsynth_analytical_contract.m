@@ -119,6 +119,45 @@ cfg.sources.placement=struct("method","explicit", ...
 verifyError(testCase,@()swsynth.compat.resolveAnalyticalSphericalConfig(cfg), ...
     "swsynth:ConflictingSourcePlacement");
 end
+function testIndependentSourceExcitationChangesField(testCase)
+cfg=makeCfg();
+cfg.directions.count=2;
+cfg.sources.count=2;
+cfg.sources.placement=struct("method","explicit", ...
+    "position_xyz_m",[-0.006 0 0.018;0.056 0 0.032]);
+cfg.sources.excitation=struct( ...
+    "force_direction_xyz",[1 0 0;0 0 1], ...
+    "relative_amplitude",[1;0.8], ...
+    "phase_rad",[0;pi/2]);
+legacy=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
+[resolved,~]=swsynth.validateConfig(legacy);
+verifyEqual(testCase,resolved.sources.excitation.relative_amplitude,[1;0.8]);
+verifyEqual(testCase,resolved.sources.excitation.phase_rad,[0;pi/2]);
+a=swsynth.run(legacy);
+verifyEqual(testCase,a.wavefield.phase_rad,[0;pi/2],"AbsTol",1e-6);
+legacy.sources.excitation.force_direction_xyz=[1 0 0;1 0 0];
+b=swsynth.run(legacy);
+verifyGreaterThan(testCase,norm(double(a.wavefield.U_zx(:))- ...
+    double(b.wavefield.U_zx(:))),1e-5);
+end
+function testRandomPhasesWithExcitation(testCase)
+cfg=makeCfg();
+cfg.sources.excitation=struct("force_direction_xyz",[1 0 0], ...
+    "relative_amplitude",0.75);
+legacy=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
+a=swsynth.run(legacy);
+b=swsynth.run(legacy);
+verifyEqual(testCase,a.wavefield.U_zx,b.wavefield.U_zx);
+verifyEqual(testCase,a.wavefield.amplitude,0.75,"AbsTol",1e-6);
+end
+function testInvalidExcitationRowsRejected(testCase)
+cfg=makeCfg();cfg.directions.count=2;
+cfg.sources.excitation=struct("force_direction_xyz",[1 0 0], ...
+    "relative_amplitude",[1;1]);
+legacy=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
+verifyError(testCase,@()swsynth.validateConfig(legacy), ...
+    "swsynth:InvalidExcitationDirections");
+end
 function cfg=makeCfg()
 cfg=swsynth.defaultConfig();
 cfg.directions.count=1;
