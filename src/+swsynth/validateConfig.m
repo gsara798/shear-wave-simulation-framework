@@ -327,6 +327,51 @@ cfg.sources.radiation.force_direction_xyz = unitVector( ...
     cfg.sources.radiation.force_direction_xyz, ...
     "sources.radiation.force_direction_xyz");
 
+% Per-source excitation is optional; all legacy runs retain exact behavior.
+if ~isempty(cfg.sources.excitation)
+    e=cfg.sources.excitation;
+    if ~isstruct(e) || cfg.propagation.model~="spherical_wave" || ...
+            cfg.sources.radiation.model~="point_force_shear_far_field"
+        error("swsynth:ExcitationUnsupported", ...
+            "Per-source excitation requires spherical point-force shear radiation.");
+    end
+    n=cfg.directions.count;
+    if ~isfield(e,"force_direction_xyz")
+        error("swsynth:MissingExcitationDirections", ...
+            "excitation.force_direction_xyz must be N-by-3.");
+    end
+    f=double(e.force_direction_xyz);
+    if isvector(f) && numel(f)==3 && n==1
+        f=reshape(f,1,3);
+    end
+    if ~ismatrix(f) || ~isequal(size(f),[n 3]) || ...
+            any(~isfinite(f),"all") || any(vecnorm(f,2,2)<=0)
+        error("swsynth:InvalidExcitationDirections", ...
+            "excitation.force_direction_xyz must contain N nonzero 3-vectors.");
+    end
+    e.force_direction_xyz=f./vecnorm(f,2,2);
+    if ~isfield(e,"relative_amplitude")
+        e.relative_amplitude=ones(n,1);
+    end
+    a=double(e.relative_amplitude(:));
+    if numel(a)~=n || any(~isfinite(a)) || any(a<0)
+        error("swsynth:InvalidExcitationAmplitude", ...
+            "relative_amplitude must contain N finite nonnegative values.");
+    end
+    e.relative_amplitude=a;
+    if isfield(e,"phase_rad") && ~isempty(e.phase_rad)
+        ph=double(e.phase_rad(:));
+        if numel(ph)~=n || any(~isfinite(ph))
+            error("swsynth:InvalidExcitationPhase", ...
+                "phase_rad must contain N finite phases.");
+        end
+        e.phase_rad=ph;
+    else
+        e.phase_rad=[];
+    end
+    cfg.sources.excitation=e;
+end
+
 if ~isempty(cfg.sources.position_xyz_m) && ...
         (cfg.propagation.model ~= "spherical_wave" || ...
          cfg.sources.radiation.model ~= "point_force_shear_far_field" || ...
