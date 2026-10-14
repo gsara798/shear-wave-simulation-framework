@@ -171,6 +171,45 @@ verifyEqual(testCase, ...
 verifyEqual(testCase, ...
     resolved.sources.excitation.force_direction_xyz,[0 0 1]);
 end
+function testExcitationModesSeedAndPhase(testCase)
+cfg=makeCfg();cfg.directions.count=4;
+cfg.sources.excitation=struct( ...
+    "force",struct("mode","random_isotropic"), ...
+    "amplitude",struct("mode","random_uniform","range",[0.7 1.3]), ...
+    "phase",struct("mode","in_phase"));
+a=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
+b=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
+verifyEqual(testCase,a.sources.excitation,b.sources.excitation);
+verifyEqual(testCase,a.sources.excitation.phase_rad,zeros(4,1));
+verifyEqual(testCase,vecnorm(a.sources.excitation.force_direction_xyz,2,2), ...
+    ones(4,1),"AbsTol",1e-12);
+verifyGreaterThanOrEqual(testCase,min(a.sources.excitation.relative_amplitude),0.7);
+verifyLessThanOrEqual(testCase,max(a.sources.excitation.relative_amplitude),1.3);
+[~,~]=swsynth.validateConfig(a);
+cfg.sources.excitation.phase=struct("mode","alternating");
+a=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
+verifyEqual(testCase,a.sources.excitation.phase_rad,[0;pi;0;pi],"AbsTol",1e-12);
+cfg.sources.excitation.phase=struct("mode","explicit", ...
+    "values_rad",[0 pi/4 pi/2 pi]);
+a=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
+verifyEqual(testCase,a.sources.excitation.phase_rad,[0;pi/4;pi/2;pi],"AbsTol",1e-12);
+cfg.sources.excitation.phase=struct("mode","random_uniform");
+a=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
+b=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
+verifyEqual(testCase,a.sources.excitation.phase_rad,b.sources.excitation.phase_rad);
+end
+function testExcitationFixedModes(testCase)
+cfg=makeCfg();cfg.directions.count=3;
+cfg.sources.excitation=struct( ...
+  "force",struct("mode","fixed","direction_xyz",[1 0 0]), ...
+  "amplitude",struct("mode","fixed","value",1.2), ...
+  "phase",struct("mode","fixed","value_rad",pi/3));
+a=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
+verifyEqual(testCase,a.sources.excitation.force_direction_xyz, ...
+    repmat([1 0 0],3,1));
+verifyEqual(testCase,a.sources.excitation.relative_amplitude,1.2*ones(3,1));
+verifyEqual(testCase,a.sources.excitation.phase_rad,(pi/3)*ones(3,1));
+end
 function cfg=makeCfg()
 cfg=swsynth.defaultConfig();
 cfg.directions.count=1;
