@@ -1,6 +1,6 @@
 # 05 — random spherical placement
 
-This framework-native example runs 12 spherical far-field shear point forces located on a shell of radius 31 mm, using `sources.placement.method="random"`. Every point force can have its own `excitation.force_direction_xyz` and `relative_amplitude`; phases are drawn using the existing random-uniform policy because `phase_rad` is omitted.
+This framework-native example runs 12 spherical far-field shear point forces located on a shell of radius 31 mm, using `sources.placement.method="random"`. The new excitation contract uses `force.mode=random_isotropic`, `amplitude.mode=random_uniform` with relative factors in [0.7,1.3], and `phase.mode=random_uniform`. These draws are seeded and reproducible. `in_phase` means all scalar excitation phases are zero; differing force-vector orientations can still change the physical displacement signs.
 
 Run in MATLAB:
 ```matlab
