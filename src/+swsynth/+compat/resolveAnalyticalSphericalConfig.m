@@ -77,11 +77,111 @@ if isfield(requested.sources,"position_xyz_m") && ...
 else
     pos=[];
 end
+% New mutually exclusive source-placement interface (legacy path still supported).
+if isfield(requested.sources,"placement")
+    placement=requested.sources.placement;
+    if ~isstruct(placement) || ~isfield(placement,"method")
+        error("swsynth:InvalidSourcePlacement", ...
+            "sources.placement.method is required.");
+    end
+    method=lower(string(placement.method));
+    if isfield(requested.sources,"position_xyz_m") && ...
+            ~isempty(requested.sources.position_xyz_m)
+        error("swsynth:ConflictingSourcePlacement", ...
+            "Use placement.position_xyz_m, not both placement and top-level positions.");
+    end
+    if ~isfield(requested.sources,"count") || ...
+            ~isscalar(requested.sources.count) || ...
+            requested.sources.count < 1 || ...
+            requested.sources.count ~= floor(requested.sources.count)
+        error("swsynth:InvalidSourceCount", ...
+            "sources.count must be a positive integer with sources.placement.");
+    end
+    count=double(requested.sources.count);
+    if isfield(requested,"directions") && ...
+            isfield(requested.directions,"count") && ...
+            requested.directions.count ~= count
+        error("swsynth:ConflictingDirectionCount", ...
+            "sources.count and directions.count must agree.");
+    end
+    if method=="explicit"
+        if ~isfield(placement,"position_xyz_m")
+            error("swsynth:MissingSourcePositions", ...
+                "Explicit placement requires position_xyz_m.");
+        end
+        positions=double(placement.position_xyz_m);
+        if isvector(positions) && numel(positions)==3
+            positions=reshape(positions,1,3);
+        end
+        if ~ismatrix(positions) || size(positions,1)~=count || ...
+                size(positions,2)~=3 || any(~isfinite(positions),"all")
+            error("swsynth:InvalidSourcePosition", ...
+                "Explicit placement requires finite N-by-3 coordinates.");
+        end
+        if isfield(placement,"radius_m") || isfield(placement,"support")
+            error("swsynth:ConflictingSourcePlacement", ...
+                "Explicit placement cannot also set radius or angular support.");
+        end
+    elseif method=="random" || method=="fibonacci"
+        if isfield(placement,"position_xyz_m")
+            error("swsynth:ConflictingSourcePlacement", ...
+                "Radial placement must not specify explicit XYZ positions.");
+        end
+        if ~isfield(placement,"radius_m")
+            error("swsynth:MissingSourceRadius", ...
+                "Radial placement requires radius_m.");
+        end
+        radius=double(placement.radius_m);
+        if ~isscalar(radius) || ~isfinite(radius) || radius<=0
+            error("swsynth:InvalidSourceRadius", ...
+                "placement.radius_m must be positive and finite.");
+        end
+        if isfield(placement,"center_xyz_m")
+            center=double(placement.center_xyz_m);
+            if ~isvector(center) || numel(center)~=3 || ...
+                    any(~isfinite(center))
+                error("swsynth:InvalidSourceCenter", ...
+                    "center_xyz_m must be a finite 3-vector.");
+            end
+            % Non-default centers need a separate source-position builder.
+            error("swsynth:CustomPlacementCenterNotImplemented", ...
+                "Custom placement.center_xyz_m is not implemented yet.");
+        end
+    else
+        error("swsynth:InvalidSourcePlacement", ...
+            "placement.method must be explicit, random or fibonacci.");
+    end
+end
 legacy=requested;
 legacy=rmfield(legacy,["simulation","observation"]);
 legacy.propagation=rmfield(legacy.propagation,"wave_type");
 legacy.propagation.model="spherical_wave";
 legacy.sources=rmfield(legacy.sources,["geometry","force_direction_xyz"]);
+if isfield(requested.sources,"placement")
+    placement=requested.sources.placement;
+    method=lower(string(placement.method));
+    legacy.sources=rmfield(legacy.sources,["placement","count"]);
+    legacy.directions.count=count;
+    legacy.directions.space="three_dimensional";
+    if method=="explicit"
+        legacy.sources.position_xyz_m=positions;
+        % Explicit placement does not require any angular sampling.
+        % Existing generator is retained temporarily for RNG compatibility.
+        legacy.directions.sampling_method="fibonacci";
+        legacy.directions.support=struct("type","full_sphere");
+        legacy.directions.explicit_xyz=zeros(0,3);
+    else
+        legacy.sources.position_xyz_m=[];
+        legacy.sources.radius_range_m=[radius radius];
+        legacy.directions.sampling_method=method;
+        legacy.directions.explicit_xyz=zeros(0,3);
+        if isfield(placement,"support")
+            legacy.directions.support=placement.support;
+        else
+            legacy.directions.support=struct("type","full_sphere");
+        end
+    end
+end
 if ~isempty(pos)
     legacy.sources.position_xyz_m=pos;
 end
