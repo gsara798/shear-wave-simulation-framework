@@ -63,11 +63,23 @@ if numel(f)~=3 || any(~isfinite(f)) || norm(f)<=0
     error("swsynth:InvalidForceDirection", ...
         "sources.force_direction_xyz must be a finite nonzero 3-vector.");
 end
+if isfield(requested.sources,"position_xyz_m")
+    pos=double(requested.sources.position_xyz_m);
+    if ~isvector(pos) || numel(pos)~=3 || any(~isfinite(pos))
+        error("swsynth:InvalidSourcePosition", ...
+            "sources.position_xyz_m must be a finite 3-vector in metres.");
+    end
+else
+    pos=[];
+end
 legacy=requested;
 legacy=rmfield(legacy,["simulation","observation"]);
 legacy.propagation=rmfield(legacy.propagation,"wave_type");
 legacy.propagation.model="spherical_wave";
 legacy.sources=rmfield(legacy.sources,["geometry","force_direction_xyz"]);
+if ~isempty(pos)
+    legacy.sources.position_xyz_m=reshape(pos,1,3);
+end
 legacy.sources.radiation=struct( ...
     "model","point_force_shear_far_field", ...
     "force_direction_xyz",f/norm(f));

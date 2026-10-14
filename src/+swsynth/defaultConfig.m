@@ -73,6 +73,8 @@ cfg.directions.support.angle_range_2d_rad = [0, 2*pi];
 
 cfg.sources = struct();
 cfg.sources.radius_range_m = [];
+% Optional explicit XYZ point-source location (metres); [] keeps legacy radii.
+cfg.sources.position_xyz_m = [];
 cfg.sources.phase_policy = "random_uniform";
 cfg.sources.amplitude_jitter_fraction = 0.10;
 

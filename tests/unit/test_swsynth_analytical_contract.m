@@ -31,6 +31,24 @@ cfg=makeCfg();cfg.propagation.wave_type="plane";
 verifyError(testCase,@()swsynth.compat.resolveAnalyticalSphericalConfig(cfg), ...
     "swsynth:UnsupportedWaveType");
 end
+function testPositionIsUsedInField(testCase)
+cfg=makeCfg();
+cfg.sources.position_xyz_m=[-0.01 0 0.017];
+legacy=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
+[resolved,~]=swsynth.validateConfig(legacy);
+verifyEqual(testCase,resolved.sources.position_xyz_m,[-0.01 0 0.017]);
+w1=swsynth.run(legacy);
+legacy.sources.position_xyz_m=[-0.01 0 0.027];
+w2=swsynth.run(legacy);
+verifyGreaterThan(testCase, ...
+    norm(double(w1.wavefield.U_zx(:))-double(w2.wavefield.U_zx(:))),1e-6);
+end
+function testInvalidPositionRejected(testCase)
+cfg=makeCfg();
+cfg.sources.position_xyz_m=[NaN 0 0];
+verifyError(testCase,@()swsynth.compat.resolveAnalyticalSphericalConfig(cfg), ...
+    "swsynth:InvalidSourcePosition");
+end
 function cfg=makeCfg()
 cfg=swsynth.defaultConfig();
 cfg.simulation=struct("method","analytical");

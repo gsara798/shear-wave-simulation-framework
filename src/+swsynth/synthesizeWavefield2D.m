@@ -72,6 +72,13 @@ xSource = sourceRadius .* ux + single(cfg.domain.Lx_m/2);
 ySource = sourceRadius .* uy + single(cfg.domain.observation_y_m);
 zSource = sourceRadius .* uz + single(cfg.domain.Lz_m/2);
 
+% Explicit point position overrides legacy radius/direction placement only.
+% Keep the historical random draws above to preserve regression behavior.
+if ~isempty(cfg.sources.position_xyz_m)
+    xSource(:) = single(cfg.sources.position_xyz_m(1));
+    ySource(:) = single(cfg.sources.position_xyz_m(2));
+    zSource(:) = single(cfg.sources.position_xyz_m(3));
+end
 parentSourceXYZ = [double(xSource(:)), double(ySource(:)), ...
     double(zSource(:))];
 apertureDefinition = swsynth.sources.buildCoherentAperture( ...
