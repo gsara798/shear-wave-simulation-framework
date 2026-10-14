@@ -82,6 +82,43 @@ radii=sqrt((double(r.wavefield.sources.x_m)-cfg.domain.Lx_m/2).^2 + ...
     (double(r.wavefield.sources.z_m)-cfg.domain.Lz_m/2).^2);
 verifyEqual(testCase,radii,0.025*ones(size(radii)),"AbsTol",1e-6);
 end
+function testPlacementExplicitWithoutDirections(testCase)
+cfg=makeCfg();
+cfg=rmfield(cfg,"directions");
+cfg.sources.count=2;
+cfg.sources.placement=struct("method","explicit", ...
+    "position_xyz_m",[-0.01 0 0.01;0.06 0 0.03]);
+legacy=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
+verifyEqual(testCase,legacy.directions.count,2);
+verifyEqual(testCase,legacy.sources.position_xyz_m, ...
+    cfg.sources.placement.position_xyz_m);
+[validated,~]=swsynth.validateConfig(legacy);
+verifyEqual(testCase,validated.directions.count,2);
+end
+function testPlacementFibonacciAndRandom(testCase)
+for method=["fibonacci","random"]
+    cfg=makeCfg();
+    cfg=rmfield(cfg,"directions");
+    cfg.sources.count=8;
+    cfg.sources.placement=struct("method",method, ...
+        "radius_m",0.025,"support",struct("type","full_sphere"));
+    legacy=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
+    verifyEqual(testCase,string(legacy.directions.sampling_method),method);
+    verifyEqual(testCase,legacy.sources.radius_range_m,[0.025 0.025]);
+    result=swsynth.run(legacy);
+    radii=sqrt((double(result.wavefield.sources.x_m)-0.025).^2 + ...
+        double(result.wavefield.sources.y_m).^2 + ...
+        (double(result.wavefield.sources.z_m)-0.025).^2);
+    verifyEqual(testCase,radii,0.025*ones(size(radii)),"AbsTol",1e-6);
+end
+end
+function testPlacementConflictsRejected(testCase)
+cfg=makeCfg();cfg.sources.count=1;
+cfg.sources.placement=struct("method","explicit", ...
+    "position_xyz_m",[-0.01 0 0.02],"radius_m",0.025);
+verifyError(testCase,@()swsynth.compat.resolveAnalyticalSphericalConfig(cfg), ...
+    "swsynth:ConflictingSourcePlacement");
+end
 function cfg=makeCfg()
 cfg=swsynth.defaultConfig();
 cfg.directions.count=1;
