@@ -63,7 +63,8 @@ if numel(f)~=3 || any(~isfinite(f)) || norm(f)<=0
     error("swsynth:InvalidForceDirection", ...
         "sources.force_direction_xyz must be a finite nonzero 3-vector.");
 end
-if isfield(requested.sources,"position_xyz_m")
+if isfield(requested.sources,"position_xyz_m") && ...
+        ~isempty(requested.sources.position_xyz_m)
     pos=double(requested.sources.position_xyz_m);
     if ~isvector(pos) || numel(pos)~=3 || any(~isfinite(pos))
         error("swsynth:InvalidSourcePosition", ...
