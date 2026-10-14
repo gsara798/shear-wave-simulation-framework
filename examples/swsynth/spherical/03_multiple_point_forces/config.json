@@ -52,6 +52,35 @@
           0.035
         ]
       ]
+    },
+    "excitation": {
+      "force_direction_xyz": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          -1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "relative_amplitude": [
+        1,
+        0.8,
+        1.2
+      ],
+      "phase_rad": [
+        0,
+        0,
+        1.5707963267948966
+      ]
     }
   },
   "amplitude": {
