@@ -38,8 +38,8 @@ dirs = swsynth.generateDirections(cfg);
 legacy = swsynth.synthesizeWavefield2D(cfg,map,dirs);
 actual = swsynth.run(cfg);
 verifyEqual(testCase,actual.wavefield.U_zx,legacy.U_zx);
-verifyEqual(testCase,actual.wavefield.source_force_directions_xyz, ...
-    legacy.source_force_directions_xyz);
+verifyEqual(testCase,actual.wavefield.weights,legacy.weights);
+verifyEqual(testCase,actual.wavefield.amplitude,legacy.amplitude);
 end
 
 function testVolumetricMatchesPlanarCutForSingleSource(testCase)
