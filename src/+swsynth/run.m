@@ -35,12 +35,21 @@ switch cfg.propagation.model
                 maps, ...
                 requestedDirections);
 
+    case "spherical_wave"
+        if cfg.sources.radiation.model == "point_force_shear_far_field"
+            if cfg.directions.space == "two_dimensional"
+                wavefield = swsynth.propagation.spherical.point_source.shear_far_field.synthesize2D( ...
+                    cfg, maps, requestedDirections);
+            else
+                wavefield = swsynth.propagation.spherical.point_source.shear_far_field.synthesizeProjected3D( ...
+                    cfg, maps, requestedDirections);
+            end
+        else
+            wavefield = swsynth.synthesizeWavefield2D(cfg,maps,requestedDirections);
+        end
+
     otherwise
-        wavefield = ...
-            swsynth.synthesizeWavefield2D( ...
-                cfg, ...
-                maps, ...
-                requestedDirections);
+        wavefield = swsynth.synthesizeWavefield2D(cfg,maps,requestedDirections);
 end
 
 if isfield(wavefield, "directions_xyz")
