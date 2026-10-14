@@ -78,9 +78,26 @@ sample.directions.retained_count = result.directions.count;
 
 sample.excitation = struct();
 sample.excitation.weights = result.wavefield.source_weights;
-sample.excitation.observed_weights = result.wavefield.observed_weights;
-sample.excitation.polarization_xyz = result.wavefield.polarization_xyz;
-sample.excitation.projection_weights = result.wavefield.projection_weights;
+if result.config.propagation.model == "spherical_wave"
+    % For point forces polarization varies with observation position.
+    % Do not fabricate a spatially constant polarization/projection weight.
+    sample.excitation.observed_weights = [];
+    sample.excitation.polarization_xyz = [];
+    sample.excitation.projection_weights = [];
+    sample.excitation.source_positions_xyz_m = ...
+        result.wavefield.source_positions_xyz_m;
+    sample.excitation.force_directions_xyz = ...
+        result.wavefield.force_directions_xyz;
+    sample.excitation.relative_amplitude = ...
+        result.config.sources.relative_amplitude;
+    sample.excitation.phase_rad = result.wavefield.phase_rad;
+    sample.excitation.radiation_model = ...
+        result.config.propagation.point_source_model;
+else
+    sample.excitation.observed_weights = result.wavefield.observed_weights;
+    sample.excitation.polarization_xyz = result.wavefield.polarization_xyz;
+    sample.excitation.projection_weights = result.wavefield.projection_weights;
+end
 
 sample.validation = struct();
 sample.validation.valid = logical(result.validation.valid);
