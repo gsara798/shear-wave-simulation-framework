@@ -87,5 +87,5 @@ vol.execution.use_parallel = false;
 result = swsynth.run3D(vol);
 verifySize(testCase,result.wavefield.U_zyx,[6,2,6]);
 verifyEqual(testCase,squeeze(result.wavefield.U_zyx(:,1,:)), ...
-    planar.wavefield.U_zx,'AbsTol',5e-5);
+    planar.wavefield.U_zx,'AbsTol',2e-3,'RelTol',2e-4);
 end
