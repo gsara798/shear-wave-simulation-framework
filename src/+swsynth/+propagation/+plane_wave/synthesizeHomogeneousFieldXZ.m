@@ -41,7 +41,7 @@ end
 
 function flag = parallelFlag(useParallel)
 if useParallel
-    flag = Inf;
+    flag = 1;
 else
     flag = 0;
 end
