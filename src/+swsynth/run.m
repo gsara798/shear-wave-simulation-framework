@@ -1,5 +1,5 @@
 function result = run(requestedConfig)
-%RUN Execute one fast synthetic shear-wave simulation.
+%RUN Execute a synthetic wavefield in planar or volumetric geometry.
 %
 % Usage:
 %   cfg = swsynth.defaultConfig();
@@ -18,6 +18,43 @@ function result = run(requestedConfig)
 
 arguments
     requestedConfig (1,1) struct = swsynth.defaultConfig()
+end
+
+% V2 unified public entry: preserve legacy volumetric configs (domain.Ly_m)
+% and support an explicit observation geometry on volumetric requests.
+% Keep the two established numerical backends and validations unchanged.
+isVolumetric = isfield(requestedConfig, "domain") && ...
+    isstruct(requestedConfig.domain) && ...
+    isfield(requestedConfig.domain, "Ly_m");
+if isfield(requestedConfig, "observation") && ...
+        isstruct(requestedConfig.observation) && ...
+        isfield(requestedConfig.observation, "geometry")
+    observationGeometry = lower(string(requestedConfig.observation.geometry));
+    if ~isscalar(observationGeometry) || ...
+            ~ismember(observationGeometry, ["volumetric3d","2d","projected3d"])
+        error("swsynth:InvalidObservationGeometry", ...
+            "Unsupported observation.geometry.");
+    end
+    if observationGeometry == "volumetric3d"
+        if ~isVolumetric
+            error("swsynth:MissingVolumetricDomain", ...
+                "volumetric3d requires domain.Ly_m and domain.dy_m.");
+        end
+        isVolumetric = true;
+    elseif isVolumetric
+        error("swsynth:ObservationDomainMismatch", ...
+            "A 3D domain cannot request a planar observation in this API.");
+    end
+    if isfield(requestedConfig.observation,"component") && ...
+            lower(string(requestedConfig.observation.component)) ~= "z"
+        error("swsynth:UnsupportedObservationComponent", ...
+            "The explicit observation contract currently supports component=z.");
+    end
+    requestedConfig = rmfield(requestedConfig,"observation");
+end
+if isVolumetric
+    result = swsynth.internal.runVolumetric(requestedConfig);
+    return;
 end
 
 [cfg, validation] = swsynth.validateConfig(requestedConfig);
