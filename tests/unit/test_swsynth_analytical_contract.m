@@ -159,6 +159,18 @@ legacy=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
 verifyError(testCase,@()swsynth.validateConfig(legacy), ...
     "swsynth:InvalidExcitationDirections");
 end
+function testExcitationWithoutSharedDirection(testCase)
+cfg=makeCfg();
+cfg.sources=rmfield(cfg.sources,"force_direction_xyz");
+cfg.sources.excitation=struct("force_direction_xyz",[0 0 1], ...
+    "relative_amplitude",1,"phase_rad",0);
+legacy=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
+[resolved,~]=swsynth.validateConfig(legacy);
+verifyEqual(testCase, ...
+    resolved.sources.radiation.force_direction_xyz,[0 0 1]);
+verifyEqual(testCase, ...
+    resolved.sources.excitation.force_direction_xyz,[0 0 1]);
+end
 function cfg=makeCfg()
 cfg=swsynth.defaultConfig();
 cfg.directions.count=1;
