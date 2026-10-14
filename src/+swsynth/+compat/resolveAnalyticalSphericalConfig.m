@@ -66,9 +66,13 @@ end
 if isfield(requested.sources,"position_xyz_m") && ...
         ~isempty(requested.sources.position_xyz_m)
     pos=double(requested.sources.position_xyz_m);
-    if ~isvector(pos) || numel(pos)~=3 || any(~isfinite(pos))
+    if isvector(pos) && numel(pos)==3
+        pos=reshape(pos,1,3);
+    end
+    if ~ismatrix(pos) || size(pos,2)~=3 || ...
+            any(~isfinite(pos),"all")
         error("swsynth:InvalidSourcePosition", ...
-            "sources.position_xyz_m must be a finite 3-vector in metres.");
+            "sources.position_xyz_m must be a finite N-by-3 matrix in metres.");
     end
 else
     pos=[];
@@ -79,7 +83,7 @@ legacy.propagation=rmfield(legacy.propagation,"wave_type");
 legacy.propagation.model="spherical_wave";
 legacy.sources=rmfield(legacy.sources,["geometry","force_direction_xyz"]);
 if ~isempty(pos)
-    legacy.sources.position_xyz_m=reshape(pos,1,3);
+    legacy.sources.position_xyz_m=pos;
 end
 legacy.sources.radiation=struct( ...
     "model","point_force_shear_far_field", ...
