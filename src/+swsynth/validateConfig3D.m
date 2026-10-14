@@ -46,10 +46,54 @@ cfg.wavefield.observed_component = choice( ...
 % model describes incident-wave geometry, while phase_model describes how
 % phase is propagated through the medium.
 cfg.propagation.model = choice(cfg.propagation.model, ...
-    ["plane_wave"], "propagation.model");
+    ["plane_wave","spherical_wave"], "propagation.model");
 cfg.propagation.phase_model = choice(cfg.propagation.phase_model, ...
     ["homogeneous_analytic","volumetric_eikonal"], ...
     "propagation.phase_model");
+
+cfg.propagation.point_source_model = choice( ...
+    cfg.propagation.point_source_model, ...
+    ["point_force_shear_far_field"], "propagation.point_source_model");
+nonnegativeScalar(cfg.propagation.geometric_decay_exponent, ...
+    "propagation.geometric_decay_exponent");
+if cfg.propagation.model == "spherical_wave"
+    if cfg.propagation.phase_model ~= "homogeneous_analytic"
+        error("swsynth:UnsupportedPointSourcePhase3D", ...
+            "Volumetric point forces currently require homogeneous_analytic.");
+    end
+    if ~isempty(cfg.medium.objects) && options.EnforcePropagationCompatibility
+        error("swsynth:PointSourceRequiresHomogeneous3D", ...
+            "Volumetric far-field point forces currently require a homogeneous medium.");
+    end
+    positions = double(cfg.sources.position_xyz_m);
+    forces = double(cfg.sources.force_direction_xyz);
+    if isempty(positions) || ~ismatrix(positions) || size(positions,2) ~= 3 || ...
+            any(~isfinite(positions),"all") || size(positions,1) ~= cfg.directions.count
+        error("swsynth:InvalidPointSourcePosition3D", ...
+            "sources.position_xyz_m must be finite N-by-3.");
+    end
+    if ~isequal(size(forces),size(positions)) || ...
+            any(~isfinite(forces),"all") || any(vecnorm(forces,2,2)<=0)
+        error("swsynth:InvalidPointSourceForce3D", ...
+            "sources.force_direction_xyz must be N nonzero 3-vectors.");
+    end
+    cfg.sources.position_xyz_m = positions;
+    cfg.sources.force_direction_xyz = forces ./ vecnorm(forces,2,2);
+    a = double(cfg.sources.relative_amplitude(:));
+    if numel(a) ~= cfg.directions.count || any(~isfinite(a)) || any(a<0)
+        error("swsynth:InvalidPointSourceAmplitude3D", ...
+            "sources.relative_amplitude must be N finite nonnegative values.");
+    end
+    cfg.sources.relative_amplitude = a;
+    if ~isempty(cfg.sources.phase_rad)
+        p = double(cfg.sources.phase_rad(:));
+        if numel(p) ~= cfg.directions.count || any(~isfinite(p))
+            error("swsynth:InvalidPointSourcePhase3D", ...
+                "sources.phase_rad must be N finite values.");
+        end
+        cfg.sources.phase_rad = p;
+    end
+end
 
 positiveInteger(cfg.propagation.eikonal.maximum_iterations, ...
     "propagation.eikonal.maximum_iterations");
