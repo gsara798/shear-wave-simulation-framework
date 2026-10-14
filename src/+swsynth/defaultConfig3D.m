@@ -39,6 +39,8 @@ cfg.measurement.axis_xyz = [0, 0, 1];
 cfg.propagation = struct();
 cfg.propagation.model = "plane_wave";
 cfg.propagation.phase_model = "homogeneous_analytic";
+cfg.propagation.point_source_model = "point_force_shear_far_field";
+cfg.propagation.geometric_decay_exponent = 0;
 cfg.propagation.eikonal = struct();
 cfg.propagation.eikonal.maximum_iterations = 200;
 cfg.propagation.eikonal.tolerance_s = 1e-10;
@@ -49,6 +51,11 @@ cfg.directions.in_plane_count = 0;
 
 cfg.sources = struct();
 cfg.sources.phase_policy = "random_uniform";
+% Explicit point-source positions, forces and relative amplitudes.
+cfg.sources.position_xyz_m = zeros(0,3);
+cfg.sources.force_direction_xyz = zeros(0,3);
+cfg.sources.relative_amplitude = [];
+cfg.sources.phase_rad = [];
 cfg.sources.amplitude_jitter_fraction = base.sources.amplitude_jitter_fraction;
 
 cfg.polarization = struct();
