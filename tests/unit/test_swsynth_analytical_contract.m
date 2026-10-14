@@ -49,13 +49,38 @@ cfg.sources.position_xyz_m=[NaN 0 0];
 verifyError(testCase,@()swsynth.compat.resolveAnalyticalSphericalConfig(cfg), ...
     "swsynth:InvalidSourcePosition");
 end
-function testMultiSourceExplicitPositionRejected(testCase)
+function testMultiSourceExplicitPositionAccepted(testCase)
 cfg=makeCfg();
 cfg.directions.count=2;
+cfg.sources.position_xyz_m=[-0.01 0 0.017; 0.06 0 0.031];
+legacy=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
+[resolved,~]=swsynth.validateConfig(legacy);
+verifyEqual(testCase,resolved.sources.position_xyz_m,cfg.sources.position_xyz_m);
+result=swsynth.run(legacy);
+verifyEqual(testCase,result.wavefield.sources.x_m, ...
+    cfg.sources.position_xyz_m(:,1)',"AbsTol",1e-6);
+verifyEqual(testCase,result.wavefield.sources.z_m, ...
+    cfg.sources.position_xyz_m(:,3)',"AbsTol",1e-6);
+end
+function testWrongPositionCountRejected(testCase)
+cfg=makeCfg();cfg.directions.count=2;
 cfg.sources.position_xyz_m=[-0.01 0 0.017];
 legacy=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
 verifyError(testCase,@()swsynth.validateConfig(legacy), ...
-    "swsynth:SourcePositionUnsupported");
+    "swsynth:InvalidSourcePosition");
+end
+function testLegacyFibonacciRadiusStillWorks(testCase)
+cfg=makeCfg();
+cfg.directions.count=8;
+cfg.directions.sampling_method="fibonacci";
+cfg.sources.radius_range_m=[0.025 0.025];
+cfg.sources.position_xyz_m=[];
+legacy=swsynth.compat.resolveAnalyticalSphericalConfig(cfg);
+r=swsynth.run(legacy);
+radii=sqrt((double(r.wavefield.sources.x_m)-cfg.domain.Lx_m/2).^2 + ...
+    (double(r.wavefield.sources.y_m)-cfg.domain.observation_y_m).^2 + ...
+    (double(r.wavefield.sources.z_m)-cfg.domain.Lz_m/2).^2);
+verifyEqual(testCase,radii,0.025*ones(size(radii)),"AbsTol",1e-6);
 end
 function cfg=makeCfg()
 cfg=swsynth.defaultConfig();
