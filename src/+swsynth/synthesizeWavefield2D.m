@@ -75,9 +75,9 @@ zSource = sourceRadius .* uz + single(cfg.domain.Lz_m/2);
 % Explicit point position overrides legacy radius/direction placement only.
 % Keep the historical random draws above to preserve regression behavior.
 if ~isempty(cfg.sources.position_xyz_m)
-    xSource(:) = single(cfg.sources.position_xyz_m(1));
-    ySource(:) = single(cfg.sources.position_xyz_m(2));
-    zSource(:) = single(cfg.sources.position_xyz_m(3));
+    xSource(:) = single(cfg.sources.position_xyz_m(:,1));
+    ySource(:) = single(cfg.sources.position_xyz_m(:,2));
+    zSource(:) = single(cfg.sources.position_xyz_m(:,3));
 end
 parentSourceXYZ = [double(xSource(:)), double(ySource(:)), ...
     double(zSource(:))];
