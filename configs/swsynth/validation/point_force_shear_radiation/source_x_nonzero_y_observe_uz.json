@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0",
+  "scenario": "point_force_source_x_nonzero_y_observe_uz",
+  "seed": 4101,
+  "domain": {
+    "Lx_m": 0.04,
+    "Lz_m": 0.036,
+    "dx_m": 0.0005,
+    "dz_m": 0.0005,
+    "observation_y_m": 0.0
+  },
+  "medium": {
+    "background_cs_m_s": 2.0,
+    "combine_mode": "overlay",
+    "objects": []
+  },
+  "wavefield": {
+    "frequency_hz": 400,
+    "observed_component": "axial"
+  },
+  "propagation": {
+    "model": "spherical_wave",
+    "phase_model": "local_k_distance"
+  },
+  "directions": {
+    "count": 1,
+    "space": "three_dimensional",
+    "sampling_method": "explicit",
+    "explicit_xyz": [-0.8, 0.6, 0],
+    "support": {
+      "type": "full_sphere"
+    }
+  },
+  "sources": {
+    "radius_range_m": [0.025, 0.025],
+    "phase_policy": "random_uniform",
+    "amplitude_jitter_fraction": 0.0,
+    "radiation": {
+      "model": "point_force_shear_far_field",
+      "force_direction_xyz": [1, 0, 0]
+    }
+  },
+  "amplitude": {
+    "geometric_decay_exponent": 0
+  },
+  "noise": {
+    "snr_db": 1000
+  },
+  "execution": {
+    "use_parallel": false
+  }
+}

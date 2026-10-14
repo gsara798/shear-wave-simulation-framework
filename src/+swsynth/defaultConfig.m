@@ -76,6 +76,22 @@ cfg.sources.radius_range_m = [];
 cfg.sources.phase_policy = "random_uniform";
 cfg.sources.amplitude_jitter_fraction = 0.10;
 
+% The legacy model applies one constant polarization coefficient to each
+% spherical component. The point-force model instead evaluates the full 3D
+% far-field shear projection at every observation point.
+cfg.sources.radiation = struct();
+cfg.sources.radiation.model = "constant_directional_polarization";
+cfg.sources.radiation.force_direction_xyz = [0, 0, 1];
+
+% A coherent aperture replaces each spherical parent source by a symmetric
+% set of point-force elements. The default point model deliberately keeps
+% the historical synthesis path byte-for-byte unchanged.
+cfg.sources.aperture = struct();
+cfg.sources.aperture.model = "point";
+cfg.sources.aperture.span_m = 0;
+cfg.sources.aperture.axis_xyz = [0, 0, 1];
+cfg.sources.aperture.node_spacing_m = 5e-4;
+
 cfg.polarization = struct();
 cfg.polarization.model = "transverse_random";
 
