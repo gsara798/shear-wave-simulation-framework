@@ -23,19 +23,7 @@
     "model": "point_force_shear_far_field",
     "phase_model": "local_k_distance"
   },
-  "directions": {
-    "count": 3,
-    "space": "three_dimensional",
-    "sampling_method": "fibonacci",
-    "support": {
-      "type": "full_sphere"
-    }
-  },
   "sources": {
-    "radius_range_m": [
-      0.025,
-      0.025
-    ],
     "phase_policy": "random_uniform",
     "amplitude_jitter_fraction": 0,
     "geometry": "point",
@@ -44,23 +32,27 @@
       0,
       0
     ],
-    "position_xyz_m": [
-      [
-        -0.006,
-        0,
-        0.015
-      ],
-      [
-        0.056,
-        0,
-        0.025
-      ],
-      [
-        -0.006,
-        0,
-        0.035
+    "count": 3,
+    "placement": {
+      "method": "explicit",
+      "position_xyz_m": [
+        [
+          -0.006,
+          0,
+          0.015
+        ],
+        [
+          0.056,
+          0,
+          0.025
+        ],
+        [
+          -0.006,
+          0,
+          0.035
+        ]
       ]
-    ]
+    }
   },
   "amplitude": {
     "geometric_decay_exponent": 0
