@@ -75,6 +75,8 @@ cfg.sources = struct();
 cfg.sources.radius_range_m = [];
 % Optional explicit XYZ point-source location (metres); [] keeps legacy radii.
 cfg.sources.position_xyz_m = [];
+% Optional per-source excitation; [] retains legacy phases and force direction.
+cfg.sources.excitation = [];
 cfg.sources.phase_policy = "random_uniform";
 cfg.sources.amplitude_jitter_fraction = 0.10;
 
