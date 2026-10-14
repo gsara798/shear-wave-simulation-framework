@@ -23,6 +23,9 @@ switch cfg.propagation.model
                     cfg.propagation.phase_model);
         end
 
+    case "spherical_wave"
+        field = swsynth.propagation.spherical.point_source.shear_far_field.synthesizeVolumetric3D(cfg, maps);
+
     otherwise
         error("swsynth:UnsupportedVolumetricPropagationModel", ...
             "Unsupported volumetric wave model: %s.", ...
