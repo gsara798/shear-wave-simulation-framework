@@ -9,7 +9,7 @@ end
 exampleDir=string(fileparts(mfilename("fullpath")));
 repositoryRoot=string(fileparts(fileparts(fileparts(fileparts(exampleDir)))));
 addpath(repositoryRoot);
-setup(Quiet=true);
+setup_simulation_framework(Quiet=true);
 names=["force_x","force_z"];
 outcomes=cell(size(names));
 for j=1:numel(names)
