@@ -41,10 +41,11 @@ end
 
 function testDifferentAperturePerSource(testCase)
 r=planarFixture();
-r.aperture(1)=struct("model","point","span_m",0, ...
+point=struct("model","point","span_m",0, ...
     "axis_xyz",[1 0 0],"node_spacing_m",.001);
-r.aperture(2)=struct("model","line_segment","span_m",.002, ...
+line=struct("model","line_segment","span_m",.002, ...
     "axis_xyz",[0 0 1],"node_spacing_m",.001);
+r.aperture=[point,line];
 bundle=swsynth.sources.prepare(r);
 verifyEqual(testCase,bundle.aperture.node_count_per_source,[1;3]);
 verifyEqual(testCase,bundle.aperture.node_source_id,[1;2;2;2]);
