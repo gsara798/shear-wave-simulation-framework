@@ -1,6 +1,6 @@
 # V2 vector field to wavefield_sample v1.0 adapter
 
-**Status (2026-10-15):** implemented and integrated with `simcampaigns`/`simrunner` **for schema-2 swsynth configurations**. The user reported all 10 end-to-end MATLAB integration tests passing, including the saved-MAT path. Legacy `swsynth.run`, legacy sample builders, and old-config routing remain temporarily in the repository; independent REQ-ML reader acceptance is still outstanding.
+**Status (2026-10-15):** implemented and integrated with `simcampaigns`/`simrunner` **for schema-2 swsynth configurations**. The user reported all 10 end-to-end MATLAB integration tests passing, including the saved-MAT path. The V2-only cleanup has now removed `swsynth.run`, `run3D`, legacy sample builders, and old-config routing; independent acceptance in the separate REQ-ML reader is still outstanding.
 
 ## Why this adapter
 
@@ -62,4 +62,4 @@ disp(table(results))
 assertSuccess(results)
 ```
 
-**Before deleting legacy:** validate this roundtrip on the MATLAB target, compare representative V2 samples against the old downstream REQ-ML loaders, and then add a *versioned, explicitly routed* V2 path to `simrunner`/`simcampaigns`. Continue using GitHub [issue #30](https://github.com/gsara798/shear-wave-simulation-framework/issues/30) as the migration checklist. Leave heterogeneous spherical Eikonal under deferred [issue #31](https://github.com/gsara798/shear-wave-simulation-framework/issues/31).
+**Current next step:** rerun MATLAB regression after the V2-only deletion, then perform an independent REQ-ML loader roundtrip with real V2 `wavefield_sample.mat` artifacts (2D plane, projected3D spherical, volumetric3D). `simrunner` and `simcampaigns` both route swsynth directly to V2. See [issue #30](https://github.com/gsara798/shear-wave-simulation-framework/issues/30) for cleanup validation, and [issue #31](https://github.com/gsara798/shear-wave-simulation-framework/issues/31) for deferred heterogeneous spherical Eikonal.
