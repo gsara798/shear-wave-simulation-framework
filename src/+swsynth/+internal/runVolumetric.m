@@ -8,11 +8,13 @@ end
 [cfg, validation] = swsynth.validateConfig3D(requestedConfig);
 maps = swsynth.buildMediumMaps3D(cfg);
 
+phaseSolver = "";
 switch cfg.propagation.model
     case "plane_wave"
         solver = swsynth.phase.validateCompatibility( ...
             "plane_wave",cfg.propagation.phase_model,"volumetric3d", ...
             ~isempty(cfg.medium.objects));
+        phaseSolver = solver;
         switch solver
             case "homogeneous_plane_3d"
                 field = swsynth.synthesizePlaneWave3D(cfg);
@@ -21,6 +23,7 @@ switch cfg.propagation.model
         end
 
     case "spherical_wave"
+        phaseSolver = "spherical_point_force_analytical_3d";
         field = swsynth.propagation.spherical.point_source.shear_far_field.synthesizeVolumetric3D(cfg, maps);
 
     otherwise
@@ -28,6 +31,11 @@ switch cfg.propagation.model
             "Unsupported volumetric wave model: %s.", ...
             cfg.propagation.model);
 end
+
+% Record execution and request separately from legacy backend labels.
+field.phase_solver = phaseSolver;
+field.requested_phase_model = string(requestedConfig.propagation.phase_model);
+field.requested_propagation_model = string(requestedConfig.propagation.model);
 
 result = struct();
 result.config = cfg;
