@@ -1,6 +1,0 @@
-function [travelTimeS, diagnostics] = integrateStraightRayTravelTime(cfg, sourceXYZ, targetXYZ)
-%INTEGRATESTRAIGHTRAYTRAVELTIME Legacy forwarding entry (V2 transition).
-[travelTimeS,diagnostics] = ...
-    swsynth.phase.straight_ray.projected3d.computeTravelTime( ...
-        cfg,sourceXYZ,targetXYZ);
-end
