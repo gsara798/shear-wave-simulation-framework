@@ -145,8 +145,13 @@ switch cfg.propagation.model
                 "Unsupported plane-wave phase solver.");
         end
         phaseSolver = selectedSolver;
-        wavefield = swsynth.propagation.plane_wave.synthesizeObserved2D( ...
-            cfg,maps,requestedDirections);
+        if planeGeometry == "projected3d"
+            wavefield = swsynth.propagation.plane_wave.synthesizeProjected3D( ...
+                cfg,maps,requestedDirections);
+        else
+            wavefield = swsynth.propagation.plane_wave.synthesize2D( ...
+                cfg,maps,requestedDirections);
+        end
 
     otherwise
         error("swsynth:UnsupportedPropagationModel", ...
