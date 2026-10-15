@@ -21,8 +21,14 @@ wavefield_sample = swsynth.io.buildWavefieldSampleV2(result,scenario);
 - `+io/buildWavefieldSampleV2.m`, `+io/resolveConfigV2.m`: V2 sample adapter and JSON configuration resolver; **schema-2 swsynth campaigns are now integrated and smoke-tested**
 - `+numerics/+eikonal`: actual numerical Eikonal kernels; **not duplicate/legacy**.
 
-## Old code still present (temporarily)
+## V2-only maintenance status
 
-`run.m`, `run3D.m`, `+internal/runVolumetric.m`, `synthesizeWavefield2D.m`, `+propagation/+plane_wave/synthesize*.m`, `+propagation/+spherical/+point_source/+shear_far_field/synthesize*.m`, legacy configuration, direction, map, sample builders and a number of `+propagation/+projected3d` helpers are **old execution paths**. They are retained for now because the old `simcampaigns` backend calls them. They are **not** part of the new `propagation.synthesize` implementation.
+As of October 2026 the old `swsynth.run`, `run3D`, legacy default/validation configuration, scalar synth adapters and old physical-source compatibility API have been **removed** from `src/+swsynth`. The `simrunner` and `simcampaigns` entrypoints require `schema_version: "2.0"` for swsynth; k-Wave keeps its own unchanged routing.
 
-The first cleanup pass removed six no-value forwarding wrappers. See `docs/architecture/V2_CLEANUP_LOG.md` for the deletion log and regression tests. The next large pass will remove the old backend as a unit alongside an explicit V2 runner migration, rather than silently breaking campaign output.
+No V2 replacement for *automatically generated plane-wave directions* exists yet. Plane waves currently require explicit `scenario.incidence.direction_xyz`. Physical point-source placements still support random and Fibonacci generation. This separate development is tracked in [issue #32](https://github.com/gsara798/shear-wave-simulation-framework/issues/32).
+
+The shared `+phase/resolveSolver.m` and `+phase/validateCompatibility.m` remain because V2's Eikonal and analytical phase backends call them. The numerical Eikonal kernels are also active.
+
+Historical input fixtures and examples may still exist in `examples/swsynth/` but are **not supported inputs to the V2-only runner**. The old physical implementation is preserved in the user's backup worktree/Git history; do not silently reinterpret old JSON as a V2 scenario.
+
+Run the V2 unit and end-to-end campaign suite before further removal. The audit and migration boundary are documented in `docs/architecture/V2_AUDIT_POST_CAMPAIGN_INTEGRATION_20261015.md`.
