@@ -1,4 +1,4 @@
-# Observation architecture — design proposal, not yet implemented
+# Observation architecture — generic projection implemented; ultrasound planned
 
 ## Separation from mechanical wavefield physics
 
@@ -9,7 +9,7 @@ Proposed packages:
 ```text
 +swsynth/
     +observation/
-        projectComponent.m        % generic sensitivity/beam-axis vector projection
+        projectComponent.m        % IMPLEMENTED: generic sensitivity-axis projection
         sampleSpaceTime.m         % generic finite FOV, grid and temporal sampling
         validate.m               % common observation contract
         +ultrasound/
@@ -30,9 +30,9 @@ Proposed packages:
 Do **not** implement arbitrary ultrasound attenuation as a scalar damping applied to the mechanical displacement field. **Shear-wave mechanical attenuation** belongs to `propagation` / the viscoelastic medium and changes the actual wavefield. **Ultrasound acoustic attenuation** operates at MHz on transmit/receive echoes (depth/path/frequency-dependent acoustic pressure, usually two-way in pulse-echo), affecting RF/IQ signal amplitude, SNR and the performance of motion estimation. An idealized model without RF/IQ should document an evidence-based depth/quality-dependent measurement noise/bias assumption, not silently rescale true tissue motion.
 
 Recommended incremental implementation:
-1. Add pure `observation.projectComponent` for signed vector projection onto a unit sensitivity axis, independent of modality.
+1. **Implemented:** `observation.projectComponent(vectorXYZ,axisXYZ)` returns the signed scalar component of N-by-3 or spatial arrays with xyz in the last dimension. Preserves complex phasors and units. Tests: `test_swsynth_observation_projection_v2.m`.
 2. Define ideal observation and ROI/FOV/time sampling with explicit output units.
-3. Add `observation.ultrasound` initially as an **ideal ultrasound axial velocity/displacement readout** reusing generic projection, with explicit geometry and no fictitious attenuation.
+3. Next, add `observation.ultrasound` as an **ideal ultrasound axial velocity/displacement readout** using the shared projection and explicit probe orientation, PRF and spatial sampling, with no fictitious attenuation. **No `+ultrasound` implementation has been added yet.**
 4. Only after defining an RF/IQ model, introduce MHz acoustic attenuation, scatterer density, transmit/receive beam, TGC, receive noise, PRF, clutter and tracking estimator. Validate against experiments where possible.
 
 Future data flow: `sources` + `medium` -> `propagation` (+ `phase` + `polarization`) -> **true vector motion** -> `observation` (projection and ultrasound acquisition/reconstruction) -> **observed displacement/velocity** -> REQ/REQ-ML.
