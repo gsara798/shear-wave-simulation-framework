@@ -1,0 +1,53 @@
+function tests = test_swsynth_phase_compute_contract
+%TEST_SWSYNTH_PHASE_COMPUTE_CONTRACT Test independent travel-time API.
+tests=functiontests(localfunctions);
+end
+
+function testAnalyticalPlanar(testCase)
+r=struct("model","plane_wave","method","analytical","geometry","2d", ...
+    "direction_xyz",[1 0 0],"reference_cs_m_s",2, ...
+    "x_m",[0 .002 .004],"z_m",[0 .002], ...
+    "cs_map_zx",2*ones(2,3));
+out=swsynth.phase.compute(r);
+verifyEqual(testCase,out.travel_time_s, ...
+    repmat([0 .001 .002],2,1),"AbsTol",1e-14);
+verifyEqual(testCase,out.solver,"homogeneous_plane_2d");
+end
+
+function testAnalyticalRejectsHeterogeneousMap(testCase)
+r=struct("model","plane_wave","method","analytical","geometry","2d", ...
+    "direction_xyz",[1 0 0],"reference_cs_m_s",2, ...
+    "x_m",[0 .002],"z_m",[0 .002], ...
+    "cs_map_zx",[2 2;2 3]);
+verifyError(testCase,@() swsynth.phase.compute(r), ...
+    "swsynth:AnalyticalRequiresHomogeneousMedium");
+end
+
+function testProjectedEikonalMatchesUnderlyingSolver(testCase)
+r=struct("model","plane_wave","method","eikonal", ...
+    "geometry","projected3d","direction_xyz",[1 0 0], ...
+    "reference_cs_m_s",2,"x_m",0:.001:.004, ...
+    "z_m",0:.001:.004,"cs_map_zx",2*ones(5));
+a=swsynth.phase.compute(r);
+[b,~]=swsynth.propagation.projected3d.computeDirectionalPhaseDelay( ...
+    r.cs_map_zx,r.x_m,r.z_m,r.direction_xyz,r.reference_cs_m_s,struct());
+verifyEqual(testCase,a.travel_time_s,b);
+verifyEqual(testCase,a.solver,"projected3d_directional_eikonal");
+end
+
+function testVolumetricEikonalMatchesUnderlyingSolver(testCase)
+r=struct("model","plane_wave","method","eikonal", ...
+    "geometry","volumetric3d","direction_xyz",[1 0 0], ...
+    "reference_cs_m_s",2,"x_m",0:.001:.003,"y_m",0:.001:.003, ...
+    "z_m",0:.001:.003,"cs_map_zyx",2*ones(4,4,4));
+a=swsynth.phase.compute(r);
+[b,~]=swsynth.propagation.volumetric3d.computeDirectionalTravelTime( ...
+    r.cs_map_zyx,r.x_m,r.y_m,r.z_m,r.direction_xyz,r.reference_cs_m_s,struct());
+verifyEqual(testCase,a.travel_time_s,b);
+verifyEqual(testCase,a.solver,"volumetric_eikonal_3d");
+end
+
+function testUnsupportedPhysical2DEikonal(testCase)
+r=struct("model","plane_wave","method","eikonal","geometry","2d");
+verifyError(testCase,@() swsynth.phase.compute(r),"swsynth:PhaseRoutingUnsupported");
+end
