@@ -6,6 +6,11 @@ arguments
     spec (1,1) struct
     geometry (1,1) string
 end
+if isfield(spec,"frequency_hz") || isfield(spec,"k_map_zx") || ...
+        isfield(spec,"k_map_zyx")
+    error("swsynth:MediumCannotOwnFrequency", ...
+        "Frequency and wavenumber are not intrinsic medium-map inputs.");
+end
 if isfield(spec,"model")
     model=string(spec.model);
     if ~isscalar(model) || ~ismember(model, ...
@@ -37,11 +42,6 @@ if ~isValidPositive(cs)
     error("swsynth:InvalidMediumSpeed", ...
         "Background shear speed must be a positive finite real scalar.");
 end
-if isfield(spec,"frequency_hz") || isfield(spec,"k_map_zx") || ...
-        isfield(spec,"k_map_zyx")
-    error("swsynth:MediumCannotOwnFrequency", ...
-        "Frequency and wavenumber are not intrinsic medium-map inputs.");
-end
 mode="overlay";
 if isfield(spec,"combine_mode")
     mode=string(spec.combine_mode);
@@ -68,7 +68,12 @@ for i=1:numel(objects)
             "Each object must specify type and cs_m_s.");
     end
     obj.type=string(obj.type);
-    obj.cs_m_s=double(obj.cs_m_s);
+    sourceCs=obj.cs_m_s;
+    if ~isValidPositive(sourceCs)
+        error("swsynth:InvalidMediumObject", ...
+            "Inclusion cs_m_s must be a positive real scalar.");
+    end
+    obj.cs_m_s=double(sourceCs);
     if ~isscalar(obj.type) || ~isValidPositive(obj.cs_m_s)
         error("swsynth:InvalidMediumObject", ...
             "Invalid inclusion type or shear speed.");
@@ -86,8 +91,9 @@ for i=1:numel(objects)
         if ~isfield(obj,"edge_sigma_m")
             obj.edge_sigma_m=0;
         end
-        sigma=double(obj.edge_sigma_m);
-        if ~isscalar(sigma) || ~isreal(sigma) || ~isfinite(sigma) || sigma<0
+        sigma=obj.edge_sigma_m;
+        if ~isnumeric(sigma) || ~isscalar(sigma) || ...
+                ~isreal(sigma) || ~isfinite(sigma) || sigma<0
             error("swsynth:InvalidMediumObject", ...
                 "edge_sigma_m must be nonnegative.");
         end
@@ -143,12 +149,12 @@ end
 medium=struct("background_cs_m_s",cs,"combine_mode",mode, ...
     "objects",{objects},"geometry",geometry);
 if isfield(spec,"density_kg_m3")
-    rho=double(spec.density_kg_m3);
+    rho=spec.density_kg_m3;
     if ~isValidPositive(rho)
         error("swsynth:InvalidMediumDensity", ...
             "density_kg_m3 must be positive and finite.");
     end
-    medium.density_kg_m3=rho;
+    medium.density_kg_m3=double(rho);
 end
 end
 
