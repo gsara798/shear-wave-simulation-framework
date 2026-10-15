@@ -55,6 +55,9 @@ for i=1:numel(report.runs)
     loaded=load(samplePath,"wavefield_sample");
     sample=loaded.wavefield_sample;
     wavefield.validateSample(sample);
+    [~,expectedRunId]=fileparts(runDir);
+    verifyEqual(tc,sample.sample_id,string(expectedRunId));
+    verifyEqual(tc,sample.provenance.run_id,string(expectedRunId));
     summary=jsondecode(fileread(summaryPath));
     verifyEqual(tc,string(summary.implementation),"modular_v2");
     verifyEqual(tc,string(sample.generator.backend),"fast_synthetic_v2");
@@ -100,6 +103,7 @@ function testSeededRandomSphericalV2RunIsReproducible(tc)
 cfgFile=fullfile(tc.TestData.root,"configs","swsynth","v2", ...
     "two_sources_projected3d.json");
 config=jsondecode(fileread(cfgFile));
+before=rng;
 root=string(tempname);
 mkdir(root);
 guard=onCleanup(@() clean("",root));
@@ -118,6 +122,7 @@ verifyEqual(tc,a.wavefield_sample.excitation.phase_rad, ...
 verifyEqual(tc,a.wavefield_sample.seed,53053);
 verifyEqual(tc,a.wavefield_sample.sources.count,2);
 verifyEqual(tc,a.wavefield_sample.directions.retained_count,0);
+verifyEqual(tc,rng,before);
 clear guard
 end
 
