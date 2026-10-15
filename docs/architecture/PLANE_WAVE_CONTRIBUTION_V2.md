@@ -73,6 +73,6 @@ component.output_convention
 
 ## Scope and next step
 
-The next complementary module is now implemented: `swsynth.propagation.accumulate` provides coherent vector superposition with explicit normalization and physical coordinate checks. Spherical point-source contributions and full synthesis orchestration are still pending. The new one-component function is **not** yet called by `swsynth.propagation.synthesize` or by the legacy synthesizers.
+The next complementary module is now implemented: `swsynth.propagation.accumulate` provides coherent vector superposition with explicit normalization and physical coordinate checks. Spherical point-source contributions are now implemented; full synthesis orchestration is still pending. The new one-component function is **not** yet called by `swsynth.propagation.synthesize` or by the legacy synthesizers.
 
 Tests: `tests/unit/test_swsynth_plane_wave_contribution_v2.m`. The tests check analytic 2D/projected3d/volumetric fields, homogeneous eikonal equivalence, explicit phase/amplitude, axis projection, geometry errors and polarization transversality.
