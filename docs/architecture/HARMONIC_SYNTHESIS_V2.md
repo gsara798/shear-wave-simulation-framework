@@ -119,4 +119,6 @@ Output `result` includes `U_xyz` (complex `[Nz,Nx,3]` or `[Nz,Ny,Nx,3]`), `field
 
 Physical wavefield validation is documented in [SYNTHESIZER_V2_PHYSICAL_VALIDATION.md](../validation/SYNTHESIZER_V2_PHYSICAL_VALIDATION.md), with a reproducible script and spectral diagnostics.
 
+The vector-to-scalar, schema-v1 `wavefield_sample` adapter is available as `swsynth.io.buildWavefieldSampleV2`. This is **not yet runner integration**; see [V2_WAVEFIELD_SAMPLE_ADAPTER.md](V2_WAVEFIELD_SAMPLE_ADAPTER.md) for explicit observation projection, local material `k_map`, source metadata, unresolved temporal sign convention, MATLAB MAT save/load and adapter tests.
+
 Tests: `tests/unit/test_swsynth_excitation_and_synthesize_v2.m`; run with `test_swsynth_domain_build_grid_v2.m`, `test_swsynth_medium_build_maps_v2.m`, `test_swsynth_sources_prepare_v2.m`, and the standalone contribution/accumulator tests.
