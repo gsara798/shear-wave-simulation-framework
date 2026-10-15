@@ -91,7 +91,10 @@ end
 function testSphericalSourcesMatchManualComposition(testCase)
 s=sphericalScenario();
 o=swsynth.propagation.synthesize(s);
-bundle=swsynth.sources.prepare(s.sources);
+sourceReq=s.sources;
+sourceReq.geometry=s.geometry;
+sourceReq.observation_y_m=s.domain.observation_y_m;
+bundle=swsynth.sources.prepare(sourceReq);
 r=struct("source_bundle",bundle,"source_id",1, ...
     "frequency_hz",500, ...
     "phase",struct("method","analytical", ...
