@@ -37,7 +37,7 @@ switch request.policy
             else
                 candidate=randn(n,3);
             end
-            [p,fallbackCount]=transverseNormalize(candidate,k);
+            [p,fallbackCount]=transverseNormalize(candidate,k,request.geometry);
         end
 end
 result=struct();
