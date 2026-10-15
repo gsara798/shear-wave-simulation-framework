@@ -128,8 +128,9 @@ function alpha=alpha2D(X,Z,obj)
 switch obj.type
     case "circle"
         c=obj.center_xz_m;
-        radius=sqrt((X-c(1)).^2+(Z-c(2)).^2);
-        mask=radius<=obj.radius_m;
+        % Compare squared distances, avoiding sqrt rounding at the boundary.
+        distanceSquared=(X-c(1)).^2+(Z-c(2)).^2;
+        mask=distanceSquared<=obj.radius_m^2;
     case "bilayer"
         normal=[cos(obj.normal_angle_rad);sin(obj.normal_angle_rad)];
         signed=X*normal(1)+Z*normal(2)-obj.offset_m;
