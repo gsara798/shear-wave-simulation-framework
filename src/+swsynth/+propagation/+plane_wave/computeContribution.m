@@ -151,8 +151,12 @@ end
 % Algebraic spatial phasor sign matches existing REQ synthetic backends.
 theta=2*pi*freq*T+phase0;
 scalarField=amplitude*exp(1i*theta);
+% MATLAB can collapse a zero-amplitude complex phasor to real zeros.
+% Keep the harmonic-field contract complex even for the zero field.
+scalarField=complex(real(scalarField),imag(scalarField));
 polShape=[ones(1,numel(spatialSize)),3];
 vectorField=reshape(scalarField,[spatialSize,1]).*reshape(p,polShape);
+vectorField=complex(real(vectorField),imag(vectorField));
 
 contribution=struct();
 contribution.model="plane_wave";
