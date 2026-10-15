@@ -15,16 +15,17 @@ if numel(d)~=3 || any(~isfinite(d)) || norm(d)<=0 || ...
     error("swsynth:InvalidPhaseRequest","Invalid direction or reference speed.");
 end
 d=d/norm(d);
-if geometry=="volumetric3d"
-    need(request,["y_m"]);
-    [Z,Y,X]=ndgrid(double(request.z_m),double(request.y_m),double(request.x_m));
-    tau=(d(1)*X+d(2)*Y+d(3)*Z)/cs;
-else
-    [X,Z]=meshgrid(double(request.x_m),double(request.z_m));
-    tau=(d(1)*X+d(3)*Z)/cs;
-    if geometry=="2d" && abs(d(2))>1e-10
-        error("swsynth:InvalidPhaseRequest","2d plane wave must be in the x-z plane.");
-    end
+switch geometry
+    case "volumetric3d"
+        need(request,["y_m"]);
+        tau=swsynth.phase.analytical.volumetric3d.computeTravelTime( ...
+            request.x_m,request.y_m,request.z_m,d,cs);
+    case "projected3d"
+        tau=swsynth.phase.analytical.projected3d.computeTravelTime( ...
+            request.x_m,request.z_m,d,cs);
+    case "2d"
+        tau=swsynth.phase.analytical.planar2d.computeTravelTime( ...
+            request.x_m,request.z_m,d,cs);
 end
 mediumField = "cs_map_zx";
 if geometry=="volumetric3d"
