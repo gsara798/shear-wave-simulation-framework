@@ -1,0 +1,68 @@
+{
+  "schema_version": "2.0",
+  "scenario": "v2_projected3d_heterogeneous_eikonal",
+  "geometry": "projected3d",
+  "domain": {
+    "x_m": [
+      0,
+      0.001,
+      0.002,
+      0.003,
+      0.004,
+      0.005,
+      0.006,
+      0.007,
+      0.008
+    ],
+    "z_m": [
+      0,
+      0.001,
+      0.002,
+      0.003,
+      0.004,
+      0.005,
+      0.006,
+      0.007,
+      0.008
+    ],
+    "observation_y_m": 0
+  },
+  "medium": {
+    "background_cs_m_s": 2,
+    "objects": [
+      {
+        "type": "circle",
+        "center_xz_m": [
+          0.004,
+          0.004
+        ],
+        "radius_m": 0.002,
+        "cs_m_s": 3
+      }
+    ]
+  },
+  "excitation": {
+    "frequency_hz": 500
+  },
+  "propagation": {
+    "model": "plane_wave",
+    "phase_method": "eikonal"
+  },
+  "incidence": {
+    "direction_xyz": [
+      1,
+      0,
+      0
+    ],
+    "polarization": {
+      "policy": "in_plane_sv"
+    }
+  },
+  "measurement": {
+    "axis_xyz": [
+      0,
+      0,
+      1
+    ]
+  }
+}
