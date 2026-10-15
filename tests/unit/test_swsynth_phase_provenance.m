@@ -9,6 +9,7 @@ cfg.propagation.model = "plane_wave";
 cfg.propagation.phase_model = "analytical";
 cfg.domain.Lx_m=.006; cfg.domain.Lz_m=.006;
 cfg.domain.dx_m=.002; cfg.domain.dz_m=.002;
+cfg.directions.space="two_dimensional";
 cfg.directions.count=2; cfg.execution.use_parallel=false;
 cfg.noise.snr_db=Inf;
 out=swsynth.run(cfg);
