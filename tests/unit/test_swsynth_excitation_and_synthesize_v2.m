@@ -88,6 +88,28 @@ ana=swsynth.propagation.synthesize(s);
 verifyEqual(testCase,eik.U_xyz,ana.U_xyz,"AbsTol",1e-12);
 end
 
+function testProjectedHeterogeneousDirectionalEikonal(testCase)
+s=planeScenario();
+s.geometry="projected3d";
+s.domain=struct("x_m",0:.005:.03, ...
+    "z_m",0:.005:.03,"observation_y_m",0);
+s.medium.objects={struct("type","circle", ...
+    "center_xz_m",[.015 .015],"radius_m",.004, ...
+    "cs_m_s",2.5,"edge_sigma_m",0)};
+s.propagation.phase_method="eikonal";
+o=swsynth.propagation.synthesize(s);
+verifySize(testCase,o.U_xyz,[7 7 3]);
+verifyTrue(testCase,all(isfinite(o.U_xyz(:))));
+verifyEqual(testCase,o.medium.cs_map_zx(4,4),2.5);
+end
+
+function testRejectTopLevelFrequency(testCase)
+s=planeScenario();
+s.frequency_hz=500;
+verifyError(testCase,@() swsynth.propagation.synthesize(s), ...
+    "swsynth:UnsupportedSynthesisField");
+end
+
 function testSphericalSourcesMatchManualComposition(testCase)
 s=sphericalScenario();
 o=swsynth.propagation.synthesize(s);
