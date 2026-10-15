@@ -53,6 +53,11 @@ if ~isstruct(scenario.domain) || ~isscalar(scenario.domain)
     error("swsynth:V2InvalidDomain","domain must be a scalar struct.");
 end
 gridReq=scenario.domain;
+if isfield(gridReq,"geometry") && ...
+        string(gridReq.geometry)~=geometry
+    error("swsynth:V2ConfigGeometryMismatch", ...
+        "domain.geometry conflicts with scenario.geometry.");
+end
 gridReq.geometry=geometry;
 grid=swsynth.domain.buildGrid(gridReq);
 maps=swsynth.medium.buildMaps(grid,scenario.medium);
@@ -152,7 +157,10 @@ meta.model=model;
 meta.phase_method=phaseMethod;
 meta.frequency_hz=drive.frequency_hz;
 meta.background_cs_m_s=background;
-meta.material_object_count=numel(scenario.medium.objects);
+meta.material_object_count=0;
+if isfield(scenario.medium,"objects")
+    meta.material_object_count=numel(scenario.medium.objects);
+end
 meta.spatial_size=grid.spatial_size;
 meta.validation_scope="configuration_material_and_routing";
 meta.valid=true;
