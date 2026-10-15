@@ -20,41 +20,18 @@ switch backend
         clear cleanup
 
     case "swsynth"
-        if isfield(config,"schema_version") && ...
-                string(config.schema_version)=="2.0"
-            [~,validation]=swsynth.io.resolveConfigV2(config);
-            outcome=struct("status","dry_run_valid", ...
-                "backend","swsynth", ...
-                "implementation","modular_v2", ...
-                "config_resolved",config,"validation",validation);
-            return;
-        end
-        if isVolumetricSwsynthConfig(config)
-            [resolved, validation] = swsynth.validateConfig3D(config);
-        else
-            [resolved, validation] = swsynth.validateConfig(config);
-        end
-
-        outcome = struct();
-        outcome.status = "dry_run_valid";
-        outcome.backend = "swsynth";
-        outcome.config_resolved = resolved;
-        outcome.validation = validation;
+        swsynth.io.requireV2Config(config);
+        [~,validation]=swsynth.io.resolveConfigV2(config);
+        outcome=struct("status","dry_run_valid", ...
+            "backend","swsynth", ...
+            "implementation","modular_v2", ...
+            "config_resolved",config,"validation",validation);
 
     otherwise
         error("simcampaigns:UnsupportedBackend", ...
             "Unsupported simulation campaign backend: %s", ...
             backend);
 end
-
-end
-
-function tf = isVolumetricSwsynthConfig(config)
-
-tf = isfield(config, "domain") && ...
-    isstruct(config.domain) && ...
-    isfield(config.domain, "Ly_m") && ...
-    isfield(config.domain, "dy_m");
 
 end
 
