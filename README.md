@@ -43,7 +43,7 @@ After setup, the public entry points remain available even if you change the wor
 
 ## 2. Run one simulation
 
-Every public single-run example contains a `config.json`. Run any configuration with:
+Run a versioned simulation JSON with:
 
 ```matlab
 outcome = run_simulation("path/to/config.json");
@@ -53,7 +53,7 @@ Examples:
 
 ```matlab
 outcome = run_simulation( ...
-    "examples/swsynth/volumetric3d/inclusion/config.json");
+    "configs/swsynth/v2/volumetric3d_heterogeneous_eikonal.json");
 ```
 
 ```matlab
@@ -61,7 +61,7 @@ outcome = run_simulation( ...
     "examples/kwave/2d/inclusion/config.json");
 ```
 
-The backend and dimensionality are inferred from the JSON configuration.
+The backend and dimensionality are inferred from the JSON configuration. The **swsynth** backend in `develop/v2` requires simulation `schema_version: "2.0"`; legacy swsynth JSON belongs to the preserved legacy worktree.
 
 ### Validate without executing the solver
 
@@ -75,7 +75,7 @@ outcome = run_simulation( ...
 
 ```matlab
 outcome = run_simulation( ...
-    "examples/swsynth/volumetric3d/bilayer/config.json", ...
+    "configs/swsynth/v2/projected3d_heterogeneous_eikonal.json", ...
     PlotFigures=true, ...
     GeneratePdf=true);
 ```
@@ -119,14 +119,14 @@ For example:
 
 ```matlab
 report = run_campaign( ...
-    "examples/swsynth/projected3d/campaign_field_regimes/campaign.json");
+    "configs/campaigns/swsynth/smoke/swsynth_v2_homogeneous_smoke.json");
 ```
 
 ### Validate the entire campaign first
 
 ```matlab
 report = run_campaign( ...
-    "examples/swsynth/projected3d/campaign_field_regimes/campaign.json", ...
+    "configs/campaigns/swsynth/smoke/swsynth_v2_homogeneous_smoke.json", ...
     DryRun=true);
 ```
 
@@ -178,34 +178,30 @@ bash scripts/sim-run examples/kwave/2d/inclusion/config.json
 ```
 
 ```bash
-bash scripts/campaign-run examples/swsynth/projected3d/campaign_field_regimes/campaign.json
+bash scripts/campaign-run configs/campaigns/swsynth/smoke/swsynth_v2_homogeneous_smoke.json
 ```
 
 Validate without running:
 
 ```bash
 bash scripts/sim-run examples/kwave/2d/inclusion/config.json --dry-run
-bash scripts/campaign-run examples/swsynth/projected3d/campaign_field_regimes/campaign.json --dry-run
+bash scripts/campaign-run configs/campaigns/swsynth/smoke/swsynth_v2_homogeneous_smoke.json --dry-run
 ```
 
 ## Examples
 
-User-facing examples are organized by backend and dimensionality:
+Active swsynth demonstrations are under `configs/swsynth/v2/` and `configs/campaigns/swsynth/smoke/`. Historical files in `examples/swsynth` are **not compatible with the V2-only backend**. k-Wave examples remain under `examples/kwave/`.
 
 ```text
-examples/
-├── swsynth/
-│   ├── 2d/
-│   ├── projected3d/
-│   └── volumetric3d/
-└── kwave/
-    ├── 2d/
-    └── 3d/
+configs/swsynth/v2/                 active swsynth V2 single-run JSONs
+configs/campaigns/swsynth/smoke/    active swsynth V2 campaign
+examples/kwave/                    k-Wave examples
+examples/swsynth/                  historic, incompatible with V2-only runner
 ```
 
 Single-run examples contain a `config.json`. Campaign examples contain a campaign JSON plus a colocated base configuration.
 
-See [`examples/README.md`](examples/README.md) for the full example tree and visualization conventions.
+See [`examples/README.md`](examples/README.md) for k-Wave examples and V2 simulation entry points.
 
 ## Wavefield contract
 
@@ -249,7 +245,7 @@ The reduced-compressional-speed option is an explicit computational approximatio
 
 ### swsynth
 
-The `swsynth` backend supports fast analytical and Eikonal-based synthetic fields, homogeneous and heterogeneous media, configurable propagation directions, reproducible seeds, projected-3D observations, and true volumetric 3D generation.
+The modular V2 `swsynth` backend synthesizes vector-valued complex harmonic fields from **explicit plane-wave incidence** or physical point-force sources, including amplitude, phase, force orientation and apertures. Analytical phase works in homogeneous media; heterogeneous Eikonal is supported for plane waves in `projected3d` and `volumetric3d` only. Automatic plane-wave direction sampling is tracked in issue #32.
 
 ## Repository layout
 
