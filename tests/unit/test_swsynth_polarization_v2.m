@@ -170,3 +170,14 @@ verifyEqual(testCase,out.diagnostics.fallback_count,1);
 verifyEqual(testCase,sum(out.vector_xyz.*out.direction_xyz,2), ...
     zeros(2,1),"AbsTol",1e-14);
 end
+
+
+function testPlanarPointForceRadiationHasNoYComponent(testCase)
+request=struct("model","point_force_shear_far_field", ...
+    "geometry","2d","source_xyz_m",[0 0 0], ...
+    "observation_xyz_m",[0 0 1;1 0 0], ...
+    "force_direction_xyz",[1 0 0]);
+out=swsynth.polarization.compute(request);
+verifyEqual(testCase,out.vector_xyz(:,2),zeros(2,1));
+verifyEqual(testCase,out.magnitude,[1;0],"AbsTol",1e-14);
+end
