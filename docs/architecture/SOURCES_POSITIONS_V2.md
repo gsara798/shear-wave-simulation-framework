@@ -7,7 +7,7 @@ Status: **implemented as an additive, standalone source-position generator**. No
 `swsynth.sources.positions.generate(request)` returns N-by-3 **physical source coordinates in metres**. These are not propagation-direction vectors and are unrelated to actuator force direction. An ideal plane wave does not require source positions. A spherical/point source does.
 
 Required:
-- `geometry`: `"planar2d"`, `"projected3d"`, or `"volumetric3d"`
+- `geometry`: `"2d"` (or `"planar2d"`), `"projected3d"`, or `"volumetric3d"`. `"2d"` is the public alias normalized to the MATLAB package name `+planar2d`.
 - `count`: number of physical sources
 - `method`: `"fibonacci"`, `"random"`, or `"explicit"` (omitted method is inferred as `explicit` only if `position_xyz_m` is supplied).
 
