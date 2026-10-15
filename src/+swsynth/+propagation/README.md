@@ -1,5 +1,9 @@
 # Propagation modules
 
+## Physical validation (before generating REQ-ML campaigns)
+
+`analysis/synthesizer_v2/validate_wavefields_v2.m` synthesizes and plots a single plane wave, a symmetric coherent two-point-force field, and a reproducible partially angular 30-wave ensemble. `+swsynth/+diagnostics/analyzeSpectrum2D.m` reports the measured-component complex FFT, radial-bin energy, expected/peak wavenumber and angular concentration. Tests: `tests/unit/test_swsynth_synthesis_physics_v2.m`. Full physical scope and run instructions: `docs/validation/SYNTHESIZER_V2_PHYSICAL_VALIDATION.md`. MATLAB execution and visual review remain pending; no legacy paths modified.
+
 ## New V2 harmonic synthesis orchestrator (additive, not yet used by legacy runs)
 
 `+propagation/synthesize.m` coordinates `swsynth.domain.buildGrid`, `swsynth.medium.buildMaps`, the new shared drive `swsynth.excitation.resolve`, V2 physical sources **or** explicit plane-wave incidence, a compatible phase/polarization model, individual contributions and `swsynth.propagation.accumulate`. The result is a complex **vector** field and simulation metadata; sensor projection remains separate. See `docs/architecture/HARMONIC_SYNTHESIS_V2.md` and `tests/unit/test_swsynth_excitation_and_synthesize_v2.m`. No legacy `swsynth.run` backend is replaced. The initial V2 path stores all contributions in memory; a streaming reduction is pending.
