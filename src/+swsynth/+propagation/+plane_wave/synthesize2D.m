@@ -13,17 +13,6 @@ if string(cfg.propagation.model) ~= "plane_wave"
 end
 
 [cfg, ~] = swsynth.validateConfig(cfg);
-%   maps = swsynth.buildMediumMaps(cfg);
-%   directions = swsynth.generateDirections(cfg);
-%   wavefield = swsynth.synthesizeWavefield2D(cfg, maps, directions);
-
-arguments
-    cfg (1,1) struct
-    maps (1,1) struct
-    directions (1,1) struct
-end
-
-[cfg, ~] = swsynth.validateConfig(cfg);
 validateMaps(maps);
 validateDirections(directions, cfg.directions.count);
 
