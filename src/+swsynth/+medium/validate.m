@@ -109,14 +109,18 @@ for i=1:numel(objects)
         case "custom"
             field="mask_zx";
             if geometry=="volumetric3d";field="mask_zyx";end
-            if ~isfield(obj,field) || ...
-                    ~(isnumeric(obj.(field)) || islogical(obj.(field))) || ...
-                    isempty(obj.(field)) || ~isreal(obj.(field)) || ...
-                    any(~isfinite(double(obj.(field)(:))))
+            if ~isfield(obj,field)
+                error("swsynth:InvalidMediumObject", ...
+                    "Custom mask field %s is required.",field);
+            end
+            mask=obj.(field);
+            if ~(isnumeric(mask) || islogical(mask)) || ...
+                    isempty(mask) || ~isreal(mask) || ...
+                    any(~isfinite(double(mask(:))))
                 error("swsynth:InvalidMediumObject", ...
                     "Custom mask must be finite numeric/logical.");
             end
-            obj.(field)=logical(obj.(field));
+            obj.(field)=logical(mask);
     end
     objects{i}=obj;
 end
