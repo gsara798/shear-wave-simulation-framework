@@ -32,8 +32,12 @@ end
 
 configFile = absolutePath(configFile);
 config = jsondecode(fileread(configFile));
-if isfield(config,"simulation") || isfield(config,"observation") || ...
-        (isfield(config,"propagation") && isfield(config.propagation,"wave_type"))
+isV2=isfield(config,"schema_version") && ...
+    string(config.schema_version)=="2.0";
+if ~isV2 && (isfield(config,"simulation") || ...
+        isfield(config,"observation") || ...
+        (isfield(config,"propagation") && ...
+         isfield(config.propagation,"wave_type")))
     config = swsynth.compat.resolveAnalyticalSphericalConfig(config);
 end
 backend = resolveBackend(config,options.Backend);
@@ -80,6 +84,18 @@ switch backend
             OutputDirectory=outputRoot);
 
     case "swsynth"
+        if isfield(config,"schema_version") && ...
+                string(config.schema_version)=="2.0"
+            [~,validation]=swsynth.io.resolveConfigV2(config);
+            outcome=struct("status","dry_run_valid", ...
+                "backend","swsynth", ...
+                "implementation","modular_v2", ...
+                "config_file",configFile, ...
+                "config_resolved",config, ...
+                "validation",validation, ...
+                "output_root",outputRoot);
+            return;
+        end
         config = normalizeSwsynthObjects(config);
         if isVolumetricSwsynth(config)
             [resolved,validation] = swsynth.validateConfig3D(config);
@@ -112,7 +128,10 @@ switch backend
         config.output.save_wavefield_sample = true;
 
     case "swsynth"
-        config = normalizeSwsynthObjects(config);
+        if ~isfield(config,"schema_version") || ...
+                string(config.schema_version)~="2.0"
+            config = normalizeSwsynthObjects(config);
+        end
 end
 end
 
@@ -160,13 +179,24 @@ if backend == "kwsim"
         summary.valid = true;
     end
 else
-    if isfield(config,"domain") && isfield(config.domain,"Ly_m")
+    if isfield(config,"geometry") && string(config.geometry)=="volumetric3d"
+        summary.spatial_dimension = 3;
+    elseif isfield(config,"domain") && isfield(config.domain,"Ly_m")
         summary.spatial_dimension = 3;
     else
         summary.spatial_dimension = 2;
     end
-    summary.frequency_hz = nestedNumeric(config,["wavefield","frequency_hz"]);
-    summary.background_cs_m_s = nestedNumeric(config,["medium","background_cs_m_s"]);
+    if isfield(config,"schema_version") && ...
+            string(config.schema_version)=="2.0"
+        summary.frequency_hz = nestedNumeric(config,["excitation","frequency_hz"]);
+        summary.background_cs_m_s = nestedNumeric(config,["medium","cs_m_s"]);
+        if isnan(summary.background_cs_m_s)
+            summary.background_cs_m_s = nestedNumeric(config,["medium","background_cs_m_s"]);
+        end
+    else
+        summary.frequency_hz = nestedNumeric(config,["wavefield","frequency_hz"]);
+        summary.background_cs_m_s = nestedNumeric(config,["medium","background_cs_m_s"]);
+    end
     if isfield(outcome,"validation") && isfield(outcome.validation,"valid")
         summary.valid = logical(outcome.validation.valid);
     else
@@ -189,7 +219,10 @@ end
 
 if isfield(config,"dimension")
     backend = "kwsim";
-elseif isfield(config,"domain") && isfield(config,"wavefield")
+elseif isfield(config,"domain") && ...
+        (isfield(config,"wavefield") || ...
+         (isfield(config,"schema_version") && ...
+          string(config.schema_version)=="2.0"))
     backend = "swsynth";
 else
     error("simrunner:BackendDetectionFailed", ...
