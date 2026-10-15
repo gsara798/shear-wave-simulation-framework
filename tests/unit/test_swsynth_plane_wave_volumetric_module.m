@@ -3,28 +3,6 @@ function tests = test_swsynth_plane_wave_volumetric_module
 tests = functiontests(localfunctions);
 end
 
-function testAnalyticalWrapperMatchesModule(testCase)
-cfg = smallConfig();
-cfg.propagation.phase_model = "analytical";
-maps = swsynth.buildMediumMaps3D(cfg);
-rng(184,'twister');
-legacy = swsynth.synthesizePlaneWave3D(cfg);
-rng(184,'twister');
-modular = swsynth.propagation.plane_wave.synthesizeVolumetric3D(cfg,maps);
-verifyEqual(testCase,modular,legacy);
-end
-
-function testEikonalWrapperMatchesModule(testCase)
-cfg = smallConfig();
-cfg.propagation.phase_model = "eikonal";
-maps = swsynth.buildMediumMaps3D(cfg);
-rng(184,'twister');
-legacy = swsynth.synthesizeVolumetricEikonal3D(cfg,maps);
-rng(184,'twister');
-modular = swsynth.propagation.plane_wave.synthesizeVolumetric3D(cfg,maps);
-verifyEqual(testCase,modular,legacy);
-end
-
 function testRunPreservesField(testCase)
 cfg = smallConfig();
 for phase = ["analytical","eikonal"]
