@@ -2,7 +2,11 @@
 
 ## Coherent accumulation (V2, not yet integrated)
 
-`+propagation/accumulate.m` coherently sums a nonempty cell/struct array of `plane_wave.computeContribution` results into one **complex vector wavefield**, validating shared frequency, spatial coordinates, geometry and phase sign before addition. Normalization is explicitly `none` (default) or `sqrt_count` (`1/sqrt(N)`); no scalar observation, noise, or wave physics is added. See `docs/architecture/PROPAGATION_ACCUMULATE_V2.md`. Tests: `tests/unit/test_swsynth_propagation_accumulate_v2.m`.
+`+propagation/accumulate.m` coherently sums a nonempty cell/struct array of `plane_wave.computeContribution` and/or `spherical.point_source.computeContribution` results into one **complex vector wavefield**, validating shared frequency, spatial coordinates (including observation-plane y), geometry and phase sign before addition. Normalization is explicitly `none` (default) or `sqrt_count` (`1/sqrt(N)`); no scalar observation, noise, or wave physics is added. See `docs/architecture/PROPAGATION_ACCUMULATE_V2.md`. Tests: `tests/unit/test_swsynth_propagation_accumulate_v2.m`.
+
+## New spherical point-source API (V2, not yet integrated)
+
+`+spherical/+point_source/computeContribution.m` builds the *vector* 3D point-force shear far-field for one V2 physical source, optionally as a coherent line aperture; each node uses spherical analytical `T=r/c_s` from `swsynth.phase.compute` and unnormalized transverse radiation from `swsynth.polarization.compute`. Its outputs can be coherently accumulated across parent sources and combined with plane waves when units/conventions match. See `docs/architecture/SPHERICAL_POINT_SOURCE_CONTRIBUTION_V2.md`. Tests: `tests/unit/test_swsynth_spherical_point_source_contribution_v2.m`.
 
 ## Single-component plane-wave API (V2, not yet integrated)
 
