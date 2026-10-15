@@ -11,7 +11,7 @@ end
 switch geometry
     case "volumetric3d"
         switch phaseModel
-            case "homogeneous_analytic"
+            case {"homogeneous_analytic","analytical"}
                 solver = "homogeneous_plane_3d";
             case {"eikonal","volumetric_eikonal"}
                 solver = "volumetric_eikonal_3d";
@@ -21,7 +21,7 @@ switch geometry
         end
     case "projected3d"
         switch phaseModel
-            case {"homogeneous_analytic","local_k_distance"}
+            case {"homogeneous_analytic","analytical","local_k_distance"}
                 solver = "homogeneous_projected_3d";
             case "eikonal"
                 solver = "projected3d_directional_eikonal";
@@ -31,7 +31,7 @@ switch geometry
         end
     case "2d"
         switch phaseModel
-            case {"homogeneous_analytic","local_k_distance"}
+            case {"homogeneous_analytic","analytical","local_k_distance"}
                 solver = "homogeneous_plane_2d";
             otherwise
                 error("swsynth:PhaseRoutingUnsupported", ...
