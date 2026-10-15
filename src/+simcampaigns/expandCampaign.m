@@ -268,9 +268,11 @@ if isscalar(base_value)
     return
 end
 
-if isrow(base_value) && ...
+% A single XYZ JSON array can decode as either [1,3] or [3,1]
+% in MATLAB. Accept both orientations as one vector-valued sweep.
+if isvector(base_value) && numel(base_value)>1 && ...
         ismatrix(values) && ...
-        size(values,2) == size(base_value,2)
+        size(values,2) == numel(base_value)
 
     value = values(index,:);
     return
