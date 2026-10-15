@@ -1,17 +1,65 @@
-# Sources and positions — incremental V2 implementation
+# Physical source positions — V2 independent contract
 
-Status: new position contract is **additive**, not connected to production wavefield synthesis.
+Status: **implemented as an additive, standalone source-position generator**. Not yet wired into legacy wavefield synthesis.
 
-## Geometry boundary
-- `swsynth.sources.positions.generate(request)` resolves explicit or sampled XYZ positions. Request fields: `geometry`, `count`; for explicit use `position_xyz_m`; for sampled use `direction_xyz`, `center_xyz_m`, `radius_range_m`. `observation_y_m` is relevant to `planar2d`. Optional `stream` is a MATLAB RandStream object (not silently reseeded).
-- `swsynth.sources.positions.validate(positions,geometry,count,observationY)` centrally enforces finite coordinates, count, and in-plane positioning for `planar2d`.
-- Geometry-specific facades `positions.planar2d.validate`, `positions.projected3d.validate`, `positions.volumetric3d.validate` currently differ only in policy. Avoid duplicating algorithms unless geometries diverge in physics.
-- MATLAB package name for 2D is `+planar2d`, not `+2d`.
+## Concept
 
-The uniform radial sampling is area-uniform (2D) or volume-uniform (3D). This is a **new contract**; it is not intended to reproduce the single-precision RNG sequence of legacy `sources.prepare`, whose behavior is kept unchanged.
+`swsynth.sources.positions.generate(request)` returns N-by-3 **physical source coordinates in metres**. These are not propagation-direction vectors and are unrelated to actuator force direction. An ideal plane wave does not require source positions. A spherical/point source does.
 
-## Source relationships
-`swsynth.sources.validate(bundle,geometry)` requires `bundle.components.direction_xyz` and `bundle.sources`; optional `sources.position_xyz_m` and `components.source_id` map components to finite sources (more than one component per source is valid). For plane-wave components, no finite position or source mapping is required. This contract is currently limited to direction-based components; more general spherical radiation will require a separate component description.
+Required:
+- `geometry`: `"planar2d"`, `"projected3d"`, or `"volumetric3d"`
+- `count`: number of physical sources
+- `method`: `"fibonacci"`, `"random"`, or `"explicit"` (omitted method is inferred as `explicit` only if `position_xyz_m` is supplied).
 
-## Next stage
-Create `sources.directions` and `sources.excitation` contracts, then deterministic independently seeded RandStream factory. Do not change the RNG behavior of legacy synthesis until a new modular end-to-end pipeline is tested. The existing experimental `swsynth.sources.prepare(cfg,directions)` remains legacy-oriented; it is **not** the new canonical source contract yet.
+For `fibonacci` / `random`:
+- `center_xyz_m`: XYZ centre, metres.
+- `radius_range_m`: [min max] in metres. Equal bounds put every source **on the same circle/sphere**, e.g. `[0.025 0.025]`.
+- Optional `support`: `struct("type","full_circle")` in planar2d, `struct("type","full_sphere")` in either 3D geometry, or `struct("type","cone","axis_xyz",[...],"half_angle_deg",...)`. Default is full circle/sphere.
+- Optional `stream`: MATLAB `RandStream`, for reproducible random sampling without touching global RNG.
+- Optional `observation_y_m`: physical y coordinate of planar2d plane (default 0). Planar source centre must lie on this plane.
+
+For `explicit`:
+- `position_xyz_m`: N-by-3 finite coordinates in metres; strictly checked against `count` and planar observation y. Explicit coordinates are not altered and consume **no RNG**.
+
+## What the sampling actually does
+
+- **planar2d**: positions on a circle or annulus in the x-z plane; `random` angles are uniform in angle and radii are uniform in **area**, `fibonacci` is deterministic **equally spaced** angles (the 2D counterpart of Fibonacci sphere), and radial shells use area-quantile midpoints.
+- **projected3d**: physical XYZ positions on spherical surfaces or inside a spherical shell, even when the observation is 2D (x-z).
+- **volumetric3d**: physical XYZ positions, using the same 3D sampling equations as projected3d. In 3D, `random` angles are isotropic, radius samples are uniform in **volume**; `fibonacci` uses golden-angle sphere angular placement and deterministic radial quantile midpoints.
+- `cone`: random uniform angular support or Fibonacci-like deterministic coverage of the circular/spherical cap. This concerns **where sources are placed**, not their force or propagation direction.
+- Neither `fibonacci` nor `random` guarantees a minimum separation of sources; no collision-rejection algorithm is implied.
+
+## Examples
+
+```matlab
+r=struct("geometry","projected3d","count",30, ...
+    "method","fibonacci","center_xyz_m",[.025 0 .025], ...
+    "radius_range_m",[.025 .025], ...
+    "support",struct("type","full_sphere"));
+xyz=swsynth.sources.positions.generate(r);
+
+r.method="random";
+r.stream=RandStream("mt19937ar","Seed",53053);
+xyzRandom=swsynth.sources.positions.generate(r);
+
+r=struct("geometry","planar2d","count",1,"method","explicit", ...
+    "observation_y_m",0,"position_xyz_m",[.01 0 .02]);
+xyzExact=swsynth.sources.positions.generate(r);
+```
+
+## Module ownership
+
+`+positions/generate.m`: contract dispatcher and explicit passthrough.
+`+positions/validateRequest.m`: validates method, units, supports and combinations.
+`+positions/+planar2d/generate.m`: circle/annulus and planar cones.
+`+positions/+projected3d/generate.m`: 3D spherical placement for slice observations.
+`+positions/+volumetric3d/generate.m`: 3D spherical placement for volumetric observations.
+`+positions/sampleUnitSphere.m` and `sampleRadii.m`: reusable **position** mathematics, not a call to propagation-direction generation.
+
+`swsynth.sources.validate(bundle,geometry)` validates physical source positions independently of incident propagation directions; optional `components.source_id` maps multiple contributions to one physical source.
+
+## Reproducibility and migration
+
+These new methods use double precision and a caller-provided stream when supplied; they do **not** call `rng` or reset the global random state. Without an explicit stream, `random` uses MATLAB's current global random stream. Fibonacci and explicit positioning do not consume RNG.
+
+The existing `swsynth.sources.prepare(cfg,directions)` remains a **legacy compatibility preparation routine** using the old single-precision draw order; it is not the new positions contract. All existing synthesizers remain unchanged. We will only migrate them after end-to-end RNG and field regression tests.
