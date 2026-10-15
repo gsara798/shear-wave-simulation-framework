@@ -13,12 +13,12 @@ It does not compute phase, polarization, amplitude, source positions, source rad
 
 ### Inputs
 
-- `contributions`: nonempty 1-by-N / N-by-1 struct array or cell array of scalar structs from `swsynth.propagation.plane_wave.computeContribution`. Cell arrays are useful when constructing independent contributions in loops.
+- `contributions`: nonempty struct array or cell array of scalar structs from either `swsynth.propagation.plane_wave.computeContribution` or `swsynth.propagation.spherical.point_source.computeContribution`. Cell arrays are useful when constructing independent contributions in loops.
 - `options`: optional scalar struct with `normalization="none"` (default) or `"sqrt_count"`. The latter applies `1/sqrt(N)` **to the entire coherent sum**. It is useful for the historical unit-amplitude incoherent-ensemble convention, but does **not** guarantee equal power for coherent fields, correlated amplitudes, or different polarizations.
 
-The accumulator rejects mixed `geometry`, mixed `frequency_hz`, mixed `phase_sign`, incompatible array dimensions, or **different coordinate axes even when shapes match**. Axes are carried by each contribution as `x_m`, `z_m`, optionally `y_m`, avoiding ambiguous overlap between shifted fields. Frequency/coordinate consistency is exact; the caller should generate all contributions on one shared grid.
+The accumulator rejects mixed `geometry`, mixed `frequency_hz`, mixed `phase_sign`, incompatible array dimensions, **different coordinate axes even when shapes match**, or distinct `observation_y_m` for 2D slice fields. Axes are carried by each contribution as `x_m`, `z_m`, optionally `y_m`, avoiding ambiguous overlap between shifted fields. Frequency/coordinate consistency is exact; the caller should generate all contributions on one shared grid.
 
-The supported contributions are currently `model="plane_wave"` with spatial geometry `2d`/`planar2d`, `projected3d`, or `volumetric3d`. A future spherical component requires a compatible vector-field contract but should not be mixed with plane waves implicitly until the synthesis adapter defines common phase and normalization semantics.
+Supported contributions are `model="plane_wave"` and `model="spherical_wave"` in geometry `2d`/`planar2d`, `projected3d`, or `volumetric3d`. Compatible plane and spherical fields may be added coherently when they share spatial phase convention, frequency, exact coordinate axes and observation plane. The caller is responsible for ensuring comparable displacement/velocity quantities and physical amplitude units; these are not yet enforced in the component contract.
 
 ### Example: two coherent planar waves
 
@@ -55,6 +55,7 @@ wavefield.normalization_factor     % 1 or 1/sqrt(N)
 wavefield.x_m
 wavefield.z_m
 wavefield.y_m                      % volumetric3d only
+wavefield.observation_y_m           % 2d/projected3d slice only
 wavefield.output_convention
 ```
 
