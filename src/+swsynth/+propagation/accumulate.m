@@ -1,8 +1,8 @@
 function wavefield = accumulate(contributions, options)
 %ACCUMULATE Coherently superpose harmonic vector wave contributions.
 %
-% contributions: nonempty struct array or cell array of scalar structs from
-%   swsynth.propagation.plane_wave.computeContribution.
+% contributions: nonempty struct array or cell array of scalar structs
+%   from plane_wave.computeContribution or spherical.point_source.computeContribution.
 % options.normalization: "none" (default), "sqrt_count" (divide by sqrt(N)).
 %
 % The complex fields are added before any optional normalization. This
@@ -73,7 +73,9 @@ for index=1:n
     if ~isequal(component.axes.x,referenceAxes.x) || ...
             ~isequal(component.axes.z,referenceAxes.z) || ...
             (referenceGeometry=="volumetric3d" && ...
-             ~isequal(component.axes.y,referenceAxes.y))
+             ~isequal(component.axes.y,referenceAxes.y)) || ...
+            (referenceGeometry~="volumetric3d" && ...
+             component.axes.observation_y_m~=referenceAxes.observation_y_m)
         error("swsynth:WaveContributionGridMismatch", ...
             "Contribution %d uses different physical spatial coordinates.",index);
     end
@@ -105,6 +107,7 @@ if referenceGeometry=="volumetric3d"
     wavefield.y_m=referenceAxes.y;
     wavefield.output_convention="U(z,y,x,component_xyz)";
 else
+    wavefield.observation_y_m=referenceAxes.observation_y_m;
     wavefield.output_convention="U(z,x,component_xyz)";
 end
 wavefield.U_xyz=summed;
@@ -123,9 +126,11 @@ for field=required
             "Missing contribution field %s.",field);
     end
 end
-if ~isequal(string(value.model),"plane_wave")
+model=string(value.model);
+if ~isscalar(model) || ...
+        ~ismember(model,["plane_wave","spherical_wave"])
     error("swsynth:InvalidWaveContributionModel", ...
-        "This accumulator currently accepts plane_wave contributions only.");
+        "Accumulator accepts plane_wave and spherical_wave contributions.");
 end
 geometry=string(value.geometry);
 if ~isscalar(geometry)
@@ -161,6 +166,16 @@ if geometry=="volumetric3d"
     axes.y=checkAxis(value.y_m,"y_m");
     expectedSize=[numel(axes.z),numel(axes.y),numel(axes.x),3];
 else
+    axes.observation_y_m=0;
+    if isfield(value,"observation_y_m")
+        axes.observation_y_m=double(value.observation_y_m);
+    end
+    if ~isscalar(axes.observation_y_m) || ...
+            ~isreal(axes.observation_y_m) || ...
+            ~isfinite(axes.observation_y_m)
+        error("swsynth:InvalidWaveContributionGrid", ...
+            "observation_y_m must be finite.");
+    end
     expectedSize=[numel(axes.z),numel(axes.x),3];
 end
 field=value.U_xyz;
@@ -170,7 +185,7 @@ if ~isnumeric(field) || isempty(field) || ...
         "U_xyz must be finite with the expected spatial and XYZ-component dimensions.");
 end
 component=struct();
-component.model="plane_wave";
+component.model=model;
 component.geometry=geometry;
 component.frequency_hz=frequency;
 component.phase_sign=phaseSign;
