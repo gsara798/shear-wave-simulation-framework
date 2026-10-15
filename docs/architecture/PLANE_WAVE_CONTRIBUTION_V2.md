@@ -56,6 +56,8 @@ For projected3d, `swsynth.phase.analytical.projected3d` returns the x-z slice at
 
 ```matlab
 component.U_xyz                % complex [Nz,Nx,3] or [Nz,Ny,Nx,3]
+component.x_m, component.z_m    % physical coordinate axes, metres
+component.y_m                   % present for volumetric3d only
 component.scalar_phasor        % complex [Nz,Nx] or [Nz,Ny,Nx]
 component.travel_time_s        % corresponding real scalar travel-time grid
 component.polarization_xyz     % 1x3 transverse displacement polarization
@@ -71,6 +73,6 @@ component.output_convention
 
 ## Scope and next step
 
-The logical next step is `swsynth.propagation.accumulate` for coherent superposition with explicit normalization, followed by the spherical point-source contribution. The new one-component function is **not** yet called by `swsynth.propagation.synthesize` or by the legacy synthesizers.
+The next complementary module is now implemented: `swsynth.propagation.accumulate` provides coherent vector superposition with explicit normalization and physical coordinate checks. Spherical point-source contributions and full synthesis orchestration are still pending. The new one-component function is **not** yet called by `swsynth.propagation.synthesize` or by the legacy synthesizers.
 
 Tests: `tests/unit/test_swsynth_plane_wave_contribution_v2.m`. The tests check analytic 2D/projected3d/volumetric fields, homogeneous eikonal equivalence, explicit phase/amplitude, axis projection, geometry errors and polarization transversality.
