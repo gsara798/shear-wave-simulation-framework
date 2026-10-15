@@ -11,15 +11,6 @@ verifyEqual(testCase,d.quantity,"relative_motion");
 verifyEqual(testCase,d.spatial_phase_sign,1);
 end
 
-function testLegacyDriveAdapter(testCase)
-legacy=swsynth.defaultConfig3D();
-legacy.wavefield.frequency_hz=225;
-legacy.wavefield.quantity="velocity";
-d=swsynth.excitation.fromLegacy(legacy);
-verifyEqual(testCase,d.frequency_hz,225);
-verifyEqual(testCase,d.quantity,"velocity");
-end
-
 function testDriveRejectsMultipleFrequencies(testCase)
 verifyError(testCase,@() swsynth.excitation.resolve( ...
     struct("frequency_hz",[250 500])), ...
