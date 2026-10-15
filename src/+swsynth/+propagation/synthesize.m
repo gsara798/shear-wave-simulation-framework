@@ -104,9 +104,12 @@ else
     end
 end
 
-mapCS=maps.cs_map_zx;
+% Material maps are named by their spatial array convention.
+% Do not touch cs_map_zx for volumetric3d: that field does not exist.
 if geometry=="volumetric3d"
     mapCS=maps.cs_map_zyx;
+else
+    mapCS=maps.cs_map_zx;
 end
 background=double(maps.background_cs_m_s);
 uniform=all(abs(mapCS(:)-background)<= ...
