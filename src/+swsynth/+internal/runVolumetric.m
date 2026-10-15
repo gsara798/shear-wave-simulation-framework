@@ -10,8 +10,9 @@ maps = swsynth.buildMediumMaps3D(cfg);
 
 switch cfg.propagation.model
     case "plane_wave"
-        solver = swsynth.phase.resolveSolver( ...
-            "plane_wave",cfg.propagation.phase_model,"volumetric3d");
+        solver = swsynth.phase.validateCompatibility( ...
+            "plane_wave",cfg.propagation.phase_model,"volumetric3d", ...
+            ~isempty(cfg.medium.objects));
         switch solver
             case "homogeneous_plane_3d"
                 field = swsynth.synthesizePlaneWave3D(cfg);
