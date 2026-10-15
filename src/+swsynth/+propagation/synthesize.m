@@ -19,11 +19,24 @@ for field=["geometry","domain","medium","excitation","propagation"]
             "Missing V2 scenario field %s.",field);
     end
 end
+allowedScenario=["geometry","domain","medium","excitation", ...
+    "propagation","sources","incidence"];
+unknownScenario=setdiff(string(fieldnames(scenario)),allowedScenario);
+if ~isempty(unknownScenario)
+    error("swsynth:UnsupportedSynthesisField", ...
+        "Unsupported V2 scenario field %s; use excitation.frequency_hz for the harmonic drive.", ...
+        unknownScenario(1));
+end
 geometry=canonicalGeometry(scenario.geometry);
 if ~isstruct(scenario.domain) || ~isscalar(scenario.domain)
     error("swsynth:InvalidSynthesisDomain","domain must be a scalar struct.");
 end
 domainReq=scenario.domain;
+if isfield(domainReq,"frequency_hz") || ...
+        isfield(domainReq,"wavefield")
+    error("swsynth:DuplicateSynthesisFrequency", ...
+        "The computational domain cannot own the drive frequency.");
+end
 if isfield(domainReq,"geometry") && ...
         canonicalGeometry(domainReq.geometry)~=geometry
     error("swsynth:SynthesisGeometryMismatch", ...
