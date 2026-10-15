@@ -142,3 +142,18 @@ verifySize(testCase,out.vector_xyz,[2 3]);
 verifyEqual(testCase,vecnorm(out.radial_direction_xyz,2,2),ones(2,1), ...
     "AbsTol",1e-14);
 end
+
+
+function testProjectedRandomAgreesWithLegacyGaussianSampler(testCase)
+directions=[1 0 0;0 0 1;1 1 1;0 1 0];
+previous=rng;
+cleanup=onCleanup(@() rng(previous));
+rng(53053,"twister");
+[expected,~]=swsynth.propagation.projected3d. ...
+    sampleTransversePolarization(directions);
+rng(53053,"twister");
+request=struct("model","plane_wave","geometry","projected3d", ...
+    "policy","transverse_random","direction_xyz",directions);
+actual=swsynth.polarization.compute(request);
+verifyEqual(testCase,actual.vector_xyz,expected,"AbsTol",1e-14);
+end
