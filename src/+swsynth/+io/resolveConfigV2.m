@@ -136,6 +136,10 @@ if isfield(config,"seed")
     end
     meta.seed=double(seed);
 end
+if isempty(meta.seed) && usesRandomness(scenario)
+    error("swsynth:V2SeedRequired", ...
+        "Stochastic V2 JSON configurations must specify seed.");
+end
 meta.measurement_axis_xyz=[0 0 1];
 if isfield(config,"measurement")
     m=config.measurement;
@@ -246,4 +250,32 @@ req.streams=struct( ...
     "positions",RandStream("mt19937ar","Seed",401), ...
     "excitation",RandStream("mt19937ar","Seed",402));
 swsynth.sources.prepare(req);
+end
+
+function required=usesRandomness(s)
+required=false;
+if string(s.propagation.model)=="plane_wave"
+    if isfield(s.incidence,"polarization") && ...
+            isfield(s.incidence.polarization,"policy") && ...
+            string(s.incidence.polarization.policy)=="transverse_random"
+        required=true;
+    end
+    return;
+end
+positions=s.sources.positions;
+if isfield(positions,"method")
+    method=string(positions.method);
+    if method~="explicit"
+        required=true;
+    end
+elseif ~isfield(positions,"position_xyz_m")
+    required=true;
+end
+ex=s.sources.excitation;
+for name=["force_policy","amplitude_policy","phase_policy"]
+    if isfield(ex,name) && ...
+            startsWith(string(ex.(name)),"random_")
+        required=true;
+    end
+end
 end
