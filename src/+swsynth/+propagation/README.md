@@ -1,5 +1,9 @@
 # Propagation modules
 
+## New V2 harmonic synthesis orchestrator (additive, not yet used by legacy runs)
+
+`+propagation/synthesize.m` coordinates `swsynth.domain.buildGrid`, `swsynth.medium.buildMaps`, the new shared drive `swsynth.excitation.resolve`, V2 physical sources **or** explicit plane-wave incidence, a compatible phase/polarization model, individual contributions and `swsynth.propagation.accumulate`. The result is a complex **vector** field and simulation metadata; sensor projection remains separate. See `docs/architecture/HARMONIC_SYNTHESIS_V2.md` and `tests/unit/test_swsynth_excitation_and_synthesize_v2.m`. No legacy `swsynth.run` backend is replaced. The initial V2 path stores all contributions in memory; a streaming reduction is pending.
+
 ## Coherent accumulation (V2, not yet integrated)
 
 `+propagation/accumulate.m` coherently sums a nonempty cell/struct array of `plane_wave.computeContribution` and/or `spherical.point_source.computeContribution` results into one **complex vector wavefield**, validating shared frequency, spatial coordinates (including observation-plane y), geometry and phase sign before addition. Normalization is explicitly `none` (default) or `sqrt_count` (`1/sqrt(N)`); no scalar observation, noise, or wave physics is added. See `docs/architecture/PROPAGATION_ACCUMULATE_V2.md`. Tests: `tests/unit/test_swsynth_propagation_accumulate_v2.m`.
