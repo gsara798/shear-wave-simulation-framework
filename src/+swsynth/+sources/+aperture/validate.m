@@ -33,6 +33,9 @@ if aperture.source_count~=N || numel(aperture.per_source)~=N || ...
 end
 swsynth.sources.positions.validate(xyz,geometry,M,observationY);
 expectedIds=repelem((1:N)',counts);
+% MATLAB's repelem can return a row when the input is scalar (N=1).
+% IDs from the aperture builder are always an M-by-1 column.
+expectedIds=expectedIds(:);
 if ~isequal(ids,expectedIds)
     error("swsynth:InvalidApertureBundle", ...
         "Aperture nodes must be grouped by parent source.");
