@@ -119,7 +119,7 @@ This is the **audit, not a declaration that further cleanup has already been per
 - CSV metadata generation now reads V2 frequency and material speed and the correct `validation/validation_report.json` path. It records explicit incident plane directions without treating point-source count as propagation-direction count.
 - The optional PDF report cover reads `propagation.phase_method`, geometry, and `excitation.frequency_hz` from V2 input; a PDF generation acceptance run is still recommended.
 - The active entrypoint is `scripts/sim-run`; the redundant `scripts/swsynth-run` compatibility shell alias was retired.
-- **Residual historical files:** `examples/swsynth/` still contains old demonstration inputs and previously generated artifacts. They are explicitly marked **unsupported by V2** in the root and examples READMEs. This directory remains a separate archival cleanup item, *not* part of the running synthesizer. Do not load its configs with `develop/v2` and do not claim it has been deleted.
+- **Historical examples removed:** `examples/swsynth/` was removed from this branch (including its old V1 JSON and generated artifacts). The backup worktree and Git history preserve the original files. Only the V2 JSON fixtures under `configs/swsynth/v2/` and `configs/campaigns/swsynth/smoke/` remain active.
 - The old V1 science and output history is protected by the user's independent worktree. Old JSON is never silently mapped onto new mechanics.
 
 ### Post-cleanup MATLAB acceptance suite
