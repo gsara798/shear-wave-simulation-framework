@@ -1,6 +1,6 @@
 # Examples and configuration entry points
 
-This branch uses **modular swsynth V2 only**. The historical `examples/swsynth/` tree contains V1 JSONs and old generated artifacts. It is not an executable V2 demonstration; legacy material belongs in the separate preserved worktree. **Do not run those V1 examples on `develop/v2`.**
+This branch uses **modular swsynth V2 only**. The historical `examples/swsynth/` tree (V1 JSONs and old generated artifacts) has been removed from `develop/v2`. It is preserved in the separate backup worktree and Git history. **Do not use those V1 examples with V2.**
 
 ## Active swsynth V2 examples
 
