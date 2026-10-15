@@ -157,3 +157,16 @@ request=struct("model","plane_wave","geometry","projected3d", ...
 actual=swsynth.polarization.compute(request);
 verifyEqual(testCase,actual.vector_xyz,expected,"AbsTol",1e-14);
 end
+
+
+function testPlanarPreferredFallbackStaysInXZ(testCase)
+request=struct("model","plane_wave","geometry","2d", ...
+    "policy","transverse_preferred", ...
+    "direction_xyz",[1 0 0;0 0 1], ...
+    "reference_axis_xyz",[1 0 0]);
+out=swsynth.polarization.compute(request);
+verifyEqual(testCase,out.vector_xyz(:,2),zeros(2,1));
+verifyEqual(testCase,out.diagnostics.fallback_count,1);
+verifyEqual(testCase,sum(out.vector_xyz.*out.direction_xyz,2), ...
+    zeros(2,1),"AbsTol",1e-14);
+end
