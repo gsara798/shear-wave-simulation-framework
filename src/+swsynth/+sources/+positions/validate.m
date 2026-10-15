@@ -6,6 +6,9 @@ arguments
     count (1,1) double {mustBeInteger,mustBeNonnegative}
     observationY (1,1) double = 0
 end
+if geometry=="2d"
+    geometry="planar2d";
+end
 if ~isequal(size(positions),[count,3]) || any(~isfinite(positions(:)))
     error("swsynth:InvalidSourcePositions", ...
         "Source positions must be a finite count-by-3 array.");
