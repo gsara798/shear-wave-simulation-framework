@@ -140,6 +140,38 @@ verifyEqual(testCase,total.U_xyz,spherical.U_xyz+plane.U_xyz, ...
     "AbsTol",1e-14);
 end
 
+function testSqrtCountNormalizesSourcesNotApertureNodes(testCase)
+ap=struct("model","line_segment","span_m",.002, ...
+    "axis_xyz",[1 0 0],"node_spacing_m",.001);
+r=struct("geometry","projected3d","count",2);
+r.positions=struct("method","explicit", ...
+    "position_xyz_m",[0 .03 0;.03 -.03 0]);
+r.excitation=struct("force_direction_xyz",[0 0 1;0 0 1], ...
+    "relative_amplitude",[1;1],"phase_rad",[0;pi/2]);
+r.aperture=ap;
+bundle=swsynth.sources.prepare(r);
+req=makeRequest(bundle,[.01 .02],[.01 .02]);
+req.source_id=1;
+a=swsynth.propagation.spherical.point_source.computeContribution(req);
+req.source_id=2;
+b=swsynth.propagation.spherical.point_source.computeContribution(req);
+out=swsynth.propagation.accumulate({a,b}, ...
+    struct("normalization","sqrt_count"));
+verifyEqual(testCase,a.aperture_node_count,3);
+verifyEqual(testCase,b.aperture_node_count,3);
+verifyEqual(testCase,out.normalization_factor,1/sqrt(2));
+verifyEqual(testCase,out.U_xyz,(a.U_xyz+b.U_xyz)/sqrt(2), ...
+    "AbsTol",1e-14);
+end
+
+function testSphericalContributionDoesNotConsumeRng(testCase)
+bundle=makeBundle("projected3d",[0 .03 0],[0 0 1],1,0,[]);
+r=makeRequest(bundle,[.01 .02],[.01 .02]);
+rngBefore=rng;
+swsynth.propagation.spherical.point_source.computeContribution(r);
+verifyEqual(testCase,rng,rngBefore);
+end
+
 function testRejectDifferentObservationPlanesInAccumulator(testCase)
 bundle=makeBundle("projected3d",[0 .03 0],[0 0 1],1,0,[]);
 r=makeRequest(bundle,[.01 .02],[.01 .02]);
