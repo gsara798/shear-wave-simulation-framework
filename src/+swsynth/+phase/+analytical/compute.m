@@ -1,5 +1,5 @@
 function [tau,diagnostics,solver] = compute(request)
-%COMPUTE Analytical travel times for homogeneous incident plane waves.
+%COMPUTE Homogeneous analytical travel times for plane or spherical waves.
 if string(request.model)=="spherical_wave"
     % This additive path does not touch legacy plane-wave phase routing.
     geometry=string(request.geometry);
