@@ -504,9 +504,11 @@ if isscalar(base_value)
     return
 end
 
-if isrow(base_value) && ...
-        ismatrix(values) && ...
-        size(values,2) == size(base_value,2)
+% XYZ arrays from JSON can decode as 3-by-1 or 1-by-3. A
+% numeric N-by-3 sweep must be counted by rows in either case.
+if isnumeric(base_value) && isvector(base_value) && ...
+        numel(base_value)>1 && isnumeric(values) && ...
+        ismatrix(values) && size(values,2)==numel(base_value)
 
     count = size(values,1);
     return
