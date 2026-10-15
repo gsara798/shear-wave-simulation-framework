@@ -45,6 +45,9 @@ try
     end
     wavefield_sample=swsynth.io.buildWavefieldSampleV2( ...
         synthesis,scenario,sampleOptions);
+    [~,runName]=fileparts(runDirectory);
+    wavefield_sample.sample_id=string(runName);
+    wavefield_sample.provenance.run_id=string(runName);
     info=wavefield.validateSample(wavefield_sample);
     validation=struct("valid",logical(wavefield_sample.validation.valid), ...
         "analysis_ready",logical(wavefield_sample.validation.analysis_ready), ...
