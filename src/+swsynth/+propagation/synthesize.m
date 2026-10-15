@@ -193,10 +193,15 @@ switch model
             error("swsynth:DuplicateSynthesisFrequency", ...
                 "Specify frequency only as scenario.excitation.frequency_hz.");
         end
-        if geometry=="2d" && isfield(sourceReq,"observation_y_m") && ...
+        if geometry=="volumetric3d"
+            if isfield(sourceReq,"observation_y_m")
+                error("swsynth:SynthesisGeometryMismatch", ...
+                    "Volumetric source geometry does not have an observation_y_m plane.");
+            end
+        elseif isfield(sourceReq,"observation_y_m") && ...
                 ~isequal(double(sourceReq.observation_y_m),grid.observation_y_m)
             error("swsynth:SynthesisGeometryMismatch", ...
-                "Planar source and observation y positions must match.");
+                "Source and computational observation planes must match.");
         end
         sourceReq.geometry=geometry;
         % Slice geometries share the domain observation plane. Volume
