@@ -15,12 +15,8 @@ switch cfg.propagation.model
             "plane_wave",cfg.propagation.phase_model,"volumetric3d", ...
             ~isempty(cfg.medium.objects));
         phaseSolver = solver;
-        switch solver
-            case "homogeneous_plane_3d"
-                field = swsynth.synthesizePlaneWave3D(cfg);
-            case "volumetric_eikonal_3d"
-                field = swsynth.synthesizeVolumetricEikonal3D(cfg,maps);
-        end
+        field = swsynth.propagation.plane_wave.synthesizeVolumetric3D( ...
+            cfg,maps);
 
     case "spherical_wave"
         phaseSolver = "spherical_point_force_analytical_3d";
