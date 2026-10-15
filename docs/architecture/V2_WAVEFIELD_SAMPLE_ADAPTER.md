@@ -1,6 +1,6 @@
 # V2 vector field to wavefield_sample v1.0 adapter
 
-**Status:** implemented on `develop/v2`, unit/schema/MAT round-trip tests included, awaiting execution in MATLAB. This is an **additive adapter**; legacy `swsynth.run`, `buildWavefieldSample`, `buildWavefieldSample3D`, `simcampaigns`, `simrunner` have **not** been modified or migrated.
+**Status (2026-10-15):** implemented and integrated with `simcampaigns`/`simrunner` **for schema-2 swsynth configurations**. The user reported all 10 end-to-end MATLAB integration tests passing, including the saved-MAT path. Legacy `swsynth.run`, legacy sample builders, and old-config routing remain temporarily in the repository; independent REQ-ML reader acceptance is still outstanding.
 
 ## Why this adapter
 
