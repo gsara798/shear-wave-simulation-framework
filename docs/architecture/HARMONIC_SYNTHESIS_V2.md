@@ -117,4 +117,6 @@ For projected3d physical sources, the sources may be off the observation x-z pla
 
 Output `result` includes `U_xyz` (complex `[Nz,Nx,3]` or `[Nz,Ny,Nx,3]`), `field` (coherent accumulator result), `domain`, `medium`, `excitation`, `propagation`, `model`, `geometry`, `component_count`, `quantity`, plus `sources` or `incidence` metadata as applicable. It does **not** save each intermediate component field.
 
-Physical wavefield validation is documented in [SYNTHESIZER_V2_PHYSICAL_VALIDATION.md](../validation/SYNTHESIZER_V2_PHYSICAL_VALIDATION.md), with a reproducible script and spectral diagnostics.\n\nTests: `tests/unit/test_swsynth_excitation_and_synthesize_v2.m`; run with `test_swsynth_domain_build_grid_v2.m`, `test_swsynth_medium_build_maps_v2.m`, `test_swsynth_sources_prepare_v2.m`, and the standalone contribution/accumulator tests.
+Physical wavefield validation is documented in [SYNTHESIZER_V2_PHYSICAL_VALIDATION.md](../validation/SYNTHESIZER_V2_PHYSICAL_VALIDATION.md), with a reproducible script and spectral diagnostics.
+
+Tests: `tests/unit/test_swsynth_excitation_and_synthesize_v2.m`; run with `test_swsynth_domain_build_grid_v2.m`, `test_swsynth_medium_build_maps_v2.m`, `test_swsynth_sources_prepare_v2.m`, and the standalone contribution/accumulator tests.
