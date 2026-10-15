@@ -32,15 +32,10 @@ end
 
 configFile = absolutePath(configFile);
 config = jsondecode(fileread(configFile));
-isV2=isfield(config,"schema_version") && ...
-    string(config.schema_version)=="2.0";
-if ~isV2 && (isfield(config,"simulation") || ...
-        isfield(config,"observation") || ...
-        (isfield(config,"propagation") && ...
-         isfield(config.propagation,"wave_type")))
-    config = swsynth.compat.resolveAnalyticalSphericalConfig(config);
-end
 backend = resolveBackend(config,options.Backend);
+if backend=="swsynth"
+    swsynth.io.requireV2Config(config);
+end
 
 outputRoot = string(options.OutputRoot);
 if strlength(outputRoot) == 0
@@ -84,34 +79,11 @@ switch backend
             OutputDirectory=outputRoot);
 
     case "swsynth"
-        if isfield(config,"schema_version") && ...
-                string(config.schema_version)=="2.0"
-            [~,validation]=swsynth.io.resolveConfigV2(config);
-            outcome=struct("status","dry_run_valid", ...
-                "backend","swsynth", ...
-                "implementation","modular_v2", ...
-                "config_file",configFile, ...
-                "config_resolved",config, ...
-                "validation",validation, ...
-                "output_root",outputRoot);
-            return;
-        end
-        config = normalizeSwsynthObjects(config);
-        if isVolumetricSwsynth(config)
-            [resolved,validation] = swsynth.validateConfig3D(config);
-        else
-            [resolved,validation] = swsynth.validateConfig(config);
-        end
-        outcome = struct();
-        outcome.status = "dry_run_valid";
-        outcome.backend = "swsynth";
-        outcome.config_file = configFile;
-        outcome.config_resolved = resolved;
-        outcome.validation = validation;
-        outcome.output_root = outputRoot;
-        fprintf("\nSWSYNTH configuration validated successfully.\n");
-        fprintf("Scenario: %s\n",string(resolved.scenario));
-        fprintf("Dry run: no outputs were created.\n");
+        [~,validation]=swsynth.io.resolveConfigV2(config);
+        outcome=struct("status","dry_run_valid", ...
+            "backend","swsynth","implementation","modular_v2", ...
+            "config_file",configFile,"config_resolved",config, ...
+            "validation",validation,"output_root",outputRoot);
 
     otherwise
         error("simrunner:UnsupportedBackend","Unsupported backend: %s",backend);
@@ -128,17 +100,7 @@ switch backend
         config.output.save_wavefield_sample = true;
 
     case "swsynth"
-        if ~isfield(config,"schema_version") || ...
-                string(config.schema_version)~="2.0"
-            config = normalizeSwsynthObjects(config);
-        end
-end
-end
-
-function config = normalizeSwsynthObjects(config)
-if isfield(config,"medium") && isfield(config.medium,"objects") && ...
-        isstruct(config.medium.objects) && ~isempty(config.medium.objects)
-    config.medium.objects = num2cell(config.medium.objects);
+        swsynth.io.requireV2Config(config);
 end
 end
 
@@ -186,15 +148,9 @@ else
     else
         summary.spatial_dimension = 2;
     end
-    if isfield(config,"schema_version") && ...
-            string(config.schema_version)=="2.0"
-        summary.frequency_hz = nestedNumeric(config,["excitation","frequency_hz"]);
-        summary.background_cs_m_s = nestedNumeric(config,["medium","cs_m_s"]);
-        if isnan(summary.background_cs_m_s)
-            summary.background_cs_m_s = nestedNumeric(config,["medium","background_cs_m_s"]);
-        end
-    else
-        summary.frequency_hz = nestedNumeric(config,["wavefield","frequency_hz"]);
+    summary.frequency_hz = nestedNumeric(config,["excitation","frequency_hz"]);
+    summary.background_cs_m_s = nestedNumeric(config,["medium","cs_m_s"]);
+    if isnan(summary.background_cs_m_s)
         summary.background_cs_m_s = nestedNumeric(config,["medium","background_cs_m_s"]);
     end
     if isfield(outcome,"validation") && isfield(outcome.validation,"valid")
@@ -219,21 +175,12 @@ end
 
 if isfield(config,"dimension")
     backend = "kwsim";
-elseif isfield(config,"domain") && ...
-        (isfield(config,"wavefield") || ...
-         (isfield(config,"schema_version") && ...
-          string(config.schema_version)=="2.0"))
+elseif isfield(config,"domain")
     backend = "swsynth";
 else
     error("simrunner:BackendDetectionFailed", ...
         "Could not infer the simulation backend from the JSON configuration.");
 end
-end
-
-function tf = isVolumetricSwsynth(config)
-tf = isfield(config,"domain") && ...
-    isfield(config.domain,"Ly_m") && ...
-    isfield(config.domain,"dy_m");
 end
 
 function value = absolutePath(value)
