@@ -1,6 +1,6 @@
 # Synthesizer V2: domain, medium, harmonic drive — integration plan
 
-**Status: architectural proposal (not an implemented V2 API).** The legacy implementations `swsynth.buildMediumMaps` and `swsynth.buildMediumMaps3D` already build grids and material maps, while `swsynth.defaultConfig` and `swsynth.defaultConfig3D` contain the original settings. Keep legacy generation paths unchanged until regression-tested.
+**Status: `domain.buildGrid` and `medium.buildMaps` are implemented as standalone V2 APIs; shared-drive configuration and synthesizer orchestration remain proposals.** The legacy implementations `swsynth.buildMediumMaps` and `swsynth.buildMediumMaps3D` already build grids and material maps, while `swsynth.defaultConfig` and `swsynth.defaultConfig3D` contain the original settings. The new modules are documented in [DOMAIN_MEDIUM_V2.md](DOMAIN_MEDIUM_V2.md) and are not yet invoked by the legacy simulation runners. Keep legacy generation paths unchanged until regression-tested.
 
 ## Physical responsibilities
 
@@ -41,11 +41,11 @@ The legacy configs already use `cfg.domain.Lx_m/dx_m`, `cfg.medium.background_cs
 
 ## Work order and validation
 
-1. Implement and test `swsynth.domain.buildGrid` for canonical axes, 2D/projected3d/volumetric3d layout, endpoint policy, and physical observation plane. Distinguish computational grid from observation/sensor sampling grid.
-2. Extract `swsynth.medium.buildMaps` from the legacy map builders so material maps are generated on an existing grid and frequency is not needed to define material properties. Add explicit `medium.validate` and compatibility tests versus existing 2D/3D maps; do not silently add unmodeled viscosity/density effects.
-3. Resolve a single shared harmonic drive `frequency_hz`, preserving the legacy `wavefield.frequency_hz` adapter; update source/excitation contracts only after choosing a compatibility path.
-4. Implement the V2 `swsynth.propagation.synthesize` orchestration; regression-test simple homogeneous plane/spherical fields, multi-source coherence, apertures, 3D observed slices, RNG isolation, known legacy outputs.
-5. Expand medium and solver support to actual viscoelastic attenuation, dispersion, and heterogeneity only when physically specified and experimentally validated.
+1. **Implemented, MATLAB tests pending:** `swsynth.domain.buildGrid` for canonical axes, 2D/projected3d/volumetric3d layout, endpoint policy, and physical observation plane. Distinguish computational grid from observation/sensor sampling grid.
+2. **Implemented, MATLAB tests pending:** `swsynth.medium.buildMaps` from the legacy map builders so material maps are generated on an existing grid and frequency is not needed to define material properties. Add explicit `medium.validate` and compatibility tests versus existing 2D/3D maps; do not silently add unmodeled viscosity/density effects.
+3. **Pending:** resolve a single shared harmonic drive `frequency_hz`, preserving the legacy `wavefield.frequency_hz` adapter; update source/excitation contracts only after choosing a compatibility path.
+4. **Pending:** implement the V2 `swsynth.propagation.synthesize` orchestration; regression-test simple homogeneous plane/spherical fields, multi-source coherence, apertures, 3D observed slices, RNG isolation, known legacy outputs.
+5. **Pending:** expand medium and solver support to actual viscoelastic attenuation, dispersion, and heterogeneity only when physically specified and experimentally validated.
 
 **Physical caveat:** `cs=sqrt(mu/rho)` assumes a homogeneous isotropic elastic material with the relevant constitutive assumptions. For viscoelastic media a complex, frequency-dependent shear modulus `G*(omega)` and density determine a complex wavenumber `k*(omega)`; prescribing both arbitrary `cs` and `G*` without consistency validation would be ambiguous.
 
