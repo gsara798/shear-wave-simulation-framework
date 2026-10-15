@@ -18,7 +18,7 @@ switch request.policy
         p=request.explicit_polarization_xyz;
     case "transverse_preferred"
         candidate=repmat(request.reference_axis_xyz,n,1);
-        [p,fallbackCount]=transverseNormalize(candidate,k);
+        [p,fallbackCount]=transverseNormalize(candidate,k,request.geometry);
     case "transverse_random"
         if request.geometry=="planar2d"
             % In a strictly 2D x-z shear model the transverse subspace
@@ -53,17 +53,22 @@ result.diagnostics=struct("count",n,"fallback_count",fallbackCount, ...
     "maximum_norm_error",max(abs(vecnorm(p,2,2)-1)));
 end
 
-function [p,fallbackCount] = transverseNormalize(v,k)
+function [p,fallbackCount] = transverseNormalize(v,k,geometry)
 % Remove longitudinal component, including for the preferred-axis model.
 p=v-sum(v.*k,2).*k;
 norms=vecnorm(p,2,2);
 degenerate=norms<1e-10;
 fallbackCount=nnz(degenerate);
 for row=find(degenerate).'
-    [~,j]=min(abs(k(row,:)));
-    axis=zeros(1,3);
-    axis(j)=1;
-    p(row,:)=axis-dot(axis,k(row,:))*k(row,:);
+    if geometry=="planar2d"
+        % The fallback must remain SV in the x-z plane, never SH in y.
+        p(row,:)=[k(row,3),0,-k(row,1)];
+    else
+        [~,j]=min(abs(k(row,:)));
+        axis=zeros(1,3);
+        axis(j)=1;
+        p(row,:)=axis-dot(axis,k(row,:))*k(row,:);
+    end
     norms(row)=norm(p(row,:));
 end
 p=p./norms;
