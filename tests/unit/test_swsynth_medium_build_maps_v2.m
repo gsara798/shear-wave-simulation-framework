@@ -17,11 +17,15 @@ end
 
 function testCircleMatchesExactAnalyticalMask(tc)
 [g,m]=base2D();
+% A non-grid-aligned radius avoids roundoff ambiguity for points
+% exactly on a circle boundary; geometric inclusion is still checked
+% independently at every pixel.
+radius=.00525;
 m.objects={struct("type","circle","cs_m_s",4.5, ...
-    "center_xz_m",[.015 .01],"radius_m",.005)};
+    "center_xz_m",[.015 .01],"radius_m",radius)};
 a=swsynth.medium.buildMaps(g,m);
 [X,Z]=meshgrid(g.x_m,g.z_m);
-inside=(X-.015).^2+(Z-.01).^2<=.005^2;
+inside=(X-.015).^2+(Z-.01).^2<=radius^2;
 verifyEqual(tc,a.cs_map_zx,2+2.5*double(inside));
 verifyEqual(tc,a.material_id_zx,uint16(inside));
 verifyEqual(tc,a.object_alpha_zx{1},double(inside));
