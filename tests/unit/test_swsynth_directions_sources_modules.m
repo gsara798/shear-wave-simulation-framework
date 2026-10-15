@@ -11,6 +11,7 @@ end
 
 function testSourcePlacementPreservesPlanarLegacyDraws(testCase)
 cfg=fixture();
+[cfg,~]=swsynth.validateConfig(cfg);
 directions=swsynth.directions.generate(cfg);
 % generateDirections resets the seed, and leaves the stream at its
 % established post-direction state.
@@ -29,6 +30,9 @@ end
 
 function testExplicitPositionsPreserveRngConsumption(testCase)
 cfg=fixture();
+cfg.propagation.model="spherical_wave";
+cfg.propagation.phase_model="local_k_distance";
+cfg.sources.radiation.model="point_force_shear_far_field";
 cfg.sources.position_xyz_m=[.01 0 .02; .02 0 .03];
 directions=swsynth.directions.generate(cfg);
 actual=swsynth.sources.prepare(cfg,directions);
