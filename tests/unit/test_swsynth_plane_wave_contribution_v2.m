@@ -31,6 +31,16 @@ verifyEqual(testCase,out.U_xyz,complex(zeros(2,3,3)));
 verifyEqual(testCase,out.scalar_phasor,complex(zeros(2,3)));
 end
 
+function testVolumetricZeroAmplitudePreservesComplexOutput(testCase)
+req=fixture2D();
+req.geometry="volumetric3d";
+req.phase.y_m=[0 .001];
+req.amplitude=0;
+out=swsynth.propagation.plane_wave.computeContribution(req);
+verifyEqual(testCase,out.scalar_phasor,complex(zeros(2,2,3)));
+verifyEqual(testCase,out.U_xyz,complex(zeros(2,2,3,3)));
+end
+
 function testProjected3DAnalyticalObliqueIncidence(testCase)
 req=fixture2D();
 req.geometry="projected3d";
