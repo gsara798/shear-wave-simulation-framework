@@ -4,18 +4,20 @@ end
 
 function testSyntheticVolumetricInclusion(testCase)
 addSourcePath();
-cfg = readSyntheticConfig("inclusion");
-[cfg, report] = swsynth.validateConfig3D(cfg);
+cfg=readV2SyntheticConfig("volumetric3d_heterogeneous_eikonal");
+[scenario,report]=swsynth.io.resolveConfigV2(cfg);
 verifyTrue(testCase,report.valid);
-verifyEqual(testCase,string(cfg.medium.objects{1}.type),"sphere");
+verifyEqual(testCase,string(report.geometry),"volumetric3d");
+verifyEqual(testCase,string(scenario.medium.objects{1}.type),"sphere");
 end
 
-function testSyntheticVolumetricBilayer(testCase)
+function testSyntheticProjected3DInclusion(testCase)
 addSourcePath();
-cfg = readSyntheticConfig("bilayer");
-[cfg, report] = swsynth.validateConfig3D(cfg);
+cfg=readV2SyntheticConfig("projected3d_heterogeneous_eikonal");
+[scenario,report]=swsynth.io.resolveConfigV2(cfg);
 verifyTrue(testCase,report.valid);
-verifyEqual(testCase,string(cfg.medium.objects{1}.type),"slab");
+verifyEqual(testCase,string(report.geometry),"projected3d");
+verifyEqual(testCase,string(scenario.medium.objects{1}.type),"circle");
 end
 
 function testKWave2DInclusion(testCase)
@@ -45,12 +47,10 @@ verifyEqual(testCase,string(outcome.status),"dry_run_valid");
 verifyTrue(testCase,outcome.config_resolved.geometry.bilayer.enabled);
 end
 
-function cfg = readSyntheticConfig(name)
-pathValue = examplePath("swsynth","volumetric3d",name);
-cfg = jsondecode(fileread(pathValue));
-if isstruct(cfg.medium.objects)
-    cfg.medium.objects = num2cell(cfg.medium.objects);
-end
+function cfg = readV2SyntheticConfig(name)
+root=repositoryRoot();
+pathValue=fullfile(root,"configs","swsynth","v2",name+".json");
+cfg=jsondecode(fileread(pathValue));
 end
 
 function pathValue = examplePath(varargin)
