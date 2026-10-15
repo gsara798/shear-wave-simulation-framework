@@ -54,3 +54,20 @@ bundle.components=struct("direction_xyz",[1 0 0], ...
 verifyError(testCase,@() swsynth.sources.validate(bundle,"projected3d"), ...
     "swsynth:InvalidSourceMapping");
 end
+
+function testPhysicalSourcesNeedNoPropagationDirections(testCase)
+bundle=struct();
+bundle.sources=struct("position_xyz_m",[.01 0 .02;.03 0 .04]);
+out=swsynth.sources.validate(bundle,"planar2d");
+verifyEqual(testCase,out.sources.position_xyz_m, ...
+    bundle.sources.position_xyz_m);
+end
+
+function testSourceMappingWithoutPropagationDirection(testCase)
+bundle=struct();
+bundle.sources=struct("position_xyz_m",[.01 0 .02]);
+bundle.components=struct("source_id",[1;1;1]);
+out=swsynth.sources.validate(bundle,"planar2d");
+verifyEqual(testCase,out.components.source_id,[1;1;1]);
+end
+
