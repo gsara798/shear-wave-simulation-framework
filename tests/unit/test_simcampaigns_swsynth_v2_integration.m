@@ -159,6 +159,30 @@ end
 clear guard
 end
 
+function testDryRunRejectsMalformedV2BeforeCampaignWrites(tc)
+cfgFile=fullfile(tc.TestData.root,"configs","swsynth","v2", ...
+    "homogeneous_plane_base.json");
+base=jsondecode(fileread(cfgFile));
+bad=base;
+bad.incidence.direction_xyz=[0 0 0;0 0 1];
+verifyError(tc, ...
+    @() simcampaigns.backends.validateRun(bad,"swsynth"), ...
+    "swsynth:V2InvalidIncidentWaves");
+
+bad=base;
+bad.propagation.phase_method="eikonal";
+verifyError(tc, ...
+    @() simcampaigns.backends.validateRun(bad,"swsynth"), ...
+    "swsynth:V2UnsupportedPhase");
+
+bad=base;
+bad.medium.objects=struct("type","circle", ...
+    "cs_m_s",4,"center_xz_m",[.005 .005],"radius_m",.001);
+verifyError(tc, ...
+    @() simcampaigns.backends.validateRun(bad,"swsynth"), ...
+    "swsynth:V2AnalyticalRequiresHomogeneous");
+end
+
 function testLegacyBackendStillUsesOldVersion(tc)
 file=fullfile(tc.TestData.root,"configs","swsynth", ...
     "homogeneous_campaign_base.json");
