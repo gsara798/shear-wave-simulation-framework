@@ -196,7 +196,7 @@ try
     grid on;
 
     sgtitle(strrep(char(testCase.name),"_"," "),"Interpreter","none");
-    exportgraphics(fig,fullfile(outputDir,char(testCase.name)+".png"), ...
+    exportgraphics(fig,fullfile(outputDir,string(testCase.name)+".png"), ...
         "Resolution",200);
 catch err
     close(fig);
