@@ -106,6 +106,52 @@ verifyTrue(testCase,all(isfinite(o.U_xyz(:))));
 verifyEqual(testCase,o.medium.cs_map_zx(4,4),2.5);
 end
 
+function testVolumetricHeterogeneousEikonalInSynthesize(testCase)
+% Genuine 3D heterogeneity, not a projected/invariant-y approximation.
+s=planeScenario();
+s.geometry="volumetric3d";
+axisM=(0:8)*.001;
+s.domain=struct("x_m",axisM,"y_m",axisM,"z_m",axisM);
+s.incidence.direction_xyz=[1 0 0];
+s.incidence.polarization=struct( ...
+    "policy","transverse_explicit", ...
+    "explicit_polarization_xyz",[0 0 1]);
+s.medium.objects={struct("type","sphere", ...
+    "center_xyz_m",[.004 .004 .004], ...
+    "radius_m",.003,"cs_m_s",3)};
+s.propagation.phase_method="eikonal";
+heterogeneous=swsynth.propagation.synthesize(s);
+verifySize(testCase,heterogeneous.U_xyz,[9 9 9 3]);
+verifyEqual(testCase,heterogeneous.medium.cs_map_zyx(5,5,5),3);
+verifyEqual(testCase,heterogeneous.medium.cs_map_zyx(1,1,1),2);
+verifyTrue(testCase,all(isfinite(heterogeneous.U_xyz(:))));
+verifyEqual(testCase,heterogeneous.propagation.phase_method,"eikonal");
+
+% Confirm the heterogeneous material actually changes the propagated
+% complex phasor compared with the identical homogeneous excitation.
+s.medium.objects={};
+homogeneous=swsynth.propagation.synthesize(s);
+difference=max(abs(heterogeneous.U_xyz(:)-homogeneous.U_xyz(:)));
+verifyGreaterThan(testCase,difference,1e-4);
+end
+
+function testHeterogeneousSphericalIsExplicitlyRejected3D(testCase)
+s=sphericalScenario();
+s.geometry="volumetric3d";
+s.domain=struct("x_m",[.01 .02 .03], ...
+    "y_m",[.005 .015 .025], ...
+    "z_m",[.01 .02 .03]);
+s.sources.positions.position_xyz_m=[0 .04 0;.04 -.04 0];
+s.sources.excitation=struct( ...
+    "force_direction_xyz",[0 0 1;0 1 0], ...
+    "relative_amplitude",[1;1],"phase_rad",[0;pi]);
+s.medium.objects={struct("type","sphere", ...
+    "center_xyz_m",[.02 .015 .02],"radius_m",.006, ...
+    "cs_m_s",3)};
+verifyError(testCase,@() swsynth.propagation.synthesize(s), ...
+    "swsynth:SynthesisAnalyticalRequiresHomogeneousMedium");
+end
+
 function testRejectTopLevelFrequency(testCase)
 s=planeScenario();
 s.frequency_hz=500;
