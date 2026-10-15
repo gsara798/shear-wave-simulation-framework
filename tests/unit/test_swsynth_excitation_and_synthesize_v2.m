@@ -128,6 +128,8 @@ b=swsynth.propagation.spherical.point_source.computeContribution(r);
 verifyEqual(testCase,o.U_xyz,a.U_xyz+b.U_xyz,"AbsTol",1e-13);
 verifyEqual(testCase,o.component_count,2);
 verifyEqual(testCase,o.sources.count,2);
+verifyEqual(testCase,o.propagation.geometric_decay_exponent,0);
+verifyEqual(testCase,o.propagation.reference_cs_m_s,2);
 verifyEqual(testCase,o.excitation.frequency_hz,500);
 end
 
