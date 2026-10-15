@@ -24,6 +24,18 @@ end
 % and support an explicit observation geometry on volumetric requests.
 % Keep the two established numerical backends and validations unchanged.
 requestedGeometry = "";
+% Capture user intent before legacy backend normalization.
+requestedPropagationModel = "";
+requestedPhaseModel = "";
+if isfield(requestedConfig,"propagation") && ...
+        isstruct(requestedConfig.propagation)
+    if isfield(requestedConfig.propagation,"model")
+        requestedPropagationModel = string(requestedConfig.propagation.model);
+    end
+    if isfield(requestedConfig.propagation,"phase_model")
+        requestedPhaseModel = string(requestedConfig.propagation.phase_model);
+    end
+end
 isVolumetric = isfield(requestedConfig, "domain") && ...
     isstruct(requestedConfig.domain) && ...
     isfield(requestedConfig.domain, "Ly_m");
@@ -93,8 +105,10 @@ requestedDirections = swsynth.generateDirections(cfg);
 requestedDirectionMetrics = ...
     swsynth.summarizePlaneIntersection(requestedDirections);
 
+phaseSolver = "";
 switch cfg.propagation.model
-    case "projected3d_eikonal"
+        case "projected3d_eikonal"
+        phaseSolver = "projected3d_directional_eikonal";
         wavefield = ...
             swsynth.propagation.plane_wave.synthesizeProjected3D( ...
                 cfg, ...
@@ -102,6 +116,7 @@ switch cfg.propagation.model
                 requestedDirections);
 
     case "spherical_wave"
+        phaseSolver = "spherical_" + string(cfg.propagation.phase_model);
         if cfg.sources.radiation.model == "point_force_shear_far_field"
             if cfg.directions.space == "two_dimensional"
                 wavefield = swsynth.propagation.spherical.point_source.shear_far_field.synthesize2D( ...
@@ -129,6 +144,7 @@ switch cfg.propagation.model
             error("swsynth:PhaseRoutingUnsupported", ...
                 "Unsupported plane-wave phase solver.");
         end
+        phaseSolver = selectedSolver;
         wavefield = swsynth.propagation.plane_wave.synthesizeObserved2D( ...
             cfg,maps,requestedDirections);
 
@@ -136,6 +152,11 @@ switch cfg.propagation.model
         error("swsynth:UnsupportedPropagationModel", ...
             "Unsupported propagation model: %s",cfg.propagation.model);
 end
+
+% Additional provenance; do not overwrite legacy output keys.
+wavefield.phase_solver = phaseSolver;
+wavefield.requested_phase_model = requestedPhaseModel;
+wavefield.requested_propagation_model = requestedPropagationModel;
 
 if isfield(wavefield, "directions_xyz")
     directions = effectiveDirectionsFromXYZ( ...
