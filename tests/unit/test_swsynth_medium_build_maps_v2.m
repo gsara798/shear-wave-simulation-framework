@@ -130,6 +130,37 @@ verifyError(testCase, ...
     "swsynth:MediumCannotOwnFrequency");
 end
 
+function testRejectUnsupportedConstitutiveModel(testCase)
+cfg=compact2D();
+cfg.medium.model="kelvin_voigt";
+verifyError(testCase, ...
+    @() swsynth.medium.buildMaps(makeGrid2D(cfg),cfg.medium), ...
+    "swsynth:UnsupportedMediumModel");
+end
+
+function testRejectUnsupportedMediumProperty(testCase)
+cfg=compact2D();
+cfg.medium.viscosity_pa_s=1;
+verifyError(testCase, ...
+    @() swsynth.medium.buildMaps(makeGrid2D(cfg),cfg.medium), ...
+    "swsynth:UnsupportedMediumProperty");
+end
+
+function testMapsFeedAnalyticalPhaseWithoutFrequencyInMedium(testCase)
+cfg=compact2D();
+cfg.medium.background_cs_m_s=2.5;
+grid=makeGrid2D(cfg);
+maps=swsynth.medium.buildMaps(grid,cfg.medium);
+phase=swsynth.phase.compute(struct( ...
+    "model","plane_wave","method","analytical", ...
+    "geometry","2d","direction_xyz",[1 0 0], ...
+    "reference_cs_m_s",2.5, ...
+    "x_m",grid.x_m,"z_m",grid.z_m, ...
+    "cs_map_zx",maps.cs_map_zx));
+[X,~]=meshgrid(grid.x_m,grid.z_m);
+verifyEqual(testCase,phase.travel_time_s,X/2.5,"AbsTol",1e-14);
+end
+
 function testRejectInvalidShearSpeed(testCase)
 cfg=compact2D();
 cfg.medium.background_cs_m_s=-2;
