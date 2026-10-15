@@ -182,9 +182,6 @@ sample.wavefield.angular_frequency_rad_s=2*pi*f;
 sample.wavefield.is_complex=~isreal(observed);
 sample.wavefield.units=units;
 sample.wavefield.phasor_convention=string(result.excitation.phasor_convention);
-sample.wavefield.output_convention="data_"+order+"("+ ...
-    join(string(cellstr(order.')),"")+")";
-% Override generic string with the tested data-index ordering.
 if isVolume
     sample.wavefield.output_convention="data_zyx(z,y,x)";
 else
