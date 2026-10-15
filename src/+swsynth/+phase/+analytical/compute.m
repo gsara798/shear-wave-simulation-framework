@@ -1,8 +1,25 @@
 function [tau,diagnostics,solver] = compute(request)
 %COMPUTE Analytical travel times for homogeneous incident plane waves.
+if string(request.model)=="spherical_wave"
+    % This additive path does not touch legacy plane-wave phase routing.
+    geometry=string(request.geometry);
+    if ~ismember(geometry,["2d","projected3d","volumetric3d"])
+        error("swsynth:PhaseRoutingUnsupported", ...
+            "Homogeneous spherical travel time is not supported for geometry %s.",geometry);
+    end
+    need(request,["source_xyz_m","target_xyz_m","reference_cs_m_s"]);
+    [tau,distance] = swsynth.phase.analytical.spherical.computeTravelTime( ...
+        double(request.source_xyz_m),double(request.target_xyz_m), ...
+        double(request.reference_cs_m_s));
+    diagnostics=struct("method","homogeneous_spherical_exact", ...
+        "reference_cs_m_s",double(request.reference_cs_m_s), ...
+        "distance_m",distance);
+    solver="homogeneous_spherical_distance";
+    return;
+end
 if string(request.model) ~= "plane_wave"
     error("swsynth:PhaseRoutingUnsupported", ...
-        "Analytical phase contract currently supports plane_wave only.");
+        "Analytical phase contract supports plane_wave and spherical_wave only.");
 end
 geometry = string(request.geometry);
 solver = swsynth.phase.validateCompatibility( ...
