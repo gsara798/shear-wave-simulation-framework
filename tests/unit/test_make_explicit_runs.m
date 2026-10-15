@@ -16,7 +16,7 @@ plan = table( ...
 
 mapping = [
     "seed"                    "rng_seed"
-    "wavefield.frequency_hz"  "frequency"
+    "excitation.frequency_hz"  "frequency"
 ];
 
 runs = simcampaigns.makeExplicitRuns( ...
@@ -30,7 +30,7 @@ verifyEqual(testCase,string(runs(1).design_id),"run_a");
 verifyEqual( ...
     testCase, ...
     string({runs(1).overrides.path})', ...
-    ["seed";"wavefield.frequency_hz"]);
+    ["seed";"excitation.frequency_hz"]);
 
 verifyEqual(testCase,runs(1).overrides(1).value,101);
 verifyEqual(testCase,runs(2).overrides(2).value,500);
@@ -80,7 +80,7 @@ plan = table( ...
     VariableNames=["id","axis"]);
 
 mapping = [
-    "directions.support.axis_xyz" "axis"
+    "measurement.axis_xyz" "axis"
 ];
 
 runs = simcampaigns.makeExplicitRuns( ...
