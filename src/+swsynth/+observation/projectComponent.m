@@ -5,7 +5,7 @@ function observed = projectComponent(vectorXYZ, axisXYZ)
 % No ultrasound attenuation, speckle, noise, filtering or motion tracking.
 arguments
     vectorXYZ {mustBeNumeric}
-    axisXYZ (1,3) double {mustBeFinite}
+    axisXYZ (1,3) double {mustBeFinite,mustBeReal}
 end
 if isempty(vectorXYZ) || ndims(vectorXYZ)<2 || ...
         size(vectorXYZ,ndims(vectorXYZ))~=3 || ...
