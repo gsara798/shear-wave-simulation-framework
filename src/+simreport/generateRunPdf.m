@@ -59,9 +59,9 @@ lines = [
     "Frequency: " + numberText(frequency) + " Hz"
     "Background SWS: " + numberText(backgroundSws) + " m/s"
     "Directions: " + numberText(directionCount)
-    "Direction space: " + nestedText(config,["directions","space"])
+    "Direction space: " + directionSpace
     "Propagation model: " + nestedText(config,["propagation","model"])
-    "Phase model: " + nestedText(config,["propagation","phase_model"])
+    "Phase model: " + phaseModel
 ];
 text(ax,0,1,strjoin(lines,newline),"VerticalAlignment","top", ...
     "Interpreter","none","FontName","Times New Roman","FontSize",14);
