@@ -21,6 +21,11 @@ rng(31415,'twister');
 legacy = swsynth.synthesizeProjected3DEikonal(cfg,maps,directions);
 rng(31415,'twister');
 modular = swsynth.propagation.plane_wave.synthesizeProjected3D(cfg,maps,directions);
+% Timing diagnostics are nondeterministic and are not physical outputs.
+legacy.diagnostics.synthesis = rmfield(legacy.diagnostics.synthesis, ...
+    "per_direction_time_s");
+modular.diagnostics.synthesis = rmfield(modular.diagnostics.synthesis, ...
+    "per_direction_time_s");
 verifyEqual(testCase,modular,legacy);
 end
 
@@ -36,6 +41,11 @@ cfg.domain.dx_m = 0.001; cfg.domain.dz_m = 0.001;
 cfg.execution.use_parallel = false;
 cfg.noise.snr_db = Inf;
 a = swsynth.run(cfg); b = swsynth.run(cfg);
+% Do not compare wall-clock timing across two valid simulations.
+a.wavefield.diagnostics.synthesis = rmfield( ...
+    a.wavefield.diagnostics.synthesis,"per_direction_time_s");
+b.wavefield.diagnostics.synthesis = rmfield( ...
+    b.wavefield.diagnostics.synthesis,"per_direction_time_s");
 verifyEqual(testCase,a.wavefield,b.wavefield);
 verifyEqual(testCase,a.wavefield.propagation_model,"projected3d_eikonal");
 end
