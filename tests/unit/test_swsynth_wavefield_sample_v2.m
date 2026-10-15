@@ -128,6 +128,26 @@ verifyEqual(testCase,sample.wavefield.units,"arbitrary_velocity");
 verifyFalse(testCase,sample.measurement.calibrated);
 end
 
+function testSavedMatFilePreservesSharedSchema(testCase)
+s=planeScenario();
+r=swsynth.propagation.synthesize(s);
+wavefield_sample=swsynth.io.buildWavefieldSampleV2(r,s); %#ok<NASGU>
+path=[tempname,'.mat'];
+cleanup=onCleanup(@() deleteIfExists(path));
+save(path,"wavefield_sample","-v7.3");
+loaded=load(path,"wavefield_sample");
+info=wavefield.validateSample(loaded.wavefield_sample);
+verifyEqual(testCase,info.spatial_dimension,2);
+verifyEqual(testCase,loaded.wavefield_sample.wavefield.frequency_hz,500);
+clear cleanup
+end
+
+function deleteIfExists(path)
+if isfile(path)
+    delete(path);
+end
+end
+
 function testRejectScenarioFrequencyMismatch(testCase)
 s=planeScenario();
 r=swsynth.propagation.synthesize(s);
