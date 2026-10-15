@@ -95,4 +95,38 @@ disp(table(results))
 assertSuccess(results)
 ```
 
-**Next stage:** freeze the shared harmonic-drive `frequency_hz` contract (with a legacy adapter from `cfg.wavefield.frequency_hz`), then implement `swsynth.propagation.synthesize` orchestration using domain and medium, prepared sources or directional incidence, phase/polarization, accumulation, observation projection and provenance.
+## Heterogeneous-media support policy (October 2026)
+
+**Supported now: heterogeneous isotropic elastic shear-speed maps with incident plane waves only.** The common flow is:
+
+```text
+domain.buildGrid → medium.validate → medium.buildMaps
+  → excitation.resolve
+  → propagation.synthesize(model="plane_wave",phase_method="eikonal")
+    → phase.compute → phase.eikonal.compute
+      → projected3d.computeTravelTime → numerics.eikonal.solveFastSweeping2D
+      → volumetric3d.computeTravelTime → numerics.eikonal.solveFastSweeping3D
+    → polarization.compute → plane_wave.computeContribution
+  → propagation.accumulate
+```
+
+This is a **selection**, not two solvers run on the same input:
+- `projected3d` consumes `cs_map_zx`, assumes medium invariance along y, and uses conserved out-of-plane slowness from a 3D incident plane-wave direction.
+- `volumetric3d` consumes `cs_map_zyx` and solves the full 3D directional Eikonal problem.
+- `2d` incident-plane Eikonal is **not implemented**; planar homogeneous analytic plane waves remain supported.
+- All three spherical/point-force geometries retain **homogeneous analytical** `T=distance/c_s` only. Heterogeneous spherical synthesis is explicitly rejected.
+- The output is a shear-like vector field with a phase derived from travel time; Eikonal **does not automatically simulate** reflections, scattering, mode conversion, full elastic amplitude transport, or ultrasound acquisition.
+
+Example heterogeneity configuration for a **projected3d plane wave** (supply domain/excitation/incidence as in `HARMONIC_SYNTHESIS_V2.md`):
+
+```matlab
+scenario.medium=struct("cs_m_s",2,"objects",{{struct( ...
+    "type","circle","center_xz_m",[.025 .025], ...
+    "radius_m",.006,"cs_m_s",4)}});
+scenario.propagation=struct("model","plane_wave", ...
+    "phase_method","eikonal");
+```
+
+The full V2 synthesis code is implemented. Unit coverage includes a heterogeneous projected3d plane wave and a newly added volumetric 3D heterogeneous plane-wave synthesis test, together with rejection of heterogeneous spherical waves; **the new tests require a MATLAB run before they can be reported passing**. Deferred extensions are tracked in [issue #31](https://github.com/gsara798/shear-wave-simulation-framework/issues/31). Legacy migration and safe duplicate removal remain tracked in [issue #30](https://github.com/gsara798/shear-wave-simulation-framework/issues/30).
+
+**Next stage:** Keep heterogeneous V2 phase routing limited to these supported plane-wave geometries while migrating dataset output contracts and the legacy runner.
