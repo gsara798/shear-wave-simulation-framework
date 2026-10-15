@@ -5,10 +5,14 @@ function result = compute(request)
 %   method: "analytical", "eikonal", or "straight_ray_numerical"
 %   geometry: "2d", "projected3d", "volumetric3d"
 %   direction_xyz: 1x3 for plane waves
+%   source_xyz_m / target_xyz_m: homogeneous spherical ray positions
+%   reference_cs_m_s: homogeneous spherical or plane-wave reference speed
 %   x_m, z_m, cs_map_zx for planar observations
 %   y_m, cs_map_zyx for volumetric observations
 %   reference_cs_m_s: incident/reference speed for plane waves
 %   cfg, source_xyz_m, target_xyz_m: straight-ray requests
+%   Spherical analytical T=|target-source|/cs is additive; existing
+%   plane-wave analytical/eikonal routes remain unchanged.
 %
 % Output travel_time_s is a spatial array (zx or zyx), or Nx1 for rays.
 % This API does not compute excitation, polarization, amplitude or noise.
