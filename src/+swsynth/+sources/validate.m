@@ -5,6 +5,9 @@ arguments
     bundle (1,1) struct
     geometry (1,1) string
 end
+if geometry=="2d"
+    geometry="planar2d";
+end
 if ~isfield(bundle,"sources") || ~isstruct(bundle.sources) || ...
         ~isscalar(bundle.sources)
     error("swsynth:InvalidSourceBundle","bundle.sources must be a struct.");
