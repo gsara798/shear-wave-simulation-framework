@@ -28,10 +28,26 @@ cover = figure("Visible","off","Color","w","Position",[100 100 900 1150]);
 cleanup = onCleanup(@() closeIfValid(cover));
 ax = axes(cover,"Position",[0.08 0.08 0.84 0.84]); axis(ax,"off");
 
-frequency = nestedNumber(config,["wavefield","frequency_hz"]);
+frequency = nestedNumber(config,["excitation","frequency_hz"]);
 if ~isfinite(frequency), frequency = nestedNumber(config,["source","f0_hz"]); end
 backgroundSws = nestedNumber(config,["medium","background_cs_m_s"]);
 if ~isfinite(backgroundSws), backgroundSws = nestedNumber(config,["medium","cs_m_s"]); end
+dimension=nestedNumber(config,["dimension"]);
+if ~isfinite(dimension) && isfield(config,"geometry")
+    dimension=2+double(string(config.geometry)=="volumetric3d");
+end
+directionCount=nestedNumber(config,["directions","count"]);
+if ~isfinite(directionCount)
+    directionCount=nestedNumber(summary,["direction_count"]);
+end
+phaseModel=nestedText(config,["propagation","phase_method"]);
+if strlength(phaseModel)==0
+    phaseModel=nestedText(config,["propagation","phase_model"]);
+end
+directionSpace=nestedText(config,["directions","space"]);
+if strlength(directionSpace)==0 && isfield(config,"incidence")
+    directionSpace="explicit_xyz";
+end
 
 lines = [
     "Simulation run report"
@@ -39,10 +55,10 @@ lines = [
     "Run: " + string(lastPathPart(runDirectory))
     "Scenario: " + textValue(config,"scenario")
     "Backend: " + textValue(summary,"backend")
-    "Dimension: " + numberText(nestedNumber(config,["dimension"])) + "D"
+    "Dimension: " + numberText(dimension) + "D"
     "Frequency: " + numberText(frequency) + " Hz"
     "Background SWS: " + numberText(backgroundSws) + " m/s"
-    "Directions: " + numberText(nestedNumber(config,["directions","count"]))
+    "Directions: " + numberText(directionCount)
     "Direction space: " + nestedText(config,["directions","space"])
     "Propagation model: " + nestedText(config,["propagation","model"])
     "Phase model: " + nestedText(config,["propagation","phase_model"])
