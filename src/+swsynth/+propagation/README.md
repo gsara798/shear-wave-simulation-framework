@@ -1,6 +1,10 @@
 # Propagation modules
 
-## New single-component plane-wave API (V2, not yet integrated)
+## Coherent accumulation (V2, not yet integrated)
+
+`+propagation/accumulate.m` coherently sums a nonempty cell/struct array of `plane_wave.computeContribution` results into one **complex vector wavefield**, validating shared frequency, spatial coordinates, geometry and phase sign before addition. Normalization is explicitly `none` (default) or `sqrt_count` (`1/sqrt(N)`); no scalar observation, noise, or wave physics is added. See `docs/architecture/PROPAGATION_ACCUMULATE_V2.md`. Tests: `tests/unit/test_swsynth_propagation_accumulate_v2.m`.
+
+## Single-component plane-wave API (V2, not yet integrated)
 
 `+plane_wave/computeContribution.m` constructs **one complex vector shear-wave contribution** from the existing `swsynth.phase.compute` and `swsynth.polarization.compute` modules. It supports analytical 2D/projected3d/volumetric3d incidence and supported directional eikonal routes, with spatial output `[Nz,Nx,3]` or `[Nz,Ny,Nx,3]`, final dimension `[Ux,Uy,Uz]`. It does not resample excitation, add noise, normalize a multi-wave ensemble or project onto an observation axis. Read `docs/architecture/PLANE_WAVE_CONTRIBUTION_V2.md` for the API and the explicit algebraic phase sign. Regression tests: `tests/unit/test_swsynth_plane_wave_contribution_v2.m`. This is an additive API; legacy field synthesizers are unchanged.
 
