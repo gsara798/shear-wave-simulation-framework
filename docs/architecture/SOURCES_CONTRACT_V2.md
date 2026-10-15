@@ -1,16 +1,16 @@
-# Source preparation contract — V2 proposal (not yet wired)
+# Source preparation contract — V2 incremental implementation
 
-Status: **design contract only**. Existing synthesizers and RNG behavior are unchanged. Do not interpret this document as implemented MATLAB API.
+Status: **positions, excitation, multi-source aperture, and source assembly are implemented as an additive V2 API**; synthesizers still use their existing backends and RNG contracts. See [SOURCES_PREPARE_V2.md](SOURCES_PREPARE_V2.md) for executable requests and outputs. Remaining portions of this document describe the longer-term wave-component interface, not already connected production behavior.
 
 ## Ownership and names
 
 The umbrella module `swsynth.sources` orchestrates physical emitters and incident components:
 - `sources.prepare` assembles and validates the entire source bundle.
 - `sources.validate` checks shape, units, cross-field relationships, and model compatibility.
-- `sources.directions` samples *propagation directions* (a directional component need not belong to a finite point source).
+- Propagation-direction sampling is a separate wave-incidence concern, not physical source motion; the legacy `swsynth.generateDirections` is not source-force orientation.
 - `sources.positions` places finite physical emitters; geometry-specific implementations only when spatial physics differs.
-- `sources.excitation` selects source/component amplitude, initial phase and force vectors, with explicit draw scope.
-- `sources.polarization` computes shear polarization and projection; do not confuse source force with material displacement.
+- `sources.excitation` prepares **source-level** force direction, amplitude, and initial phase.
+- Polarization of tissue motion belongs to radiation/propagation physics, not source actuation.
 - `sources.aperture` describes physical emitting elements.
 Shared calculations live at the method root; geometry-specific algorithms live under `+planar2d`, `+projected3d`, `+volumetric3d` only as needed. MATLAB does not permit `+2d`.
 
@@ -29,11 +29,11 @@ Shared calculations live at the method root; geometry-specific algorithms live u
 - `direction_xyz`: N-by-3 unit vectors when plane-wave incidence directions exist; spherical fields obtain local propagation directions from positions and observation points instead
 - `count`: N
 
-`bundle.excitation`:
-- `amplitude`: nonnegative S-by-1 or N-by-1 (scope must be stated explicitly)
-- `initial_phase_rad`: S-by-1 or N-by-1; deterministic fixed, shared or independently sampled
-- `force_direction_xyz`: source-level parameter when applicable, not a synonym for propagation direction
-- `draw_scope`: source / aperture_element / component
+`bundle.excitation` (implemented source-level):
+- `relative_amplitude`: nonnegative S-by-1, may exceed one
+- `phase_rad`: initial phase S-by-1
+- `force_direction_xyz`: S-by-3 unit actuator force orientation, not propagation direction
+- Aperture nodes are coherent: they inherit parent source excitation and are weighted by `bundle.aperture.node_weight`.
 
 `bundle.polarization`:
 - `vector_xyz`: N-by-3 for constant directional polarization where meaningful
@@ -45,13 +45,13 @@ Do not silently require S=N. Define source/component mapping explicitly for many
 
 `sources.validate`: source IDs, source/component correspondence, units and shape; reject finite-source position requirements for pure plane-wave incidence; ensure chosen radiation, direction, geometry and polarization models are physically compatible.
 
-`sources.directions.validate`: unit vectors, physical dimension, angular support / sampling configuration.
+Wave-incidence direction validation: a later propagation-side task.
 
 `sources.positions.validate`: XYZ, source count, aperture geometry and spatial domain.
 
 `sources.excitation.validate`: amplitude sign/unit convention, phase policy (fixed, shared, random) and explicit draw scope, force vectors.
 
-`sources.polarization.validate`: transversality where required and measurement-axis compatibility.
+Propagation/radiation polarization validation: a later task, separate from actuator forcing.
 
 Top-level `validateConfig` owns global combinations and delegates to local validators instead of duplicating all checks.
 
@@ -63,6 +63,6 @@ Top-level `validateConfig` owns global combinations and delegates to local valid
 
 ## Existing code status and migration
 
-Present V2 code uses `swsynth.generateDirections`, `swsynth.generateDirectionalExcitation`, `swsynth.sources.buildCoherentAperture`, and an experimental `swsynth.sources.prepare`. These are **not** the full new contract. In particular the current `sources.prepare` derives point positions even for plane waves to match legacy RNG behavior; do not make this an invariant of the new interface.
+The new single-argument `swsynth.sources.prepare(request)` assembles actual physical sources. The old two-argument `swsynth.sources.prepare(cfg,directions)` remains available for exact legacy reproduction through `swsynth.sources.compat.prepareLegacy`; the legacy radii/directions coupling is **not** a new architectural invariant.
 
-Next steps: (1) validate this schema and policies; (2) implement source-local validation and deterministic stream manager with independent tests; (3) adapt directions and positions separately; (4) prepare excitation/polarization and assemble bundle; (5) integrate into synthesis after field-level regressions.
+Next steps: verify new tests in MATLAB; finalize named independent RNG streams per excitation property; then integrate the assembled physical-source bundle into spherical propagation after field-level regression tests. Keep wave-incidence and material polarization distinct from actuator force.
