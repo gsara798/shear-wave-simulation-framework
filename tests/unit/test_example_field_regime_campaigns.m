@@ -1,9 +1,8 @@
 function tests = test_example_field_regime_campaigns
-%TEST_EXAMPLE_FIELD_REGIME_CAMPAIGNS Validate current V2 campaign fixtures.
 tests = functiontests(localfunctions);
 end
 
-function testTwoDimensionalV2Campaign(testCase)
+function testCurrentV2PlaneWaveCampaign(testCase)
 root=repoRoot();
 addpath(fullfile(root,"src"));
 file=fullfile(root,"configs","campaigns","swsynth","smoke", ...
@@ -12,26 +11,25 @@ file=fullfile(root,"configs","campaigns","swsynth","smoke", ...
 verifyTrue(testCase,validation.valid);
 verifyEqual(testCase,numel(runs),4);
 verifyTrue(testCase,all(arrayfun(@(r) ...
-    string(r.config.geometry)=="2d",runs)));
-verifyTrue(testCase,all(arrayfun(@(r) ...
-    string(r.config.propagation.model)=="plane_wave",runs)));
-verifyEqual(testCase,sort(arrayfun(@(r) ...
-    r.config.excitation.frequency_hz,runs)),[400;400;500;500]);
+    string(r.config.schema_version)=="2.0",runs)));
+counts=arrayfun(@(r) size(r.config.incidence.direction_xyz,1),runs);
+verifyEqual(testCase,counts,2*ones(size(counts)));
+frequencies=sort(arrayfun(@(r) ...
+    r.config.excitation.frequency_hz,runs));
+verifyEqual(testCase,frequencies(:),[400;400;500;500]);
 end
 
-function testVolumetricV2HeterogeneousScenario(testCase)
+function testCurrentV2VolumetricPlaneEikonal(testCase)
 root=repoRoot();
 addpath(fullfile(root,"src"));
 file=fullfile(root,"configs","swsynth","v2", ...
     "volumetric3d_heterogeneous_eikonal.json");
-config=jsondecode(fileread(file));
-[scenario,meta]=swsynth.io.resolveConfigV2(config);
-verifyEqual(testCase,string(meta.geometry),"volumetric3d");
-verifyEqual(testCase,string(meta.phase_method),"eikonal");
-verifyEqual(testCase,string(scenario.propagation.model),"plane_wave");
-verifyEqual(testCase,meta.material_object_count,1);
+out=simrunner.runConfig(file,DryRun=true);
+verifyEqual(testCase,string(out.implementation),"modular_v2");
+verifyEqual(testCase,string(out.validation.geometry),"volumetric3d");
+verifyEqual(testCase,string(out.validation.phase_method),"eikonal");
 end
 
-function root = repoRoot()
+function root=repoRoot()
 root=fileparts(fileparts(fileparts(mfilename("fullpath"))));
 end
