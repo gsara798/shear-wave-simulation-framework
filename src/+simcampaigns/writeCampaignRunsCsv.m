@@ -96,7 +96,10 @@ for index = 1:run_count
         "data", ...
         "validation_report.json");
 
-    if backend(index) == "kwsim"
+    if backend(index) == "swsynth"
+        validation_report_path(index) = fullfile( ...
+            run_directory(index),"validation","validation_report.json");
+    elseif backend(index) == "kwsim"
         summary_path(index) = fullfile(run_directory(index),"data","summary.mat");
         validation_report_path(index) = fullfile( ...
             run_directory(index),"data","validation_report.mat");
@@ -117,14 +120,16 @@ for index = 1:run_count
     seed(index) = numericField(config, "seed");
 
     if backend(index) == "swsynth"
-        if isfield(config, "wavefield")
-            frequency_hz(index) = ...
-                numericField(config.wavefield, "frequency_hz");
+        if isfield(config,"excitation")
+            frequency_hz(index)=numericField(config.excitation,"frequency_hz");
         end
-
         if isfield(config, "medium")
             background_cs_m_s(index) = ...
-                numericField(config.medium, "background_cs_m_s");
+                numericField(config.medium, "cs_m_s");
+            if isnan(background_cs_m_s(index))
+                background_cs_m_s(index)= ...
+                    numericField(config.medium,"background_cs_m_s");
+            end
 
             if isfield(config.medium, "objects")
                 medium_object_count(index) = ...
@@ -147,6 +152,27 @@ for index = 1:run_count
 
         geometry_family(index) = ...
             geometryFamily(config);
+
+        if isfield(config,"incidence") && ...
+                isfield(config.incidence,"direction_xyz")
+            d=double(config.incidence.direction_xyz);
+            if isvector(d) && numel(d)==3
+                d=reshape(d,1,3);
+            end
+            if size(d,2)==3
+                direction_count(index)=size(d,1);
+                retained_direction_count(index)=size(d,1);
+                requested_in_plane_count(index)=nnz(abs(d(:,2))<=1e-10);
+                retained_in_plane_count(index)=requested_in_plane_count(index);
+                retained_in_plane_fraction(index)= ...
+                    retained_in_plane_count(index)/retained_direction_count(index);
+                direction_support_type(index)="explicit";
+            end
+        elseif isfield(config,"sources") && ...
+                isfield(config.sources,"count")
+            direction_count(index)=0;
+            retained_direction_count(index)=0;
+        end
 
         if isfield(config, "directions")
             direction_count(index) = ...
