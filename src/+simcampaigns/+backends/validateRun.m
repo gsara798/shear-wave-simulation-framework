@@ -20,6 +20,15 @@ switch backend
         clear cleanup
 
     case "swsynth"
+        if isfield(config,"schema_version") && ...
+                string(config.schema_version)=="2.0"
+            [~,validation]=swsynth.io.resolveConfigV2(config);
+            outcome=struct("status","dry_run_valid", ...
+                "backend","swsynth", ...
+                "implementation","modular_v2", ...
+                "config_resolved",config,"validation",validation);
+            return;
+        end
         if isVolumetricSwsynthConfig(config)
             [resolved, validation] = swsynth.validateConfig3D(config);
         else
