@@ -6,6 +6,10 @@ arguments
     runDirectory {mustBeTextScalar}
 end
 [scenario,meta]=swsynth.io.resolveConfigV2(config);
+if isempty(meta.seed) && requiresStochasticSeed(scenario)
+    error("simcampaigns:V2SeedRequired", ...
+        "V2 campaign sources or polarization use randomness; specify config.seed.");
+end
 runDirectory=string(runDirectory);
 if isfolder(runDirectory)
     error("simcampaigns:RunDirectoryExists", ...
@@ -119,4 +123,34 @@ end
 guard=onCleanup(@() fclose(fid));
 fprintf(fid,"%s",jsonencode(value,PrettyPrint=true));
 clear guard;
+end
+
+function required=requiresStochasticSeed(s)
+required=false;
+if string(s.propagation.model)=="plane_wave"
+    if isfield(s.incidence,"polarization") && ...
+            isfield(s.incidence.polarization,"policy") && ...
+            string(s.incidence.polarization.policy)=="transverse_random"
+        required=true;
+    end
+    return;
+end
+positions=s.sources.positions;
+if isfield(positions,"method")
+    method=string(positions.method);
+    if method~="explicit"
+        required=true;
+    end
+elseif ~isfield(positions,"position_xyz_m")
+    required=true;
+end
+excitation=s.sources.excitation;
+for name=["force_policy","amplitude_policy","phase_policy"]
+    if isfield(excitation,name)
+        policy=string(excitation.(name));
+        if startsWith(policy,"random_")
+            required=true;
+        end
+    end
+end
 end
