@@ -18,6 +18,12 @@ verifyEqual(testCase,diff(sort(theta)),repmat(2*pi/8,7,1), ...
     "AbsTol",1e-12);
 end
 
+function testPublic2dAlias(testCase)
+r=base("2d","fibonacci",5,[.025 .025]);
+p=swsynth.sources.positions.generate(r);
+verifyEqual(testCase,p(:,2),zeros(5,1));
+end
+
 function testProjectedFibonacciIsDeterministicSphere(testCase)
 r=base("projected3d","fibonacci",21,[.025 .025]);
 a=swsynth.sources.positions.generate(r);
