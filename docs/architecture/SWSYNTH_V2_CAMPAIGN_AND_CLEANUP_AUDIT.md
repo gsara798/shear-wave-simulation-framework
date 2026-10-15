@@ -91,6 +91,14 @@ The repository also contains `+kwsim`, `+simcampaigns`, `+simrunner`, `+simviz`,
 6. Numerical solver extension for heterogeneous **spherical** sources remains intentionally deferred (issue #31).
 7. Confirm how `simviz`, `simreport`, CLI and PDF reports handle V2 sample metadata and arbitrary-relative-motion units; a figure smoke test is included, but no MATLAB result claimed yet.
 
+## JSON XYZ vector orientation regression (2026-10-15)
+
+A first MATLAB integration run passed 3 of 9 tests and exposed an input-boundary issue: MATLAB `jsondecode` represents some flat JSON `[x,y,z]` arrays as 3-by-1 vectors. The V2 JSON resolver previously required `measurement.axis_xyz` and single `incidence.direction_xyz` to already be 1-by-3. This was not a physical propagation or Eikonal solver failure.
+
+**Fix:** `swsynth.io.resolveConfigV2` converts only known single XYZ vectors to 1-by-3 MATLAB rows, while preserving valid N-by-3 incidence/source matrices. This also covers singleton explicit polarizations, force directions, physical source positions, and aperture axes. A new test `testFlatJsonXYZVectorsAreNormalizedButMatricesPreserved` checks both the 1-by-3 heterogeneous Eikonal case and a 2-by-3 multiwave case directly from the committed JSON files.
+
+**Status:** code fix uploaded; the new/repeated MATLAB results remain pending. Do not treat integration as passing until the full nine-test suite (and the new regression) succeeds.
+
 ## 5. MATLAB regression/acceptance commands
 
 ```matlab
