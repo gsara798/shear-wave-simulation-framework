@@ -126,6 +126,39 @@ verifyEqual(tc,rng,before);
 clear guard
 end
 
+function testHeterogeneousPlaneEikonalUsesV2InBoth3DGeometries(tc)
+root=string(tempname);
+mkdir(root);
+guard=onCleanup(@() clean("",root));
+fixtures=["projected3d_heterogeneous_eikonal", ...
+    "volumetric3d_heterogeneous_eikonal"];
+for i=1:numel(fixtures)
+    file=fullfile(tc.TestData.root,"configs","swsynth","v2", ...
+        fixtures(i)+".json");
+    cfg=jsondecode(fileread(file));
+    dry=simcampaigns.backends.validateRun(cfg,"swsynth");
+    verifyEqual(tc,dry.status,"dry_run_valid");
+    verifyEqual(tc,dry.validation.phase_method,"eikonal");
+    out=simcampaigns.backends.executeRun(cfg,"swsynth", ...
+        fullfile(root,fixtures(i)));
+    verifyEqual(tc,out.implementation,"modular_v2");
+    loaded=load(out.paths.wavefield_sample,"wavefield_sample");
+    sample=loaded.wavefield_sample;
+    wavefield.validateSample(sample);
+    verifyEqual(tc,sample.propagation.phase_model,"eikonal");
+    if i==1
+        verifyEqual(tc,sample.spatial_dimension,2);
+        verifyEqual(tc,sample.truth.cs_map_zx(5,5),3);
+        verifyEqual(tc,sample.truth.cs_map_zx(1,1),2);
+    else
+        verifyEqual(tc,sample.spatial_dimension,3);
+        verifyEqual(tc,sample.truth.cs_map_zyx(4,4,4),3);
+        verifyEqual(tc,sample.truth.cs_map_zyx(1,1,1),2);
+    end
+end
+clear guard
+end
+
 function testLegacyBackendStillUsesOldVersion(tc)
 file=fullfile(tc.TestData.root,"configs","swsynth", ...
     "homogeneous_campaign_base.json");
