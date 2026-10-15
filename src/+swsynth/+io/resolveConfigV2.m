@@ -27,6 +27,10 @@ for f=required
 end
 scenario=rmfield(config,intersect(string(fieldnames(config)), ...
     ["schema_version","scenario","seed","measurement"]));
+% jsondecode may return a flat JSON XYZ array as a 3-by-1 column.
+% Normalize only known XYZ vector fields here; don't transpose N-by-3
+% matrices or mutate the general MATLAB synthesis API.
+scenario=normalizeJsonXYZVectors(scenario);
 % JSON arrays of material objects become MATLAB struct arrays; the medium
 % contract expects a cell array of scalar struct objects.
 if isstruct(scenario.medium) && isscalar(scenario.medium) && ...
@@ -150,7 +154,13 @@ if isfield(config,"measurement")
             "measurement must have exactly axis_xyz.");
     end
     axis=double(m.axis_xyz);
-    if ~isequal(size(axis),[1 3]) || ~isreal(axis) || ...
+    if ~isnumeric(m.axis_xyz) || ~isvector(axis) || ...
+            numel(axis)~=3
+        error("swsynth:V2InvalidMeasurement", ...
+            "measurement.axis_xyz must have three numeric components.");
+    end
+    axis=reshape(axis,1,3);
+    if ~isreal(axis) || ...
             any(~isfinite(axis)) || norm(axis)<=eps
         error("swsynth:V2InvalidMeasurement", ...
             "measurement.axis_xyz must be finite nonzero 1-by-3.");
@@ -277,5 +287,68 @@ for name=["force_policy","amplitude_policy","phase_policy"]
             startsWith(string(ex.(name)),"random_")
         required=true;
     end
+end
+end
+
+function scenario=normalizeJsonXYZVectors(scenario)
+% Only convert single 3-element XYZ JSON arrays to MATLAB [1,3].
+% Leave valid N-by-3 multiwave/multisource arrays intact.
+if isfield(scenario,"incidence") && isstruct(scenario.incidence) && ...
+        isscalar(scenario.incidence)
+    inc=scenario.incidence;
+    if isfield(inc,"direction_xyz")
+        inc.direction_xyz=asXYZRowIfVector(inc.direction_xyz);
+    end
+    if isfield(inc,"polarization") && isstruct(inc.polarization) && ...
+            isscalar(inc.polarization)
+        for name=["explicit_polarization_xyz","reference_axis_xyz"]
+            if isfield(inc.polarization,name)
+                inc.polarization.(name)= ...
+                    asXYZRowIfVector(inc.polarization.(name));
+            end
+        end
+    end
+    scenario.incidence=inc;
+end
+if ~isfield(scenario,"sources") || ~isstruct(scenario.sources) || ...
+        ~isscalar(scenario.sources)
+    return
+end
+sources=scenario.sources;
+if isfield(sources,"positions") && isstruct(sources.positions) && ...
+        isscalar(sources.positions)
+    positions=sources.positions;
+    for name=["center_xyz_m","position_xyz_m"]
+        if isfield(positions,name)
+            positions.(name)=asXYZRowIfVector(positions.(name));
+        end
+    end
+    sources.positions=positions;
+end
+if isfield(sources,"excitation") && ...
+        isstruct(sources.excitation) && isscalar(sources.excitation)
+    ex=sources.excitation;
+    if isfield(ex,"force_direction_xyz")
+        ex.force_direction_xyz= ...
+            asXYZRowIfVector(ex.force_direction_xyz);
+    end
+    sources.excitation=ex;
+end
+if isfield(sources,"aperture") && isstruct(sources.aperture)
+    aperture=sources.aperture;
+    for i=1:numel(aperture)
+        if isfield(aperture(i),"axis_xyz")
+            aperture(i).axis_xyz= ...
+                asXYZRowIfVector(aperture(i).axis_xyz);
+        end
+    end
+    sources.aperture=aperture;
+end
+scenario.sources=sources;
+end
+
+function value=asXYZRowIfVector(value)
+if isnumeric(value) && isvector(value) && numel(value)==3
+    value=reshape(value,1,3);
 end
 end
