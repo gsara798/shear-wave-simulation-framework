@@ -27,20 +27,33 @@ switch backend
                 "The swsynth base config must contain one JSON object.");
         end
 
-        requested = normalizeObjects(requested);
-        volumetric = isVolumetric(requested);
-        if volumetric
-            [config, validation] = swsynth.validateConfig3D(requested);
+        if isfield(requested,"schema_version") && ...
+                string(requested.schema_version)=="2.0"
+            % Explicit V2 config. Keep the version selector in expanded
+            % sweep/run configs; never quietly route back to swsynth.run.
+            [~,validation]=swsynth.io.resolveConfigV2(requested);
+            config=requested;
+            metadata=struct("backend","swsynth", ...
+                "implementation","modular_v2", ...
+                "base_config_file",base_config_file, ...
+                "requested",requested,"validation",validation, ...
+                "spatial_dimension",validation.dimension);
         else
-            [config, validation] = swsynth.validateConfig(requested);
+            requested = normalizeObjects(requested);
+            volumetric = isVolumetric(requested);
+            if volumetric
+                [config, validation] = swsynth.validateConfig3D(requested);
+            else
+                [config, validation] = swsynth.validateConfig(requested);
+            end
+            metadata = struct();
+            metadata.backend = "swsynth";
+            metadata.implementation = "legacy";
+            metadata.base_config_file = base_config_file;
+            metadata.requested = requested;
+            metadata.validation = validation;
+            metadata.spatial_dimension = 2 + double(volumetric);
         end
-
-        metadata = struct();
-        metadata.backend = "swsynth";
-        metadata.base_config_file = base_config_file;
-        metadata.requested = requested;
-        metadata.validation = validation;
-        metadata.spatial_dimension = 2 + double(volumetric);
 
     otherwise
         error("simcampaigns:UnsupportedBackend", ...
