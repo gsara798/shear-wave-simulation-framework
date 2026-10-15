@@ -11,7 +11,13 @@ switch backend
     case "kwsim"
         outcome = executeKwsim(config,run_directory);
     case "swsynth"
-        outcome = executeSwsynth(config,run_directory);
+        if isfield(config,"schema_version") && ...
+                string(config.schema_version)=="2.0"
+            outcome = simcampaigns.backends.executeSwsynthV2( ...
+                config,run_directory);
+        else
+            outcome = executeSwsynth(config,run_directory);
+        end
     otherwise
         error("simcampaigns:UnsupportedBackend","Unsupported simulation campaign backend: %s",backend);
 end
