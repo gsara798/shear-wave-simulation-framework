@@ -11,7 +11,15 @@ for key=keys
         error("swsynth:PhaseRequestMissingField","Missing %s.",key);
     end
 end
-[tau,diagnostics] = swsynth.integrateStraightRayTravelTime( ...
-    request.cfg,request.source_xyz_m,request.target_xyz_m);
+switch string(request.geometry)
+    case "2d"
+        [tau,diagnostics] = ...
+            swsynth.phase.straight_ray.planar2d.computeTravelTime( ...
+                request.cfg,request.source_xyz_m,request.target_xyz_m);
+    case "projected3d"
+        [tau,diagnostics] = ...
+            swsynth.phase.straight_ray.projected3d.computeTravelTime( ...
+                request.cfg,request.source_xyz_m,request.target_xyz_m);
+end
 solver="straight_ray_integral_2p5d";
 end
