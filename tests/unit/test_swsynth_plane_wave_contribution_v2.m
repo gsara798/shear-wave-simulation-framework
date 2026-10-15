@@ -107,6 +107,22 @@ swsynth.propagation.plane_wave.computeContribution(req);
 verifyEqual(testCase,rng,state);
 end
 
+function testRandomPolarizationUsesExplicitStream(testCase)
+req=fixture2D();
+req.geometry="volumetric3d";
+req.direction_xyz=[1 0 0];
+req.phase.y_m=[0 .001];
+req.polarization=struct("policy","transverse_random", ...
+    "stream",RandStream("mt19937ar","Seed",53053));
+state=rng;
+a=swsynth.propagation.plane_wave.computeContribution(req);
+verifyEqual(testCase,rng,state);
+req.polarization.stream=RandStream("mt19937ar","Seed",53053);
+b=swsynth.propagation.plane_wave.computeContribution(req);
+verifyEqual(testCase,a.U_xyz,b.U_xyz);
+verifyEqual(testCase,a.polarization_xyz,b.polarization_xyz);
+end
+
 function testRejectIncompatibleDirections(testCase)
 req=fixture2D();
 req.polarization.direction_xyz=[0 0 1];
