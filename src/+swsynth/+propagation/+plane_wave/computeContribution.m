@@ -162,6 +162,13 @@ contribution=struct();
 contribution.model="plane_wave";
 contribution.geometry=geometry;
 contribution.frequency_hz=freq;
+% Include physical coordinate axes so accumulation can reject displaced
+% grids even when their arrays happen to have identical dimensions.
+contribution.x_m=x(:).';
+contribution.z_m=z(:).';
+if geometry=="volumetric3d"
+    contribution.y_m=y(:).';
+end
 contribution.direction_xyz=d;
 contribution.amplitude=amplitude;
 contribution.phase_rad=phase0;
