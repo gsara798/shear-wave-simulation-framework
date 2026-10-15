@@ -74,6 +74,9 @@ o=swsynth.propagation.synthesize(s);
 verifySize(testCase,o.U_xyz,[2 3 2 3]);
 verifyEqual(testCase,o.domain.spatial_size,[2 3 2]);
 verifyEqual(testCase,o.field.y_m,[0 .01 .02]);
+verifyTrue(testCase,isfield(o.medium,"cs_map_zyx"));
+verifyFalse(testCase,isfield(o.medium,"cs_map_zx"));
+verifyEqual(testCase,o.medium.cs_map_zyx,2*ones(2,3,2));
 verifyEqual(testCase,o.field.component_count,1);
 end
 
@@ -145,6 +148,9 @@ s.sources.excitation=struct( ...
 o=swsynth.propagation.synthesize(s);
 verifySize(testCase,o.U_xyz,[2 2 2 3]);
 verifyFalse(testCase,isfield(o.domain,"observation_y_m"));
+verifyTrue(testCase,isfield(o.medium,"cs_map_zyx"));
+verifyFalse(testCase,isfield(o.medium,"cs_map_zx"));
+verifyEqual(testCase,o.medium.cs_map_zyx,2*ones(2,2,2));
 verifyEqual(testCase,o.sources.count,2);
 end
 
