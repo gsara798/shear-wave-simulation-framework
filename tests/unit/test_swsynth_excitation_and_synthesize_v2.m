@@ -202,6 +202,17 @@ verifyError(testCase,@() swsynth.propagation.synthesize(s), ...
     "swsynth:UnsupportedSynthesisPhase");
 end
 
+function testRejectSourceObservationPlaneConflict(testCase)
+s=sphericalScenario();
+s.geometry="projected3d";
+s.sources.positions.position_xyz_m=[0 .03 0;.04 -.03 0];
+s.sources.excitation=struct("force_direction_xyz",[0 1 0;0 0 1], ...
+    "relative_amplitude",[1;1],"phase_rad",[0;pi]);
+s.sources.observation_y_m=.01;
+verifyError(testCase,@() swsynth.propagation.synthesize(s), ...
+    "swsynth:SynthesisGeometryMismatch");
+end
+
 function testRejectDuplicateSourceFrequency(testCase)
 s=sphericalScenario();
 s.sources.excitation.frequency_hz=500;
