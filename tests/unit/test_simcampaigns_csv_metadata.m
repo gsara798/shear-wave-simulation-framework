@@ -66,7 +66,7 @@ opts=detectImportOptions(csv_file, ...
     FileType="text",Delimiter=",",VariableNamingRule="preserve");
 opts.VariableNamesLine=1;
 opts.DataLines=[2 Inf];
-campaign_runs=readtable(csv_file,opts,TextType="string");
+campaign_runs=readtable(csv_file,opts);
 verifyEqual(testCase,height(campaign_runs),4);
 names=string(campaign_runs.Properties.VariableNames);
 required=["primary_object_type","primary_object_cs_m_s", ...
