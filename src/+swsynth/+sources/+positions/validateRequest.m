@@ -10,7 +10,7 @@ for key=["geometry","count"]
     end
 end
 request.geometry=string(request.geometry);
-if request.geometry=="2d"
+if isscalar(request.geometry) && request.geometry=="2d"
     request.geometry="planar2d";
 end
 if ~isscalar(request.geometry) || ...
