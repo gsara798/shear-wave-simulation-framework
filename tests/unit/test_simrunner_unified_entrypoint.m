@@ -12,6 +12,29 @@ verifyEqual(testCase,string(outcome.implementation),"modular_v2");
 verifyEqual(testCase,string(outcome.validation.geometry),"volumetric3d");
 end
 
+function testLegacySwsynthSimulationConfigIsRejected(testCase)
+root=addFrameworkPath();
+source=fullfile(root,"configs","swsynth","v2", ...
+    "homogeneous_plane_base.json");
+config=jsondecode(fileread(source));
+config=rmfield(config,"schema_version");
+tmp=string(tempname)+".json";
+id=fopen(tmp,"w");
+assert(id>=0);
+fileGuard=onCleanup(@() fclose(id));
+fprintf(id,"%s",jsonencode(config,PrettyPrint=true));
+clear fileGuard
+cleanup=onCleanup(@() deleteIfPresent(tmp)); %#ok<NASGU>
+verifyError(testCase,@() simrunner.runConfig(tmp,DryRun=true), ...
+    "swsynth:LegacyConfigUnsupported");
+end
+
+function deleteIfPresent(path)
+if isfile(path)
+    delete(path);
+end
+end
+
 function testKWaveDryRun(testCase)
 root = addFrameworkPath();
 configFile = fullfile(root,"examples","kwave","2d","inclusion","config.json");
