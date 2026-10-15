@@ -190,13 +190,13 @@ bash scripts/campaign-run configs/campaigns/swsynth/smoke/swsynth_v2_homogeneous
 
 ## Examples
 
-Active swsynth demonstrations are under `configs/swsynth/v2/` and `configs/campaigns/swsynth/smoke/`. Historical files in `examples/swsynth` are **not compatible with the V2-only backend**. k-Wave examples remain under `examples/kwave/`.
+Active swsynth demonstrations are under `configs/swsynth/v2/` and `configs/campaigns/swsynth/smoke/`. The historical `examples/swsynth` directory was removed from this branch; its files are retained in Git history/the backup worktree. k-Wave examples remain under `examples/kwave/`.
 
 ```text
 configs/swsynth/v2/                 active swsynth V2 single-run JSONs
 configs/campaigns/swsynth/smoke/    active swsynth V2 campaign
 examples/kwave/                    k-Wave examples
-examples/swsynth/                  historic, incompatible with V2-only runner
+examples/swsynth/                  REMOVED from V2 (legacy worktree only)
 ```
 
 Single-run examples contain a `config.json`. Campaign examples contain a campaign JSON plus a colocated base configuration.
