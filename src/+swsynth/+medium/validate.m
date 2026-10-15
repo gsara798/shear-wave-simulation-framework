@@ -6,6 +6,22 @@ arguments
     spec (1,1) struct
     geometry (1,1) string
 end
+if isfield(spec,"model")
+    model=string(spec.model);
+    if ~isscalar(model) || ~ismember(model, ...
+            ["isotropic_elastic_shear_speed","homogeneous_elastic"])
+        error("swsynth:UnsupportedMediumModel", ...
+            "Only isotropic elastic speed-prescribed materials are implemented.");
+    end
+end
+allowed=["model","cs_m_s","background_cs_m_s", ...
+    "combine_mode","objects","density_kg_m3"];
+unknown=setdiff(string(fieldnames(spec)),allowed);
+if ~isempty(unknown)
+    error("swsynth:UnsupportedMediumProperty", ...
+        "Unsupported medium property %s; do not silently ignore physics.", ...
+        unknown(1));
+end
 if geometry=="planar2d";geometry="2d";end
 if ~ismember(geometry,["2d","projected3d","volumetric3d"])
     error("swsynth:InvalidMediumGeometry","Unsupported medium geometry.");
@@ -16,7 +32,7 @@ if hasCs==hasBackground
     error("swsynth:InvalidMediumSpeed", ...
         "Specify exactly one of cs_m_s or background_cs_m_s.");
 end
-if hasCs;cs=double(spec.cs_m_s);else;cs=double(spec.background_cs_m_s);end
+if hasCs;cs=spec.cs_m_s;else;cs=spec.background_cs_m_s;end
 if ~isValidPositive(cs)
     error("swsynth:InvalidMediumSpeed", ...
         "Background shear speed must be a positive finite real scalar.");
@@ -137,7 +153,7 @@ end
 end
 
 function good=isValidPositive(value)
-good=isscalar(value) && isnumeric(value) && isreal(value) && ...
+good=isnumeric(value) && isscalar(value) && isreal(value) && ...
     isfinite(value) && value>0;
 end
 
@@ -145,8 +161,8 @@ function requireFinite(obj,name)
 if ~isfield(obj,name)
     error("swsynth:InvalidMediumObject","Missing inclusion field %s.",name);
 end
-v=double(obj.(name));
-if ~isscalar(v) || ~isreal(v) || ~isfinite(v)
+v=obj.(name);
+if ~isnumeric(v) || ~isscalar(v) || ~isreal(v) || ~isfinite(v)
     error("swsynth:InvalidMediumObject","%s must be finite.",name);
 end
 end
@@ -163,7 +179,8 @@ if ~isfield(obj,name)
     error("swsynth:InvalidMediumObject","Missing inclusion field %s.",name);
 end
 value=double(obj.(name));
-if ~isreal(value) || numel(value)~=count || any(~isfinite(value(:)))
+if ~isnumeric(obj.(name)) || ~isreal(value) || ...
+        numel(value)~=count || any(~isfinite(value(:)))
     error("swsynth:InvalidMediumObject", ...
         "%s must have %d finite real values.",name,count);
 end
