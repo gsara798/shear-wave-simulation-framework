@@ -10,6 +10,9 @@ for key=["geometry","count"]
     end
 end
 request.geometry=string(request.geometry);
+if request.geometry=="2d"
+    request.geometry="planar2d";
+end
 if ~isscalar(request.geometry) || ...
         ~ismember(request.geometry,["planar2d","projected3d","volumetric3d"])
     error("swsynth:InvalidSourceGeometry","Unsupported source geometry.");
