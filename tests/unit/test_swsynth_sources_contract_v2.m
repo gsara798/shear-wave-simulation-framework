@@ -26,8 +26,8 @@ end
 
 function testSeededPositionsIndependentOfGlobalRng(testCase)
 r=struct("geometry","volumetric3d","count",2, ...
-    "center_xyz_m",[0 0 0],"radius_range_m",[.02 .03], ...
-    "direction_xyz",[1 0 0;0 1 0]);
+    "method","random", ...
+    "center_xyz_m",[0 0 0],"radius_range_m",[.02 .03]);
 r.stream=RandStream("mt19937ar","Seed",101);
 a=swsynth.sources.positions.generate(r);
 rng(75);
