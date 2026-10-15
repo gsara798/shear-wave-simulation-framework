@@ -186,10 +186,10 @@ switch model
                 "Planar source and observation y positions must match.");
         end
         sourceReq.geometry=geometry;
-        sourceReq.observation_y_m=grid.observation_y_m;
-        % Volumetric domains have no observation plane; geometry is full 3D.
-        if geometry=="volumetric3d"
-            sourceReq=rmfield(sourceReq,"observation_y_m");
+        % Slice geometries share the domain observation plane. Volume
+        % geometry has no observation_y_m scalar at all.
+        if geometry~="volumetric3d"
+            sourceReq.observation_y_m=grid.observation_y_m;
         end
         sourceBundle=swsynth.sources.prepare(sourceReq);
         count=double(sourceBundle.count);
