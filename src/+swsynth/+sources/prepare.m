@@ -1,4 +1,4 @@
-function bundle = prepare(request, directions)
+function bundle = prepare(request)
 %PREPARE Assemble physical source positions, excitation and coherent apertures.
 %
 % New API: bundle = swsynth.sources.prepare(request)
@@ -9,19 +9,8 @@ function bundle = prepare(request, directions)
 % request.aperture: scalar or per-source aperture definition (optional)
 % request.streams.positions/excitation: optional independent RandStreams.
 %
-% Legacy API: swsynth.sources.prepare(cfg, directions)
-% Preserves historic draws/outputs until synthesizers are migrated.
 arguments
     request (1,1) struct
-    directions = []
-end
-if nargin==2
-    if ~isstruct(directions) || ~isscalar(directions)
-        error("swsynth:InvalidLegacyDirections", ...
-            "Legacy sources.prepare requires a direction struct.");
-    end
-    bundle=swsynth.sources.compat.prepareLegacy(request,directions);
-    return;
 end
 if ~isfield(request,"geometry") || ~isfield(request,"count")
     error("swsynth:SourceBundleMissingField", ...
