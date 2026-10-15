@@ -111,6 +111,19 @@ switch cfg.propagation.model
         end
 
     case "plane_wave"
+        % Select the analytic solver from the actual directional geometry.
+        % Legacy local_k_distance is retained as the analytical alias here.
+        planeGeometry = "2d";
+        if cfg.directions.space == "three_dimensional"
+            planeGeometry = "projected3d";
+        end
+        selectedSolver = swsynth.phase.resolveSolver( ...
+            "plane_wave",cfg.propagation.phase_model,planeGeometry);
+        if ~ismember(selectedSolver, ...
+                ["homogeneous_plane_2d","homogeneous_projected_3d"])
+            error("swsynth:PhaseRoutingUnsupported", ...
+                "Unsupported plane-wave phase solver.");
+        end
         wavefield = swsynth.propagation.plane_wave.synthesizeObserved2D( ...
             cfg,maps,requestedDirections);
 
