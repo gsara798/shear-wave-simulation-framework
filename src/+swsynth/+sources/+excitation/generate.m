@@ -17,7 +17,15 @@ end
 geometry="";
 if isfield(request,"geometry")
     geometry=string(request.geometry);
+    if ~isscalar(geometry)
+        error("swsynth:InvalidExcitationGeometry", ...
+            "geometry must be a scalar string.");
+    end
     if geometry=="2d"; geometry="planar2d"; end
+    if ~ismember(geometry,["planar2d","projected3d","volumetric3d"])
+        error("swsynth:InvalidExcitationGeometry", ...
+            "Unsupported excitation geometry %s.",geometry);
+    end
 end
 stream=[];
 if isfield(request,"stream")
