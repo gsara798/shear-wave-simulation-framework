@@ -10,17 +10,13 @@ maps = swsynth.buildMediumMaps3D(cfg);
 
 switch cfg.propagation.model
     case "plane_wave"
-        switch cfg.propagation.phase_model
-            case "homogeneous_analytic"
+        solver = swsynth.phase.resolveSolver( ...
+            "plane_wave",cfg.propagation.phase_model,"volumetric3d");
+        switch solver
+            case "homogeneous_plane_3d"
                 field = swsynth.synthesizePlaneWave3D(cfg);
-
-            case "volumetric_eikonal"
-                field = swsynth.synthesizeVolumetricEikonal3D(cfg, maps);
-
-            otherwise
-                error("swsynth:UnsupportedVolumetricPhaseModel", ...
-                    "Unsupported volumetric phase model: %s.", ...
-                    cfg.propagation.phase_model);
+            case "volumetric_eikonal_3d"
+                field = swsynth.synthesizeVolumetricEikonal3D(cfg,maps);
         end
 
     case "spherical_wave"
