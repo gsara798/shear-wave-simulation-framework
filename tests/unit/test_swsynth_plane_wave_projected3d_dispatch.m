@@ -53,6 +53,7 @@ end
 
 function cfg = smallPlanarConfig()
 cfg = swsynth.defaultConfig();
+cfg.propagation.model = "plane_wave";
 cfg.domain.Lx_m = .006; cfg.domain.Lz_m = .006;
 cfg.domain.dx_m = .001; cfg.domain.dz_m = .001;
 cfg.directions.space = "three_dimensional";
