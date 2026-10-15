@@ -1,0 +1,99 @@
+{
+  "schema_version": "2.0",
+  "scenario": "v2_two_spherical_sources",
+  "seed": 53053,
+  "geometry": "projected3d",
+  "domain": {
+    "x_m": [
+      0.01,
+      0.011,
+      0.012,
+      0.013,
+      0.014,
+      0.015,
+      0.016,
+      0.017,
+      0.018,
+      0.019,
+      0.02,
+      0.021,
+      0.022
+    ],
+    "z_m": [
+      0.01,
+      0.011,
+      0.012,
+      0.013,
+      0.014,
+      0.015,
+      0.016,
+      0.017,
+      0.018,
+      0.019,
+      0.02,
+      0.021,
+      0.022
+    ],
+    "observation_y_m": 0
+  },
+  "medium": {
+    "cs_m_s": 2,
+    "objects": []
+  },
+  "excitation": {
+    "frequency_hz": 500,
+    "quantity": "relative_motion"
+  },
+  "propagation": {
+    "model": "spherical_wave",
+    "phase_method": "analytical",
+    "geometric_decay_exponent": 0,
+    "normalization": "sqrt_count"
+  },
+  "sources": {
+    "count": 2,
+    "positions": {
+      "method": "explicit",
+      "position_xyz_m": [
+        [
+          0,
+          0.03,
+          0
+        ],
+        [
+          0.04,
+          -0.03,
+          0
+        ]
+      ]
+    },
+    "excitation": {
+      "force_direction_xyz": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "relative_amplitude": [
+        1,
+        1
+      ],
+      "phase_policy": "random_uniform",
+      "force_policy": "fixed",
+      "amplitude_policy": "fixed"
+    }
+  },
+  "measurement": {
+    "axis_xyz": [
+      0,
+      0,
+      1
+    ]
+  }
+}
