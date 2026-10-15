@@ -246,6 +246,23 @@ verifyError(tc,@() simcampaigns.backends.executeRun(legacy,"swsynth", ...
 end
 
 
+function testLegacySwsynthRejectedByEveryPublicV2Entry(testCase)
+file=fullfile(testCase.TestData.root,"configs","swsynth","v2", ...
+    "homogeneous_plane_base.json");
+legacy=jsondecode(fileread(file));
+legacy=rmfield(legacy,"schema_version");
+tempFile=string(tempname)+".json";
+writeTestJson(tempFile,legacy);
+guard=onCleanup(@() clean(tempFile,""));
+verifyError(testCase, ...
+    @() simcampaigns.backends.loadBaseConfig(tempFile,"swsynth"), ...
+    "swsynth:LegacyConfigUnsupported");
+verifyError(testCase, ...
+    @() simrunner.runConfig(tempFile,DryRun=true,Backend="swsynth"), ...
+    "swsynth:LegacyConfigUnsupported");
+clear guard
+end
+
 function writeTestJson(file,value)
 fid=fopen(file,"w");
 if fid<0; error("test:WriteFailed","Cannot create campaign.");end
