@@ -85,9 +85,8 @@ verifyEqual(testCase,out.geometry,"projected3d");
 verifySize(testCase,out.U_xyz,[3 4 3]);
 end
 
-function testComplexSignsAcrossDifferentPolarizations(testCase)
+function testDifferentPolarizationsStayVectorial(testCase)
 request=fixture();
-a=component(request,0,1);
 request.polarization.explicit_polarization_xyz=[0 1 0];
 request.geometry="projected3d";
 % In projected3d, Y polarization is allowed for X incidence.
