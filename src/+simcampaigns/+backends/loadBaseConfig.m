@@ -27,33 +27,14 @@ switch backend
                 "The swsynth base config must contain one JSON object.");
         end
 
-        if isfield(requested,"schema_version") && ...
-                string(requested.schema_version)=="2.0"
-            % Explicit V2 config. Keep the version selector in expanded
-            % sweep/run configs; never quietly route back to swsynth.run.
-            [~,validation]=swsynth.io.resolveConfigV2(requested);
-            config=requested;
-            metadata=struct("backend","swsynth", ...
-                "implementation","modular_v2", ...
-                "base_config_file",base_config_file, ...
-                "requested",requested,"validation",validation, ...
-                "spatial_dimension",validation.dimension);
-        else
-            requested = normalizeObjects(requested);
-            volumetric = isVolumetric(requested);
-            if volumetric
-                [config, validation] = swsynth.validateConfig3D(requested);
-            else
-                [config, validation] = swsynth.validateConfig(requested);
-            end
-            metadata = struct();
-            metadata.backend = "swsynth";
-            metadata.implementation = "legacy";
-            metadata.base_config_file = base_config_file;
-            metadata.requested = requested;
-            metadata.validation = validation;
-            metadata.spatial_dimension = 2 + double(volumetric);
-        end
+        swsynth.io.requireV2Config(requested);
+        [~,validation]=swsynth.io.resolveConfigV2(requested);
+        config=requested;
+        metadata=struct("backend","swsynth", ...
+            "implementation","modular_v2", ...
+            "base_config_file",base_config_file, ...
+            "requested",requested,"validation",validation, ...
+            "spatial_dimension",validation.dimension);
 
     otherwise
         error("simcampaigns:UnsupportedBackend", ...
@@ -62,28 +43,3 @@ end
 
 end
 
-function tf = isVolumetric(config)
-tf = isfield(config,"domain") && isstruct(config.domain) && ...
-    isfield(config.domain,"Ly_m") && isfield(config.domain,"dy_m");
-end
-
-function config = normalizeObjects(config)
-
-if ~isfield(config, "medium") || ...
-        ~isstruct(config.medium) || ...
-        ~isfield(config.medium, "objects")
-    return
-end
-
-objects = config.medium.objects;
-
-if isempty(objects)
-    config.medium.objects = {};
-elseif isstruct(objects)
-    config.medium.objects = reshape(num2cell(objects), [], 1);
-elseif ~iscell(objects)
-    error("simcampaigns:InvalidSwsynthObjects", ...
-        "medium.objects must decode to an object array.");
-end
-
-end
