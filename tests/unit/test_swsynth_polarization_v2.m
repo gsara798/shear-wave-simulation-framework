@@ -144,20 +144,24 @@ verifyEqual(testCase,vecnorm(out.radial_direction_xyz,2,2),ones(2,1), ...
 end
 
 
-function testProjectedRandomAgreesWithLegacyGaussianSampler(testCase)
+function testProjectedRandomMatchesIndependentGaussianProjection(testCase)
 directions=[1 0 0;0 0 1;1 1 1;0 1 0];
-previous=rng;
-cleanup=onCleanup(@() rng(previous));
-rng(53053,"twister");
-[expected,~]=swsynth.propagation.projected3d. ...
-    sampleTransversePolarization(directions);
-rng(53053,"twister");
+directions=directions./vecnorm(directions,2,2);
+globalBefore=rng;
+expectedStream=RandStream("mt19937ar","Seed",53053);
+actualStream=RandStream("mt19937ar","Seed",53053);
+candidate=randn(expectedStream,size(directions,1),3);
+perpendicular=candidate-sum(candidate.*directions,2).*directions;
+expected=perpendicular./vecnorm(perpendicular,2,2);
 request=struct("model","plane_wave","geometry","projected3d", ...
-    "policy","transverse_random","direction_xyz",directions);
+    "policy","transverse_random","direction_xyz",directions, ...
+    "stream",actualStream);
 actual=swsynth.polarization.compute(request);
 verifyEqual(testCase,actual.vector_xyz,expected,"AbsTol",1e-14);
+verifyEqual(testCase,sum(actual.vector_xyz.*directions,2), ...
+    zeros(size(directions,1),1),"AbsTol",1e-14);
+verifyEqual(testCase,rng,globalBefore);
 end
-
 
 function testPlanarPreferredFallbackStaysInXZ(testCase)
 request=struct("model","plane_wave","geometry","2d", ...
