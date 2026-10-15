@@ -18,7 +18,7 @@ wavefield_sample = swsynth.io.buildWavefieldSampleV2(result,scenario);
 - `+propagation/+plane_wave/computeContribution.m`, `+propagation/+spherical/+point_source/computeContribution.m`: one coherent contribution
 - `+propagation/accumulate.m`, `synthesize.m`: vector field assembly
 - `+observation/projectComponent.m`: signed axis projection
-- `+io/buildWavefieldSampleV2.m`: sample adapter; legacy campaign runner not migrated
+- `+io/buildWavefieldSampleV2.m`, `+io/resolveConfigV2.m`: V2 sample adapter and JSON configuration resolver; **schema-2 swsynth campaigns are now integrated and smoke-tested**
 - `+numerics/+eikonal`: actual numerical Eikonal kernels; **not duplicate/legacy**.
 
 ## Old code still present (temporarily)
