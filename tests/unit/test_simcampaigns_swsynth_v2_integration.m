@@ -233,14 +233,18 @@ verifyError(tc,@() simcampaigns.backends.validateRun(config,"swsynth"), ...
     "swsynth:V2SeedRequired");
 end
 
-function testLegacyBackendStillUsesOldVersion(tc)
-file=fullfile(tc.TestData.root,"configs","swsynth", ...
-    "homogeneous_campaign_base.json");
-cfg=jsondecode(fileread(file));
-o=simcampaigns.backends.validateRun(cfg,"swsynth");
-verifyEqual(tc,o.backend,"swsynth");
-verifyFalse(tc,isfield(o,"implementation"));
+function testLegacySwsynthConfigRejectedWithoutLegacyFallback(tc)
+file=fullfile(tc.TestData.root,"configs","swsynth","v2", ...
+    "homogeneous_plane_base.json");
+legacy=jsondecode(fileread(file));
+legacy=rmfield(legacy,"schema_version");
+verifyError(tc,@() simcampaigns.backends.validateRun(legacy,"swsynth"), ...
+    "swsynth:LegacyConfigUnsupported");
+verifyError(tc,@() simcampaigns.backends.executeRun(legacy,"swsynth", ...
+    string(tempname)), ...
+    "swsynth:LegacyConfigUnsupported");
 end
+
 
 function writeTestJson(file,value)
 fid=fopen(file,"w");
