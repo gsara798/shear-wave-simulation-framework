@@ -4,11 +4,12 @@ end
 
 function testSwsynthDryRun(testCase)
 root = addFrameworkPath();
-configFile = fullfile(root,"examples","swsynth","volumetric3d","inclusion","config.json");
+configFile = fullfile(root,"configs","swsynth","v2","volumetric3d_heterogeneous_eikonal.json");
 outcome = simrunner.runConfig(configFile,DryRun=true);
 verifyEqual(testCase,string(outcome.status),"dry_run_valid");
 verifyEqual(testCase,string(outcome.backend),"swsynth");
-verifyEqual(testCase,double(outcome.config_resolved.domain.Ly_m),0.02,"AbsTol",1e-12);
+verifyEqual(testCase,string(outcome.implementation),"modular_v2");
+verifyEqual(testCase,string(outcome.validation.geometry),"volumetric3d");
 end
 
 function testKWaveDryRun(testCase)
@@ -22,12 +23,12 @@ end
 function testPublicCampaignDryRun(testCase)
 root = addFrameworkPath();
 addpath(root);
-campaignFile = fullfile(root,"examples","swsynth","projected3d", ...
-    "campaign_field_regimes","campaign.json");
+campaignFile = fullfile(root,"configs","campaigns","swsynth","smoke", ...
+    "swsynth_v2_homogeneous_smoke.json");
 report = run_campaign(campaignFile,DryRun=true);
 verifyTrue(testCase,report.valid);
 verifyEqual(testCase,string(report.backend),"swsynth");
-verifyEqual(testCase,double(report.run_count),6);
+verifyEqual(testCase,double(report.run_count),4);
 verifyEqual(testCase,double(report.failed_count),0);
 end
 
