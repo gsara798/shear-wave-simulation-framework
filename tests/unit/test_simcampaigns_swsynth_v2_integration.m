@@ -99,6 +99,22 @@ wavefield.validateSample(loaded.wavefield_sample);
 clear guard
 end
 
+function testV2FiguresUseSavedWavefieldSample(tc)
+cfgFile=fullfile(tc.TestData.root,"configs","swsynth","v2", ...
+    "homogeneous_plane_base.json");
+outputRoot=string(tempname);
+guard=onCleanup(@() clean("",outputRoot));
+out=simrunner.runConfig(cfgFile,OutputRoot=outputRoot, ...
+    PlotFigures=true,FigureVisible="off",GeneratePdf=false);
+verifyTrue(tc,isfile(out.paths.wavefield_sample));
+verifyTrue(tc,isfile(fullfile(out.paths.run,"figures","sws.png")));
+verifyTrue(tc,isfile(fullfile(out.paths.run, ...
+    "figures","wavefield_real.png")));
+verifyTrue(tc,isfile(fullfile(out.paths.run, ...
+    "figures","wavefield_phase.png")));
+clear guard
+end
+
 function testSeededRandomSphericalV2RunIsReproducible(tc)
 cfgFile=fullfile(tc.TestData.root,"configs","swsynth","v2", ...
     "two_sources_projected3d.json");
