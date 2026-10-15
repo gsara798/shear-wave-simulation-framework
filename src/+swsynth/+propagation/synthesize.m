@@ -244,7 +244,13 @@ result.excitation=drive;
 result.propagation=struct( ...
     "model",model,"phase_method",method, ...
     "normalization",normalization, ...
+    "reference_cs_m_s",background, ...
     "spatial_phase_sign",wavefield.phase_sign);
+if model=="spherical_wave"
+    result.propagation.geometric_decay_exponent=exponent;
+elseif method=="eikonal" && isfield(prop,"solver_options")
+    result.propagation.solver_options=prop.solver_options;
+end
 result.component_count=wavefield.component_count;
 result.field=wavefield;
 result.U_xyz=wavefield.U_xyz;
