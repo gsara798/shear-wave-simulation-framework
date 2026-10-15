@@ -199,6 +199,15 @@ verifyError(tc, ...
     "swsynth:V2AnalyticalRequiresHomogeneous");
 end
 
+function testUnseededStochasticCampaignRejectedInDryRun(tc)
+file=fullfile(tc.TestData.root,"configs","swsynth","v2", ...
+    "two_sources_projected3d.json");
+config=jsondecode(fileread(file));
+config=rmfield(config,"seed");
+verifyError(tc,@() simcampaigns.backends.validateRun(config,"swsynth"), ...
+    "swsynth:V2SeedRequired");
+end
+
 function testLegacyBackendStillUsesOldVersion(tc)
 file=fullfile(tc.TestData.root,"configs","swsynth", ...
     "homogeneous_campaign_base.json");
