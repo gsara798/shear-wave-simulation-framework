@@ -97,11 +97,13 @@ if model=="plane_wave"
         error("swsynth:V2InvalidIncidentWaves", ...
             "Plane waves require incidence, and may not have sources.");
     end
+    validateIncidenceWithoutSynthesis(scenario.incidence,geometry);
 else
     if ~isfield(scenario,"sources") || isfield(scenario,"incidence")
         error("swsynth:V2InvalidPointSources", ...
             "Spherical waves require sources, and may not have incidence.");
     end
+    validateSourcesWithoutSynthesis(scenario.sources,geometry,grid);
 end
 if geometry=="volumetric3d"
     cs=maps.cs_map_zyx;
@@ -164,4 +166,84 @@ end
 meta.spatial_size=grid.spatial_size;
 meta.validation_scope="configuration_material_and_routing";
 meta.valid=true;
+end
+
+function validateIncidenceWithoutSynthesis(inc,geometry)
+if ~isstruct(inc) || ~isscalar(inc) || ...
+        ~isfield(inc,"direction_xyz") || ~isfield(inc,"polarization")
+    error("swsynth:V2InvalidIncidentWaves", ...
+        "incidence requires direction_xyz and polarization.");
+end
+allowed=["direction_xyz","polarization","relative_amplitude","phase_rad"];
+if ~isempty(setdiff(string(fieldnames(inc)),allowed))
+    error("swsynth:V2InvalidIncidentWaves", ...
+        "Unsupported incidence configuration property.");
+end
+d=inc.direction_xyz;
+if ~isnumeric(d) || ~ismatrix(d) || size(d,2)~=3 || ...
+        isempty(d) || any(~isfinite(d(:))) || ~isreal(d) || ...
+        any(vecnorm(d,2,2)<=eps)
+    error("swsynth:V2InvalidIncidentWaves", ...
+        "direction_xyz must contain nonzero finite N-by-3 vectors.");
+end
+n=size(d,1);
+if geometry=="2d" && any(abs(d(:,2))>1e-10)
+    error("swsynth:V2InvalidIncidentWaves", ...
+        "Planar directions must have zero out-of-plane component.");
+end
+for f=["relative_amplitude","phase_rad"]
+    if isfield(inc,f)
+        values=inc.(f);
+        if ~isnumeric(values) || ~isreal(values) || ...
+                ~isvector(values) || ...
+                ~ismember(numel(values),[1,n]) || ...
+                any(~isfinite(values(:)))
+            error("swsynth:V2InvalidIncidentWaves", ...
+                "%s must contain one or N finite real values.",f);
+        end
+        if f=="relative_amplitude" && any(values(:)<0)
+            error("swsynth:V2InvalidIncidentWaves", ...
+                "Relative amplitudes must be nonnegative.");
+        end
+    end
+end
+pol=inc.polarization;
+if ~isstruct(pol) || ~isscalar(pol) || ~isfield(pol,"policy")
+    error("swsynth:V2InvalidIncidentWaves", ...
+        "polarization.policy is required.");
+end
+if string(pol.policy)=="transverse_explicit" && ...
+        isfield(pol,"explicit_polarization_xyz") && ...
+        size(pol.explicit_polarization_xyz,1)==1 && n>1
+    pol.explicit_polarization_xyz=repmat( ...
+        pol.explicit_polarization_xyz,n,1);
+end
+pol.model="plane_wave";
+pol.geometry=geometry;
+pol.direction_xyz=d;
+swsynth.polarization.validate(pol);
+end
+
+function validateSourcesWithoutSynthesis(source,geometry,grid)
+if ~isstruct(source) || ~isscalar(source) || ...
+        ~isfield(source,"positions") || ...
+        ~isfield(source,"excitation")
+    error("swsynth:V2InvalidPointSources", ...
+        "sources needs positions and excitation.");
+end
+% Use independent local streams: dry-run checks geometry/forces/positions
+% and coherent apertures without modifying the global RNG or wavefields.
+req=source;
+req.geometry=geometry;
+if geometry~="volumetric3d"
+    req.observation_y_m=grid.observation_y_m;
+end
+if isfield(req,"streams")
+    error("swsynth:V2ConfigUnexpectedField", ...
+        "JSON configurations must not contain RandStream objects.");
+end
+req.streams=struct( ...
+    "positions",RandStream("mt19937ar","Seed",401), ...
+    "excitation",RandStream("mt19937ar","Seed",402));
+swsynth.sources.prepare(req);
 end
