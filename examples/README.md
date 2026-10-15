@@ -1,156 +1,43 @@
-# Examples
+# Examples and configuration entry points
 
-The examples are organized by simulation dimensionality and geometry.
+This branch uses **modular swsynth V2 only**. The historical `examples/swsynth/` tree contains V1 JSONs and old generated artifacts. It is not an executable V2 demonstration; legacy material belongs in the separate preserved worktree. **Do not run those V1 examples on `develop/v2`.**
 
-```text
-examples/
-├── swsynth/
-│   ├── 2d/
-│   │   └── homogeneous/
-│   ├── projected3d/
-│   │   ├── inclusion/
-│   │   ├── bilayer/
-│   │   └── campaign_field_regimes/
-│   └── volumetric3d/
-│       ├── homogeneous/
-│       ├── inclusion/
-│       └── bilayer/
-└── kwave/
-    ├── 2d/
-    │   ├── homogeneous/
-    │   ├── inclusion/
-    │   └── bilayer/
-    └── 3d/
-        ├── homogeneous/
-        ├── inclusion/
-        └── bilayer/
-```
+## Active swsynth V2 examples
 
-Each single-run example contains a `config.json`. Run examples from the repository root with the public runner rather than changing into example directories.
+Single-run JSONs live in `configs/swsynth/v2/`:
+- `homogeneous_plane_base.json`: directional plane-wave superposition in 2D
+- `two_sources_projected3d.json`: two coherent physical point sources
+- `projected3d_heterogeneous_eikonal.json`: heterogeneous projected 3D plane-wave Eikonal
+- `volumetric3d_heterogeneous_eikonal.json`: heterogeneous volumetric 3D plane-wave Eikonal
 
-## Setup once per MATLAB session
+The campaign fixture is `configs/campaigns/swsynth/smoke/swsynth_v2_homogeneous_smoke.json`. It references the 2D base configuration and sweeps material speed and frequency across four runs.
 
 ```matlab
 setup_simulation_framework
-```
-
-For k-Wave:
-
-```matlab
-setup_simulation_framework( ...
-    KWavePath="/absolute/path/to/k-wave-toolbox-version-1.4.1")
-```
-
-## Run one example
-
-Synthetic volumetric inclusion:
-
-```matlab
 outcome = run_simulation( ...
-    "examples/swsynth/volumetric3d/inclusion/config.json");
-```
-
-k-Wave 2D inclusion:
-
-```matlab
+    "configs/swsynth/v2/volumetric3d_heterogeneous_eikonal.json", ...
+    DryRun=true);
 outcome = run_simulation( ...
-    "examples/kwave/2d/inclusion/config.json");
-```
-
-Validate without executing:
-
-```matlab
-outcome = run_simulation( ...
-    "examples/kwave/3d/bilayer/config.json", ...
+    "configs/swsynth/v2/homogeneous_plane_base.json", ...
+    PlotFigures=true);
+report = run_campaign( ...
+    "configs/campaigns/swsynth/smoke/swsynth_v2_homogeneous_smoke.json", ...
     DryRun=true);
 ```
 
-## Run a campaign
+The **simulation** JSON must specify `"schema_version": "2.0"`; campaign JSONs use their independent campaign schema.
 
-Validate the public field-regime campaign:
+## k-Wave examples (unchanged)
 
-```matlab
-report = run_campaign( ...
-    "examples/swsynth/projected3d/campaign_field_regimes/campaign.json", ...
-    DryRun=true);
-```
-
-Execute or resume it:
+Public k-Wave examples remain under `examples/kwave/2d/` and `examples/kwave/3d/`.
 
 ```matlab
-report = run_campaign( ...
-    "examples/swsynth/projected3d/campaign_field_regimes/campaign.json");
+setup_simulation_framework(KWavePath="/absolute/path/to/k-wave-toolbox-version-1.4.1")
+outcome = run_simulation("examples/kwave/2d/inclusion/config.json");
 ```
 
-The example convention is:
+## Standard data contract
 
-```text
-directional  -> 1 direction
-intermediate -> 16 directions
-diffuse      -> 128 directions
-```
+Both backends export `data/wavefield_sample.mat` with `wavefield_sample`, plus configuration, validation, summary JSON and optional plots/PDF. For V2, `wavefield.data_zx` and `data_zyx` are projections of complex vector relative-motion fields; the local material truth map is `k=2*pi*f/c_s`, not an REQ estimate.
 
-These are example settings for increasing angular complexity, not universal physical thresholds.
-
-## Dimensionality
-
-- `swsynth/2d`: two-dimensional directions and output `U(z,x)`.
-- `swsynth/projected3d`: 3D directions/polarization observed on a 2D `U(z,x)` plane.
-- `swsynth/volumetric3d`: true volumetric `U(z,y,x)`.
-- `kwave/2d`: 2D elastic k-Wave solver.
-- `kwave/3d`: 3D elastic k-Wave solver with volumetric `wavefield_sample` output.
-
-## Standard single-run output
-
-By default, output is created next to the JSON:
-
-```text
-<example>/outputs/<scenario>_<timestamp>/
-├── config/
-├── data/
-│   ├── wavefield_sample.mat
-│   └── run_summary.json
-├── figures/
-├── validation/
-└── report/              # when requested
-```
-
-k-Wave can retain additional native solver artifacts inside the same run.
-
-## Standard figures
-
-Planar samples:
-
-```text
-sws.png
-wavefield_real.png
-wavefield_phase.png
-wavefield_amplitude.png
-```
-
-Volumetric samples additionally include:
-
-```text
-sws_crossplanes.png
-wavefield_real_crossplanes.png
-wavefield_phase_crossplanes.png
-wavefield_amplitude_crossplanes.png
-```
-
-Synthetic runs may include `directions.png`. k-Wave 3D runs may include `source_geometry.png`.
-
-## Terminal runners
-
-Single run:
-
-```bash
-bash scripts/sim-run examples/kwave/2d/inclusion/config.json
-```
-
-Campaign:
-
-```bash
-bash scripts/campaign-run examples/swsynth/projected3d/campaign_field_regimes/campaign.json
-```
-
-The `run_example.m` files are thin interactive wrappers only. The root-level `run_simulation` and `run_campaign` functions are the recommended public API.
+Unit/integration validation of modular swsynth is described in `docs/architecture/V2_AUDIT_POST_CAMPAIGN_INTEGRATION_20261015.md`. The numerical Eikonal solver and k-Wave backend remain separate.
