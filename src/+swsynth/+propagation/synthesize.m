@@ -131,7 +131,7 @@ if isfield(scenario,"execution")
         error("swsynth:InvalidExecution", ...
             "execution.parallel must be a logical scalar.");
     end
-    w=4;
+    w=inf; % Use all workers in the active/default MATLAB pool.
     if isfield(opts,"num_workers")
         w=double(opts.num_workers);
         if ~isnumeric(opts.num_workers) || ~isscalar(w) || ...
