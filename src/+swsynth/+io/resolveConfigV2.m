@@ -44,6 +44,35 @@ if isfield(scenario,"incidence") && isstruct(scenario.incidence) && ...
     inc=rmfield(inc,"sampling");
     scenario.incidence=inc;
 end
+% Resolve optional phase policy for plane-wave incidence using an isolated
+% local RNG stream; DryRun and repeated runs do not modify global RNG.
+if isfield(scenario,"incidence") && isstruct(scenario.incidence) && ...
+        isscalar(scenario.incidence) && isfield(scenario.incidence,"phase_policy")
+    inc=scenario.incidence;
+    policy=string(inc.phase_policy);
+    if ~isscalar(policy) || ~ismember(policy,["fixed","random_uniform"])
+        error("swsynth:V2InvalidPhasePolicy", ...
+            "incidence.phase_policy must be fixed or random_uniform.");
+    end
+    if policy=="random_uniform"
+        if isfield(inc,"phase_rad")
+            error("swsynth:V2InvalidPhasePolicy", ...
+                "Use phase_policy=random_uniform or phase_rad, not both.");
+        end
+        if ~isfield(config,"seed") || ~isnumeric(config.seed) || ...
+                ~isscalar(config.seed) || ~isfinite(config.seed) || ...
+                config.seed<0 || config.seed~=fix(config.seed) || ...
+                config.seed>2^32-1
+            error("swsynth:V2SeedRequired", ...
+                "Random incident phases require a valid config.seed.");
+        end
+        n=size(inc.direction_xyz,1);
+        stream=RandStream("mt19937ar","Seed",double(config.seed));
+        inc.phase_rad=2*pi*rand(stream,n,1);
+    end
+    inc=rmfield(inc,"phase_policy");
+    scenario.incidence=inc;
+end
 % JSON arrays of material objects become MATLAB struct arrays; the medium
 % contract expects a cell array of scalar struct objects.
 if isstruct(scenario.medium) && isscalar(scenario.medium) && ...
