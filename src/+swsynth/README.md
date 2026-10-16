@@ -17,7 +17,7 @@ Or run a schema-2 simulation JSON through `simrunner.runConfig` / `run_simulatio
 |---|---|
 | `+domain` | Spatial grid and observation plane |
 | `+medium` | Background shear speed, material maps, inclusions |
-| `+excitation` | Shared harmonic frequency and temporal/spatial convention |
+| `+excitation` | Solver implementation for the `harmonic` configuration block (shared frequency and temporal/spatial convention) |
 | `+sources` | Physical source positions, amplitudes, phases, force vectors, coherent apertures |
 | `+phase/+analytical` | Homogeneous planar/projected/volumetric plane and spherical travel time |
 | `+phase/+eikonal`, `+numerics/+eikonal` | Projected/volumetric heterogeneous **plane-wave** Eikonal and Fast Sweeping |
