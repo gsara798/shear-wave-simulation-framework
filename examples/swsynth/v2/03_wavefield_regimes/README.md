@@ -58,3 +58,13 @@ Individual incident waves can be computed independently with MATLAB Parallel Com
 The same option also applies to independent physical point sources. `num_workers` is a positive integer and limits workers used by the `parfor` loop; it does not control the number of waves or physical sources. With `parallel: false`, execution remains serial, even if `num_workers` is set. Random plane-wave transverse polarizations are sampled before entering the parallel loop so worker scheduling does not alter the realization. Component fields are accumulated after the loop in a fixed order.
 
 Note that many simultaneous 3D contributions can increase memory usage; use serial execution or fewer workers if memory is limited.
+
+## Parallel multiwave campaign
+
+`diffuse_projected3d_parallel.json` is the same 64-wave projected 3D case with `execution.parallel=true` and `num_workers=4`. `configs/campaigns/swsynth/examples/many_plane_waves_parallel.json` sweeps 400, 500 and 600 Hz. The three campaign runs execute sequentially while each run computes its 64 wave contributions using `parfor`. MATLAB Parallel Computing Toolbox is required.
+
+```matlab
+setup_simulation_framework
+report=run_campaign("configs/campaigns/swsynth/examples/many_plane_waves_parallel.json",DryRun=true);
+report=run_campaign("configs/campaigns/swsynth/examples/many_plane_waves_parallel.json");
+```
