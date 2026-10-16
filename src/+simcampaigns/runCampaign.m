@@ -56,6 +56,20 @@ if level=="campaign"
         error("simcampaigns:ParallelToolboxRequired", ...
             "Campaign parallelism requires Parallel Computing Toolbox.");
     end
+    % V7.3 MAT-file saving is unsupported on thread-based workers.
+    % Campaign workers persist wavefield_sample.mat, so use processes.
+    pool=gcp("nocreate");
+    if ~isempty(pool) && isa(pool,"parallel.ThreadPool")
+        delete(pool);
+        pool=[];
+    end
+    if isempty(pool)
+        pool=parpool("Processes",workers);
+    elseif pool.NumWorkers<workers
+        error("simcampaigns:InsufficientProcessWorkers", ...
+            "Active process pool has %d workers; requested %d.", ...
+            pool.NumWorkers,workers);
+    end
     eligible=false(expansion.run_count,1);
     for k=1:expansion.run_count
         dir=string(records(k).run_directory);
