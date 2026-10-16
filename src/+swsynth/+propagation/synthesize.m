@@ -1,6 +1,6 @@
 function result = synthesize(scenario)
 %SYNTHESIZE Modular harmonic vector shear-wave synthesis (V2).
-% Required: geometry, domain, medium, excitation, propagation.
+% Required: geometry, domain, medium, harmonic, propagation.
 % plane_wave requires incidence.direction_xyz and incidence.polarization.
 % spherical_wave requires sources request for sources.prepare V2.
 %
@@ -13,18 +13,18 @@ function result = synthesize(scenario)
 arguments
     scenario (1,1) struct
 end
-for field=["geometry","domain","medium","excitation","propagation"]
+for field=["geometry","domain","medium","harmonic","propagation"]
     if ~isfield(scenario,field)
         error("swsynth:SynthesisMissingField", ...
             "Missing V2 scenario field %s.",field);
     end
 end
-allowedScenario=["geometry","domain","medium","excitation", ...
+allowedScenario=["geometry","domain","medium","harmonic", ...
     "propagation","sources","incidence"];
 unknownScenario=setdiff(string(fieldnames(scenario)),allowedScenario);
 if ~isempty(unknownScenario)
     error("swsynth:UnsupportedSynthesisField", ...
-        "Unsupported V2 scenario field %s; use excitation.frequency_hz for the harmonic drive.", ...
+        "Unsupported V2 scenario field %s; use harmonic.frequency_hz for the harmonic drive.", ...
         unknownScenario(1));
 end
 geometry=canonicalGeometry(scenario.geometry);
@@ -45,7 +45,7 @@ end
 domainReq.geometry=geometry;
 grid=swsynth.domain.buildGrid(domainReq);
 maps=swsynth.medium.buildMaps(grid,scenario.medium);
-drive=swsynth.excitation.resolve(scenario.excitation);
+drive=swsynth.excitation.resolve(scenario.harmonic);
 
 if ~isstruct(scenario.propagation) || ~isscalar(scenario.propagation) || ...
         ~isfield(scenario.propagation,"model")
@@ -194,7 +194,7 @@ switch model
                  isstruct(sourceReq.excitation) && ...
                  isfield(sourceReq.excitation,"frequency_hz"))
             error("swsynth:DuplicateSynthesisFrequency", ...
-                "Specify frequency only as scenario.excitation.frequency_hz.");
+                "Specify frequency only as scenario.harmonic.frequency_hz.");
         end
         if geometry=="volumetric3d"
             if isfield(sourceReq,"observation_y_m")
