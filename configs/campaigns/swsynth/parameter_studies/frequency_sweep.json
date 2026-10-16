@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.1",
+  "backend": "swsynth",
+  "campaign_name": "swsynth_v2_frequency_sweep",
+  "base_config": "examples/swsynth/v2/06_parameter_studies/plane_wave_base.json",
+  "output": {
+    "directory": "outputs/campaigns"
+  },
+  "sweep": [
+    {
+      "path": "harmonic.frequency_hz",
+      "values": [
+        300,
+        400,
+        500,
+        600,
+        700
+      ]
+    }
+  ]
+}
