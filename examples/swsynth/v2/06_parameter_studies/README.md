@@ -4,7 +4,7 @@ This family illustrates reproducible, single-variable studies of synthetic harmo
 
 The base simulation is `plane_wave_base.json`: 16 plane-wave directions on a deterministic Fibonacci sphere, no forced in-plane directions, random transverse polarizations and seeded uniform random phases. The observation is the z component in a homogeneous 24 × 24 mm x-z plane. The grid spacing is 0.4 mm, and the baseline is f=500 Hz, cs=2 m/s. The background contains no objects; propagation uses homogeneous analytical phase.
 
-The campaign JSON files live under `configs/campaigns/swsynth/parameter_studies/`:
+The campaign JSON files live under `examples/swsynth/v2/06_parameter_studies/`:
 
 | Campaign | Swept variable | Values | What to inspect |
 | --- | --- | --- | --- |
@@ -19,7 +19,7 @@ The campaign JSON files live under `configs/campaigns/swsynth/parameter_studies/
 
 ```matlab
 setup_simulation_framework
-file="configs/campaigns/swsynth/parameter_studies/frequency_sweep.json";
+file="examples/swsynth/v2/06_parameter_studies/frequency_sweep.json";
 dry=run_campaign(file,DryRun=true);
 report=run_campaign(file,ParallelLevel="campaign",NumWorkers=4,PlotFigures=true);
 ```
