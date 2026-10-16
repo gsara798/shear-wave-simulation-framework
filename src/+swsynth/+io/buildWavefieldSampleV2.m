@@ -23,7 +23,7 @@ arguments
     options (1,1) struct = struct()
 end
 
-needed=["geometry","domain","medium","harmonic","propagation", ...
+needed=["geometry","domain","medium","excitation","propagation", ...
     "U_xyz","quantity","model"];
 for field=needed
     if ~isfield(result,field)
