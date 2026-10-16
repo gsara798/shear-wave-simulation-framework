@@ -126,6 +126,9 @@ if ~isnumeric(csMap) || ~isreal(csMap) || ...
         "Material speeds and observed phasor must be finite.");
 end
 kLocal=2*pi*f./double(csMap);
+if isfield(result.propagation,"material_dispersion")
+    kLocal(:)=real(result.propagation.material_dispersion.wavenumber_rad_m);
+end
 validMask=isfinite(observed) & isfinite(csMap) & (csMap>0);
 
 sample=struct();
@@ -224,6 +227,10 @@ sample.propagation.normalization=string(result.propagation.normalization);
 sample.propagation.reference_cs_m_s=result.propagation.reference_cs_m_s;
 sample.propagation.component_count=result.component_count;
 sample.propagation.k_map_definition="local_material_2pi_f_over_cs";
+if isfield(result.propagation,"material_dispersion")
+    sample.propagation.k_map_definition="real_complex_constitutive_wavenumber";
+    sample.propagation.material_dispersion=result.propagation.material_dispersion;
+end
 sample.propagation.k_map_is_eikonal_phase_gradient=false;
 sample.propagation.spatial_phase_sign=result.excitation.spatial_phase_sign;
 if isfield(result.propagation,"geometric_decay_exponent")
