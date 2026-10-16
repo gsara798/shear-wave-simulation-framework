@@ -5,7 +5,7 @@ end
 function testAngularCampaignsDryRun(tc)
 root=repoRoot();
 addpath(fullfile(root,"src"));
-folder=fullfile(root,"configs","campaigns","swsynth","parameter_studies");
+folder=fullfile(root,"examples","swsynth","v2","06_parameter_studies");
 names=["angular_aperture_plane_waves.json", ...
     "angular_aperture_spherical_sources.json"];
 for name=names
