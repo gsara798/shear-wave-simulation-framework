@@ -14,6 +14,16 @@ original=jsondecode(fileread(file));
 verifyFalse(tc,isfield(original,"execution"));
 end
 
+function testParallelWithoutWorkerLimit(tc)
+root=repoRoot();
+addpath(fullfile(root,"src"));
+file=fullfile(root,"examples","swsynth","v2", ...
+    "02_point_sources","random_excitation_points_projected3d.json");
+out=simrunner.runConfig(file,DryRun=true,Parallel=true);
+verifyTrue(tc,out.config_resolved.execution.parallel);
+verifyFalse(tc,isfield(out.config_resolved.execution,"num_workers"));
+end
+
 function testInvalidWorkerCount(tc)
 root=repoRoot();
 addpath(fullfile(root,"src"));
