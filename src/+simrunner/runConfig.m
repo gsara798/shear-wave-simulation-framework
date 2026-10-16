@@ -148,7 +148,7 @@ else
     else
         summary.spatial_dimension = 2;
     end
-    summary.frequency_hz = nestedNumeric(config,["excitation","frequency_hz"]);
+    summary.frequency_hz = nestedNumeric(config,["harmonic","frequency_hz"]);
     summary.background_cs_m_s = nestedNumeric(config,["medium","cs_m_s"]);
     if isnan(summary.background_cs_m_s)
         summary.background_cs_m_s = nestedNumeric(config,["medium","background_cs_m_s"]);
