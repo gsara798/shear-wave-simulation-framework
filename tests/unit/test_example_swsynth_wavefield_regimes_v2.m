@@ -40,6 +40,26 @@ verifyError(tc,@()swsynth.incidence.sampleDirections(s,"projected3d"), ...
     "swsynth:InvalidDirectionSampling");
 end
 
+function testRandomPhasesReproducibleAndRngUntouched(tc)
+root=repoRoot();
+addpath(fullfile(root,"src"));
+file=fullfile(root,"examples","swsynth","v2", ...
+    "03_wavefield_regimes","diffuse_projected3d.json");
+cfg=jsondecode(fileread(file));
+prior=rng;
+[a,~]=swsynth.io.resolveConfigV2(cfg);
+verifyEqual(tc,rng,prior);
+[b,~]=swsynth.io.resolveConfigV2(cfg);
+verifyEqual(tc,a.incidence.phase_rad,b.incidence.phase_rad);
+verifyEqual(tc,numel(a.incidence.phase_rad),cfg.incidence.sampling.count);
+verifyGreaterThan(tc,numel(unique(a.incidence.phase_rad)),1);
+cfg.seed=cfg.seed+1;
+[c,~]=swsynth.io.resolveConfigV2(cfg);
+verifyNotEqual(tc,a.incidence.phase_rad,c.incidence.phase_rad);
+cfg=rmfield(cfg,"seed");
+verifyError(tc,@()swsynth.io.resolveConfigV2(cfg),"swsynth:V2SeedRequired");
+end
+
 function root=repoRoot()
 root=fileparts(fileparts(fileparts(mfilename("fullpath"))));
 end
