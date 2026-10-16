@@ -4,7 +4,7 @@ end
 
 function setupOnce(testCase)
 repo=fileparts(fileparts(fileparts(mfilename("fullpath"))));
-folder=fullfile(repo,"analysis","synthesizer_v2");
+folder=fullfile(repo,"tests","helpers");
 addpath(folder);
 testCase.addTeardown(@() rmpath(folder));
 end
