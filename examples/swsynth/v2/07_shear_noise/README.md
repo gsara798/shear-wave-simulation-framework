@@ -34,3 +34,18 @@ out=run_simulation(f,PlotFigures=true);
 
 - **Shear attenuation** should live under `+swsynth/+propagation/+attenuation`, with distinct mechanisms for bulk viscoelastic attenuation and interface-induced transmission/amplitude loss. The original `simcore-wave` implements a ray-integrated `exp(-integral(alpha ds))`, an empirical interface shadow and a shear-impedance-based transmission-only approximation. Neither interface model generates reflected fields. Adapting these correctly requires compatible material/density maps and per-path geometry and is **not implemented here**.
 - **Ultrasound readout noise** should live under `+swsynth/+observation/+ultrasound` and can eventually support full time-domain Boukraa-like noise and a separately validated faster equivalent-phasor model. This stage is **not implemented here**.
+
+## Controlled noise sweep: one plane wave
+
+The files `single_plane_wave_noise_base.json` and `single_plane_wave_noise_sweep.json` define a seven-run campaign with **one +x traveling plane shear wave**, z-directed polarization, no source jitter, and exactly the same clean field and noise seed in every run.
+
+Only `shear_noise.propagation_relative_std` changes: **0, 0.002, 0.006, 0.015, 0.03, 0.06, 0.12**. All runs use 0.75 mm spatial noise correlation. The zero-noise case is a control and reports infinite SNR when the clean and noisy fields coincide. Relative standard deviation is not a prescribed SNR.
+
+```matlab
+setup_simulation_framework
+campaign="examples/swsynth/v2/07_shear_noise/single_plane_wave_noise_sweep.json";
+run_campaign(campaign,DryRun=true);
+report=run_campaign(campaign,ParallelLevel="campaign",NumWorkers=4,PlotFigures=true);
+```
+
+Read `data/run_summary.json` in each run directory for `shear_noise_snr_db`, and compare `wavefield_sample.mat` against `shear_clean_reference.mat`. The perturbation is a spatially correlated complex phasor disturbance **after mechanical projection**, not a modeled ultrasound acquisition or physically propagated scattering.
