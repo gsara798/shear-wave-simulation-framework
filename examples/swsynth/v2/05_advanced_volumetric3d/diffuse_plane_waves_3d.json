@@ -1,0 +1,47 @@
+{
+  "schema_version": "2.0",
+  "seed": 53053,
+  "geometry": "volumetric3d",
+  "domain": {
+    "Lx_m": 0.012,
+    "Ly_m": 0.012,
+    "Lz_m": 0.012,
+    "dx_m": 0.0006,
+    "dy_m": 0.0006,
+    "dz_m": 0.0006
+  },
+  "harmonic": {
+    "frequency_hz": 500,
+    "quantity": "relative_motion"
+  },
+  "propagation": {
+    "model": "plane_wave",
+    "phase_method": "analytical",
+    "normalization": "sqrt_count"
+  },
+  "incidence": {
+    "sampling": {
+      "count": 24,
+      "count_in_plane": 0,
+      "method": "fibonacci",
+      "support": "full_sphere"
+    },
+    "phase_policy": "random_uniform",
+    "polarization": {
+      "policy": "transverse_random"
+    },
+    "relative_amplitude": 1
+  },
+  "measurement": {
+    "axis_xyz": [
+      0,
+      0,
+      1
+    ]
+  },
+  "scenario": "volume_diffuse_plane_waves",
+  "medium": {
+    "cs_m_s": 2,
+    "objects": []
+  }
+}
