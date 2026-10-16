@@ -27,6 +27,13 @@ for name=cases
 end
 end
 
+function testProcessPoolRequirementDocumented(tc)
+root=repoRoot();
+source=fileread(fullfile(root,"src","+simcampaigns","runCampaign.m"));
+verifyTrue(tc,contains(source,'parpool("Processes",workers)'));
+verifyTrue(tc,contains(source,'parallel.ThreadPool'));
+end
+
 function root=repoRoot()
 root=fileparts(fileparts(fileparts(mfilename("fullpath"))));
 end
