@@ -15,7 +15,7 @@ verifyTrue(testCase,all(arrayfun(@(r) ...
 counts=arrayfun(@(r) size(r.config.incidence.direction_xyz,1),runs);
 verifyEqual(testCase,counts,2*ones(size(counts)));
 frequencies=sort(arrayfun(@(r) ...
-    r.config.excitation.frequency_hz,runs));
+    r.config.harmonic.frequency_hz,runs));
 verifyEqual(testCase,frequencies(:),[400;400;500;500]);
 end
 
