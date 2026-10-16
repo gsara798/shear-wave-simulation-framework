@@ -49,9 +49,9 @@
   },
   "measurement": {
     "axis_xyz": [
-      1,
       0,
-      0
+      0,
+      1
     ]
   }
 }
