@@ -49,14 +49,16 @@ verifyEqual(tc,bundle.aperture.node_count,7);
 verifyEqual(tc,sum(bundle.aperture.node_weight),1,"AbsTol",1e-12);
 end
 
-function testSingleSourceXForceAndXObservation(tc)
+function testSingleSourceXForceAndZObservation(tc)
 root=repoRoot();
 addpath(fullfile(root,"src"));
 folder=fullfile(root,"examples","swsynth","v2","02_point_sources");
 original=jsondecode(fileread(fullfile(folder,"single_point_projected3d.json")));
 variant=jsondecode(fileread(fullfile(folder,"single_point_projected3d_force_x.json")));
 verifyEqual(tc,double(variant.sources.excitation.force_direction_xyz(:)),[1;0;0]);
-verifyEqual(tc,double(variant.measurement.axis_xyz(:)),[1;0;0]);
+verifyEqual(tc,double(variant.measurement.axis_xyz(:)),[0;0;1]);
+verifyEqual(tc,double(variant.measurement.axis_xyz(:)), ...
+    double(original.measurement.axis_xyz(:)));
 verifyEqual(tc,double(variant.sources.positions.position_xyz_m(:)), ...
     double(original.sources.positions.position_xyz_m(:)));
 verifyEqual(tc,string(variant.geometry),"projected3d");
