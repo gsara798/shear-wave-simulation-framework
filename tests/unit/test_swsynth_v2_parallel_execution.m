@@ -47,6 +47,27 @@ parallel=swsynth.propagation.synthesize(s);
 verifyEqual(tc,parallel.U_xyz,serial.U_xyz,"AbsTol",1e-12);
 end
 
+function testPointSourceParallelEqualsSerial(tc)
+if exist("parpool","file")~=2
+    return
+end
+root=repoRoot();
+addpath(fullfile(root,"src"));
+p=fullfile(root,"examples","swsynth","v2", ...
+    "02_point_sources","two_coherent_points_projected3d.json");
+cfg=jsondecode(fileread(p));
+[s,~]=swsynth.io.resolveConfigV2(cfg);
+s.execution=struct("parallel",false,"num_workers",2);
+old=rng;
+restore=onCleanup(@()rng(old)); %#ok<NASGU>
+rng(cfg.seed,"twister");
+a=swsynth.propagation.synthesize(s);
+s.execution.parallel=true;
+rng(cfg.seed,"twister");
+b=swsynth.propagation.synthesize(s);
+verifyEqual(tc,a.U_xyz,b.U_xyz,"AbsTol",1e-12);
+end
+
 function root=repoRoot()
 root=fileparts(fileparts(fileparts(mfilename("fullpath"))));
 end
