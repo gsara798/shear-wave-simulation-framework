@@ -38,6 +38,6 @@ outcome = run_simulation("examples/kwave/2d/inclusion/config.json");
 
 ## Standard data contract
 
-Both backends export `data/wavefield_sample.mat` with `wavefield_sample`, plus configuration, validation, summary JSON and optional plots/PDF. For V2, `wavefield.data_zx` and `data_zyx` are projections of complex vector relative-motion fields; the local material truth map is `k=2*pi*f/c_s`, not an REQ estimate.
+Both backends export `data/wavefield_sample.mat` with `wavefield_sample`, plus configuration, validation, summary JSON and optional plots/PDF. For V2, `wavefield.data_zx` and `data_zyx` are projections of complex vector relative-motion fields; the local material wavenumber truth map follows `k=2*pi*f/c_s`.
 
 Unit/integration validation of modular swsynth is described in `docs/architecture/V2_AUDIT_POST_CAMPAIGN_INTEGRATION_20261015.md`. The numerical Eikonal solver and k-Wave backend remain separate.
