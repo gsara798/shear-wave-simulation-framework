@@ -5,7 +5,7 @@ These examples use **physical force sources** (`sources.positions` and `sources.
 | Example | What changes |
 | --- | --- |
 | `single_point_projected3d.json` | One off-plane z-directed force; 2D x-z observation |
-| `single_point_projected3d_force_x.json` | Same source position with x-directed force and x-axis observation |
+| `single_point_projected3d_force_x.json` | Same source position with x-directed force and z-axis observation |
 | `two_coherent_points_projected3d.json` | Two sources, equal phase and amplitude |
 | `two_out_of_phase_points_projected3d.json` | Same sources with relative phase pi |
 | `two_force_orientations_projected3d.json` | Same source positions; z and y force directions |
@@ -29,7 +29,7 @@ run_simulation(file,DryRun=true);
 out=run_simulation(file,PlotFigures=true);
 ```
 
-Change the filename to run another case. To isolate the effect of force and observation orientation, compare `single_point_projected3d.json` (z-force, z-readout) with `single_point_projected3d_force_x.json` (x-force, x-readout). Since both change together, this is not a controlled test of force orientation alone; for that, hold the measurement axis fixed. Standard figures include complex amplitude, phase, real and imaginary phasor components, and four real-time snapshots. The full run exports `data/wavefield_sample.mat`.
+Change the filename to run another case. To isolate the effect of force and observation orientation, compare `single_point_projected3d.json` (z-force, z-readout) with `single_point_projected3d_force_x.json` (x-force, z-readout). Both cases measure the z component, so the comparison isolates the change in applied force orientation. Standard figures include complex amplitude, phase, real and imaginary phasor components, and four real-time snapshots. The full run exports `data/wavefield_sample.mat`.
 
 ## Interpreting the results
 
