@@ -16,11 +16,17 @@ files.sws = fullfile(figureDirectory,"sws.png");
 files.field = fullfile(figureDirectory,"wavefield_real.png");
 files.phase = fullfile(figureDirectory,"wavefield_phase.png");
 files.amplitude = fullfile(figureDirectory,"wavefield_amplitude.png");
+files.imaginary = fullfile(figureDirectory,"wavefield_imag.png");
+files.snapshots = fullfile(figureDirectory,"wavefield_snapshots.png");
 
 exportOne(@() simviz.plotSws(sample,Visible=visibility),files.sws,options.ResolutionDPI);
 exportOne(@() simviz.plotField(sample,Visible=visibility),files.field,options.ResolutionDPI);
 exportOne(@() simviz.plotPhase(sample,Visible=visibility),files.phase,options.ResolutionDPI);
 exportOne(@() simviz.plotAmplitude(sample,Visible=visibility),files.amplitude,options.ResolutionDPI);
+exportOne(@() simviz.plotComplexTimeView(sample,"imaginary",Visible=visibility), ...
+    files.imaginary,options.ResolutionDPI);
+exportOne(@() simviz.plotComplexTimeView(sample,"snapshots",Visible=visibility), ...
+    files.snapshots,options.ResolutionDPI);
 
 if isfield(sample,"directions") && isfield(sample.directions,"xyz") && ~isempty(sample.directions.xyz)
     files.directions = fullfile(figureDirectory,"directions.png");
