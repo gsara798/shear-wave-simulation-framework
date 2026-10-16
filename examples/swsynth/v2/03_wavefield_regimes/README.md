@@ -43,3 +43,18 @@ out=run_simulation(fullfile(folder,"diffuse_projected3d.json"),PlotFigures=true)
 ```
 
 Inspect `directions.png`, amplitude, phase and snapshots. The `sws.png` plot displays the prescribed material shear-wave-speed map. To verify spectral angular coverage, inspect the spatial Fourier spectrum of the complex field in `wavefield_sample.mat`; the number of configured incident directions alone does not establish diffuse **observed** energy.
+
+## Optional parallel execution
+
+Individual incident waves can be computed independently with MATLAB Parallel Computing Toolbox. Parallel execution is **off by default**. Add this top-level field to any V2 `swsynth` configuration:
+
+```json
+"execution": {
+  "parallel": true,
+  "num_workers": 4
+}
+```
+
+The same option also applies to independent physical point sources. `num_workers` is a positive integer and limits workers used by the `parfor` loop; it does not control the number of waves or physical sources. With `parallel: false`, execution remains serial, even if `num_workers` is set. Random plane-wave transverse polarizations are sampled before entering the parallel loop so worker scheduling does not alter the realization. Component fields are accumulated after the loop in a fixed order.
+
+Note that many simultaneous 3D contributions can increase memory usage; use serial execution or fewer workers if memory is limited.
