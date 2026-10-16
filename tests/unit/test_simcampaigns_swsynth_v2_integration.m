@@ -144,6 +144,18 @@ verifyTrue(tc,isfile(fullfile(out.paths.run, ...
 clear guard
 end
 
+function testPointSourceFiguresIncludePositions(tc)
+cfgFile=fullfile(tc.TestData.root,"configs","swsynth","v2", ...
+    "two_sources_projected3d.json");
+outputRoot=string(tempname);
+guard=onCleanup(@() clean("",outputRoot));
+out=simrunner.runConfig(cfgFile,OutputRoot=outputRoot, ...
+    PlotFigures=true,FigureVisible="off",GeneratePdf=false);
+verifyTrue(tc,isfile(fullfile(out.paths.run,"figures","source_positions.png")));
+verifyFalse(tc,isfile(fullfile(out.paths.run,"figures","directions.png")));
+clear guard
+end
+
 function testSeededRandomSphericalV2RunIsReproducible(tc)
 cfgFile=fullfile(tc.TestData.root,"configs","swsynth","v2", ...
     "two_sources_projected3d.json");
