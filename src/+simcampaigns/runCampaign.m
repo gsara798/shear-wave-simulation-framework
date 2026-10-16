@@ -5,6 +5,8 @@ arguments
     campaign_file {mustBeTextScalar}
     options.Resume (1,1) logical = true
     options.ContinueOnError (1,1) logical = true
+    options.ParallelLevel (1,1) string = "sources"
+    options.NumWorkers (1,1) double = 4
     options.Executor (1,1) function_handle = ...
         @simcampaigns.backends.executeRun
 end
@@ -29,6 +31,96 @@ ensureDirectory(campaign_directory);
 
 report = publishState( ...
     expansion, campaign_directory, records, runs);
+
+level=options.ParallelLevel;
+if ~ismember(level,["sources","campaign","none"])
+    error("simcampaigns:InvalidParallelLevel", ...
+        "ParallelLevel must be sources, campaign or none.");
+end
+workers=options.NumWorkers;
+if ~isfinite(workers) || workers~=fix(workers) || workers<1
+    error("simcampaigns:InvalidWorkerCount","NumWorkers must be a positive integer.");
+end
+if level=="campaign"
+    % All manifest and summary writes occur on the client, never workers.
+    % A worker writes only to its unique run directory.
+    for k=1:numel(runs)
+        if isfield(runs(k).config,"execution") && ...
+                isfield(runs(k).config.execution,"parallel") && ...
+                runs(k).config.execution.parallel
+            error("simcampaigns:NestedParallelism", ...
+                "Disable execution.parallel in the base simulation when ParallelLevel=campaign.");
+        end
+    end
+    if exist("parpool","file")~=2
+        error("simcampaigns:ParallelToolboxRequired", ...
+            "Campaign parallelism requires Parallel Computing Toolbox.");
+    end
+    eligible=false(expansion.run_count,1);
+    for k=1:expansion.run_count
+        dir=string(records(k).run_directory);
+        marker=fullfile(dir,"campaign_run.json");
+        [state,message]=inspectExistingRun(dir,marker,runs(k).hash_sha256);
+        if state=="completed" && options.Resume
+            records(k).status="skipped_completed";
+            records(k).outcome_status=readOutcomeStatus(marker);
+        elseif state~="absent"
+            records(k).status="blocked_existing";
+            records(k).error_identifier="simcampaigns:CampaignRunDirectoryExists";
+            records(k).error_message=message;
+        else
+            eligible(k)=true;
+            records(k).status="running";
+        end
+    end
+    report=publishState(expansion,campaign_directory,records,runs);
+    selected=find(eligible);
+    completed=cell(numel(selected),1);
+    % Store per-run outcomes in cells; parfor workers never publish campaign state.
+    executor=options.Executor;
+    parfor (j=1:numel(selected),workers)
+        k=selected(j);
+        run=runs(k);
+        runDir=string(records(k).run_directory);
+        try
+            outcome=executor(run.config,run.backend,runDir);
+            completed{j}=struct("outcome",outcome,"error_identifier","", ...
+                "error_message","");
+        catch ex
+            id=string(ex.identifier);
+            if strlength(id)==0;id="unidentified_error";end
+            completed{j}=struct("outcome",[],"error_identifier",id, ...
+                "error_message",replace(string(ex.message),newline," "));
+        end
+    end
+    for j=1:numel(selected)
+        k=selected(j);
+        item=completed{j};
+        run=runs(k);
+        runDir=string(records(k).run_directory);
+        marker=fullfile(runDir,"campaign_run.json");
+        try
+            if strlength(string(item.error_identifier))>0
+                error(char(item.error_identifier),"%s",item.error_message);
+            end
+            verifyExecutorOutput(item.outcome,runDir);
+            records(k).status="completed";
+            records(k).outcome_status=textField(item.outcome,"status","completed");
+            writeCompletionMarker(marker,run,records(k).outcome_status);
+        catch ex
+            records(k).status="failed";
+            records(k).error_identifier=exceptionIdentifier(ex);
+            records(k).error_message=singleLine(ex.message);
+        end
+        report=publishState(expansion,campaign_directory,records,runs);
+    end
+    report=publishState(expansion,campaign_directory,records,runs);
+    if ~options.ContinueOnError && ~report.success
+        error("simcampaigns:CampaignNotCompleted", ...
+            "Parallel campaign ended with failed or blocked runs.");
+    end
+    return
+end
 
 for index = 1:expansion.run_count
     run = runs(index);
