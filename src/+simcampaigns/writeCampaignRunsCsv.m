@@ -120,8 +120,8 @@ for index = 1:run_count
     seed(index) = numericField(config, "seed");
 
     if backend(index) == "swsynth"
-        if isfield(config,"excitation")
-            frequency_hz(index)=numericField(config.excitation,"frequency_hz");
+        if isfield(config,"harmonic")
+            frequency_hz(index)=numericField(config.harmonic,"frequency_hz");
         end
         if isfield(config, "medium")
             background_cs_m_s(index) = ...
