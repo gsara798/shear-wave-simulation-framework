@@ -31,6 +31,19 @@ scenario=rmfield(config,intersect(string(fieldnames(config)), ...
 % Normalize only known XYZ vector fields here; don't transpose N-by-3
 % matrices or mutate the general MATLAB synthesis API.
 scenario=normalizeJsonXYZVectors(scenario);
+% Expand deterministic direction specifications into the explicit V2 incidence API.
+if isfield(scenario,"incidence") && isstruct(scenario.incidence) && ...
+        isscalar(scenario.incidence) && isfield(scenario.incidence,"sampling")
+    inc=scenario.incidence;
+    if isfield(inc,"direction_xyz")
+        error("swsynth:InvalidDirectionSampling", ...
+            "Choose incidence.sampling or incidence.direction_xyz, not both.");
+    end
+    inc.direction_xyz=swsynth.incidence.sampleDirections( ...
+        inc.sampling,string(scenario.geometry));
+    inc=rmfield(inc,"sampling");
+    scenario.incidence=inc;
+end
 % JSON arrays of material objects become MATLAB struct arrays; the medium
 % contract expects a cell array of scalar struct objects.
 if isstruct(scenario.medium) && isscalar(scenario.medium) && ...
