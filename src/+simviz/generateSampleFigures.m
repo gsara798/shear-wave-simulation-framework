@@ -33,6 +33,15 @@ if isfield(sample,"directions") && isfield(sample.directions,"xyz") && ~isempty(
     exportOne(@() simviz.plotDirections(sample,Visible=visibility),files.directions,options.ResolutionDPI);
 end
 
+if isfield(sample,"sources") && isstruct(sample.sources) && ...
+        isfield(sample.sources,"sources") && ...
+        isfield(sample.sources.sources,"position_xyz_m") && ...
+        ~isempty(sample.sources.sources.position_xyz_m)
+    files.source_positions = fullfile(figureDirectory,"source_positions.png");
+    exportOne(@() simviz.plotSourcePositions(sample,Visible=visibility), ...
+        files.source_positions,options.ResolutionDPI);
+end
+
 if double(sample.spatial_dimension) == 3
     files.sws_crossplanes = fullfile(figureDirectory,"sws_crossplanes.png");
     files.wavefield_amplitude_crossplanes = fullfile(figureDirectory,"wavefield_amplitude_crossplanes.png");
