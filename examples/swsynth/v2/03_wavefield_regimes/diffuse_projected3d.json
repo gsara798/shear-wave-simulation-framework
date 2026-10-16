@@ -32,7 +32,7 @@
     },
     "relative_amplitude": 1,
     "polarization": {
-      "policy": "in_plane_sv"
+      "policy": "transverse_random"
     },
     "phase_policy": "random_uniform"
   },
