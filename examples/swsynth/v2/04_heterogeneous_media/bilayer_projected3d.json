@@ -1,0 +1,50 @@
+{
+  "schema_version": "2.0",
+  "seed": 53053,
+  "geometry": "projected3d",
+  "domain": {
+    "Lx_m": 0.024,
+    "Lz_m": 0.024,
+    "dx_m": 0.0003,
+    "dz_m": 0.0003,
+    "observation_y_m": 0
+  },
+  "harmonic": {
+    "frequency_hz": 500,
+    "quantity": "relative_motion"
+  },
+  "propagation": {
+    "model": "plane_wave",
+    "phase_method": "eikonal",
+    "normalization": "none"
+  },
+  "incidence": {
+    "direction_xyz": [
+      1,
+      0,
+      0
+    ],
+    "polarization": {
+      "policy": "in_plane_sv"
+    }
+  },
+  "measurement": {
+    "axis_xyz": [
+      0,
+      0,
+      1
+    ]
+  },
+  "scenario": "heterogeneous_bilayer_projected3d",
+  "medium": {
+    "background_cs_m_s": 2,
+    "objects": [
+      {
+        "type": "bilayer",
+        "normal_angle_rad": 0,
+        "offset_m": 0.012,
+        "cs_m_s": 3
+      }
+    ]
+  }
+}
