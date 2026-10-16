@@ -28,7 +28,7 @@ cover = figure("Visible","off","Color","w","Position",[100 100 900 1150]);
 cleanup = onCleanup(@() closeIfValid(cover));
 ax = axes(cover,"Position",[0.08 0.08 0.84 0.84]); axis(ax,"off");
 
-frequency = nestedNumber(config,["excitation","frequency_hz"]);
+frequency = nestedNumber(config,["harmonic","frequency_hz"]);
 if ~isfinite(frequency), frequency = nestedNumber(config,["source","f0_hz"]); end
 backgroundSws = nestedNumber(config,["medium","background_cs_m_s"]);
 if ~isfinite(backgroundSws), backgroundSws = nestedNumber(config,["medium","cs_m_s"]); end
