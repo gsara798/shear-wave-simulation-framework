@@ -13,6 +13,8 @@ arguments
     options.PlotFigures (1,1) logical = true
     options.FigureVisible = "off"
     options.GeneratePdf (1,1) logical = false
+    options.Parallel = []
+    options.NumWorkers = []
 end
 
 repositoryRoot = string(fileparts(mfilename("fullpath")));
@@ -36,7 +38,9 @@ outcome = simrunner.runConfig( ...
     DryRun=options.DryRun, ...
     PlotFigures=options.PlotFigures, ...
     FigureVisible=options.FigureVisible, ...
-    GeneratePdf=options.GeneratePdf);
+    GeneratePdf=options.GeneratePdf, ...
+    Parallel=options.Parallel, ...
+    NumWorkers=options.NumWorkers);
 end
 
 function tf = isAbsolutePath(value)
