@@ -1,0 +1,46 @@
+{
+  "schema_version": "2.0",
+  "scenario": "parameter_study_plane_waves",
+  "seed": 53053,
+  "geometry": "projected3d",
+  "domain": {
+    "Lx_m": 0.024,
+    "Lz_m": 0.024,
+    "dx_m": 0.0004,
+    "dz_m": 0.0004,
+    "observation_y_m": 0
+  },
+  "medium": {
+    "cs_m_s": 2,
+    "objects": []
+  },
+  "harmonic": {
+    "frequency_hz": 500,
+    "quantity": "relative_motion"
+  },
+  "propagation": {
+    "model": "plane_wave",
+    "phase_method": "analytical",
+    "normalization": "sqrt_count"
+  },
+  "incidence": {
+    "sampling": {
+      "count": 16,
+      "count_in_plane": 0,
+      "method": "fibonacci",
+      "support": "full_sphere"
+    },
+    "relative_amplitude": 1,
+    "polarization": {
+      "policy": "transverse_random"
+    },
+    "phase_policy": "random_uniform"
+  },
+  "measurement": {
+    "axis_xyz": [
+      0,
+      0,
+      1
+    ]
+  }
+}
