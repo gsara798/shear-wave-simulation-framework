@@ -33,9 +33,9 @@ report = publishState( ...
     expansion, campaign_directory, records, runs);
 
 level=options.ParallelLevel;
-if ~ismember(level,["sources","campaign","none"])
+if ~ismember(level,["sources","campaign"])
     error("simcampaigns:InvalidParallelLevel", ...
-        "ParallelLevel must be sources, campaign or none.");
+        "ParallelLevel must be sources or campaign.");
 end
 workers=options.NumWorkers;
 if ~isfinite(workers) || workers~=fix(workers) || workers<1
