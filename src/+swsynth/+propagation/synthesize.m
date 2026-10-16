@@ -20,7 +20,7 @@ for field=["geometry","domain","medium","harmonic","propagation"]
     end
 end
 allowedScenario=["geometry","domain","medium","harmonic", ...
-    "propagation","sources","incidence","execution"];
+    "propagation","sources","incidence","execution","shear_noise"];
 unknownScenario=setdiff(string(fieldnames(scenario)),allowedScenario);
 if ~isempty(unknownScenario)
     error("swsynth:UnsupportedSynthesisField", ...
