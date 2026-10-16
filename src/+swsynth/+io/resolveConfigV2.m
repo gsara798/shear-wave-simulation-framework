@@ -146,14 +146,16 @@ if isfield(scenario.propagation,"attenuation")
         error("swsynth:InvalidAttenuation","Invalid propagation.attenuation.");
     end
     if a.enabled
-        if ~isfield(a,"constitutive") || phaseMethod=="eikonal" || ...
-                false
+        if ~isfield(a,"constitutive") || phaseMethod=="eikonal"
             error("swsynth:UnsupportedAttenuation", ...
                 "Stage 1 attenuation requires homogeneous analytical propagation.");
         end
         swsynth.medium.viscoelastic.dispersion(a.constitutive,drive.frequency_hz);
-        localCS=maps.cs_map_zx;
-        if geometry=="volumetric3d";localCS=maps.cs_map_zyx;end
+        if geometry=="volumetric3d"
+            localCS=maps.cs_map_zyx;
+        else
+            localCS=maps.cs_map_zx;
+        end
         if any(abs(localCS(:)-maps.background_cs_m_s)>1e-10)
             error("swsynth:UnsupportedAttenuation","Heterogeneous attenuation is not yet supported.");
         end
