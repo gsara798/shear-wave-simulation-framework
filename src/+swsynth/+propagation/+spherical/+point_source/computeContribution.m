@@ -172,6 +172,13 @@ for j=1:nodeCount
     if decayExponent>0
         spreading=distance.^(-decayExponent);
     end
+    if isfield(request,"attenuation_np_m")
+        alpha=double(request.attenuation_np_m);
+        if ~isscalar(alpha)||~isfinite(alpha)||alpha<0
+            error("swsynth:InvalidAttenuation","attenuation_np_m must be nonnegative.");
+        end
+        spreading=spreading.*exp(-alpha*distance);
+    end
     scalar=amplitude*weights(j).*spreading.* ...
         exp(1i*(2*pi*frequency*tau+initialPhase));
     fieldXYZ=fieldXYZ+scalar.*double(pol.vector_xyz);
