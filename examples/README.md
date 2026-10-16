@@ -41,3 +41,31 @@ outcome = run_simulation("examples/kwave/2d/inclusion/config.json");
 Both backends export `data/wavefield_sample.mat` with `wavefield_sample`, plus configuration, validation, summary JSON and optional plots/PDF. For V2, `wavefield.data_zx` and `data_zyx` are projections of complex vector relative-motion fields; the local material wavenumber truth map follows `k=2*pi*f/c_s`.
 
 Unit/integration validation of modular swsynth is described in `docs/architecture/V2_AUDIT_POST_CAMPAIGN_INTEGRATION_20261015.md`. The numerical Eikonal solver and k-Wave backend remain separate.
+
+## Parallel execution: choose one level
+
+A campaign can use either of two parallelism levels, but **not both at the same time**.
+
+**Independent simulations in parallel** (the run JSONs must have `execution.parallel` absent or false):
+
+```matlab
+report=run_campaign( ...
+    "configs/campaigns/swsynth/examples/many_point_sources_campaign_parallel.json", ...
+    ParallelLevel="campaign", NumWorkers=4);
+
+report=run_campaign( ...
+    "configs/campaigns/swsynth/examples/many_plane_waves_campaign_parallel.json", ...
+    ParallelLevel="campaign", NumWorkers=4);
+```
+
+**Contributions within a simulation in parallel** (the base JSONs set `execution.parallel=true`):
+
+```matlab
+report=run_campaign( ...
+    "configs/campaigns/swsynth/examples/many_point_sources_parallel.json", ...
+    ParallelLevel="sources", NumWorkers=4);
+```
+
+For source-level parallelism, the worker count is taken from the individual simulation JSON's `execution.num_workers`, **not** from `run_campaign(...,NumWorkers=...)`; the latter controls campaign-level workers. Individual simulation source parallelism remains available with `run_simulation`.
+
+The campaign scheduler executes runs concurrently only in `ParallelLevel="campaign"`, writes each run to its own output directory and publishes campaign summary/CSV and completion markers on the client. The previous sequential scheduling remains the default. Both modes require MATLAB Parallel Computing Toolbox when the corresponding parallelism is activated. Campaign parallelism does not support nested source parallelism and rejects base configs with `execution.parallel=true` instead of silently opening nested pools. Select a distinct campaign name/output directory for each benchmark; `Resume` reuses completed runs.
