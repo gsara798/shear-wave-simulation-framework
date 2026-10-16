@@ -54,7 +54,7 @@ if ~isstruct(scenario.propagation) || ~isscalar(scenario.propagation) || ...
 end
 prop=scenario.propagation;
 allowed=["model","phase_method","normalization", ...
-    "geometric_decay_exponent","solver_options"];
+    "geometric_decay_exponent","solver_options","attenuation"];
 unknown=setdiff(string(fieldnames(prop)),allowed);
 if ~isempty(unknown)
     error("swsynth:UnsupportedSynthesisOption", ...
@@ -119,6 +119,21 @@ if (method=="analytical" || method=="homogeneous_analytic") && ~uniform
         "Analytical travel time requires a homogeneous medium; use supported Eikonal for heterogeneous plane waves.");
 end
 
+% Homogeneous elastic/Kelvin-Voigt dispersion, opt-in only.
+materialLoss=[];
+propagationSpeed=background;
+if isfield(prop,"attenuation") && isfield(prop.attenuation,"enabled") && prop.attenuation.enabled
+    a=prop.attenuation;
+    if ~isfield(a,"constitutive")
+        error("swsynth:InvalidAttenuation","attenuation.constitutive required.");
+    end
+    if ~uniform || method=="eikonal"
+        error("swsynth:UnsupportedAttenuation", ...
+            "Constitutive attenuation stage 1 supports homogeneous analytical propagation only.");
+    end
+    materialLoss=swsynth.medium.viscoelastic.dispersion(a.constitutive,drive.frequency_hz);
+    propagationSpeed=materialLoss.phase_speed_m_s;
+end
 % parfor(...,0) runs serially, without starting a worker pool.
 workerLimit=0;
 if isfield(scenario,"execution")
@@ -188,7 +203,7 @@ switch model
         end
         parfor (i=1:count,workerLimit)
             phaseRequest=struct("method",method, ...
-                "reference_cs_m_s",background, ...
+                "reference_cs_m_s",propagationSpeed, ...
                 "x_m",grid.x_m,"z_m",grid.z_m);
             if geometry=="volumetric3d"
                 phaseRequest.y_m=grid.y_m;
@@ -217,6 +232,9 @@ switch model
                 "amplitude",incidence.relative_amplitude(i), ...
                 "phase_rad",incidence.phase_rad(i), ...
                 "phase",phaseRequest,"polarization",pol);
+            if ~isempty(materialLoss)
+                req.attenuation_np_m=materialLoss.attenuation_np_m;
+            end
             components{i}=swsynth.propagation.plane_wave.computeContribution(req);
         end
     case "spherical_wave"
@@ -270,13 +288,16 @@ switch model
             req=struct("source_bundle",sourceBundle, ...
                 "source_id",i,"frequency_hz",drive.frequency_hz, ...
                 "phase",struct("method",method, ...
-                    "reference_cs_m_s",background), ...
+                    "reference_cs_m_s",propagationSpeed), ...
                 "x_m",grid.x_m,"z_m",grid.z_m, ...
                 "geometric_decay_exponent",exponent);
             if geometry=="volumetric3d"
                 req.y_m=grid.y_m;
             else
                 req.observation_y_m=grid.observation_y_m;
+            end
+            if ~isempty(materialLoss)
+                req.attenuation_np_m=materialLoss.attenuation_np_m;
             end
             components{i}=swsynth.propagation.spherical.point_source.computeContribution(req);
         end
@@ -300,6 +321,9 @@ if model=="spherical_wave"
     result.propagation.geometric_decay_exponent=exponent;
 elseif method=="eikonal" && isfield(prop,"solver_options")
     result.propagation.solver_options=prop.solver_options;
+end
+if ~isempty(materialLoss)
+    result.propagation.material_dispersion=materialLoss;
 end
 result.component_count=wavefield.component_count;
 result.field=wavefield;
