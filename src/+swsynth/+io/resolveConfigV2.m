@@ -12,14 +12,14 @@ if ~isfield(config,"schema_version") || ...
         "V2 swsynth configuration requires schema_version=2.0.");
 end
 allowed=["schema_version","scenario","seed","measurement", ...
-    "geometry","domain","medium","excitation","propagation", ...
+    "geometry","domain","medium","harmonic","propagation", ...
     "incidence","sources"];
 extra=setdiff(string(fieldnames(config)),allowed);
 if ~isempty(extra)
     error("swsynth:V2ConfigUnexpectedField", ...
         "Unsupported V2 configuration field %s.",extra(1));
 end
-required=["geometry","domain","medium","excitation","propagation"];
+required=["geometry","domain","medium","harmonic","propagation"];
 for f=required
     if ~isfield(config,f)
         error("swsynth:V2ConfigMissingField","Missing %s.",f);
@@ -65,7 +65,7 @@ end
 gridReq.geometry=geometry;
 grid=swsynth.domain.buildGrid(gridReq);
 maps=swsynth.medium.buildMaps(grid,scenario.medium);
-drive=swsynth.excitation.resolve(scenario.excitation);
+drive=swsynth.excitation.resolve(scenario.harmonic);
 
 if ~isstruct(scenario.propagation) || ...
         ~isscalar(scenario.propagation) || ...
