@@ -22,6 +22,8 @@ arguments
     options.PlotFigures (1,1) logical = true
     options.FigureVisible = "off"
     options.GeneratePdf (1,1) logical = false
+    options.Parallel = []
+    options.NumWorkers = []
 end
 
 configFile = string(configFile);
@@ -33,6 +35,7 @@ end
 configFile = absolutePath(configFile);
 config = jsondecode(fileread(configFile));
 backend = resolveBackend(config,options.Backend);
+config = applyParallelOverrides(config,backend,options.Parallel,options.NumWorkers);
 if backend=="swsynth"
     swsynth.io.requireV2Config(config);
 end
@@ -68,6 +71,40 @@ outcome = ensureStandardArtifacts(outcome,config,backend);
 fprintf("\nUnified simulation run completed.\n");
 fprintf("Backend: %s\n",backend);
 fprintf("Run:     %s\n",outcome.run_directory);
+end
+
+function config = applyParallelOverrides(config,backend,parallel,numWorkers)
+% Optional command-line overrides are applied to the in-memory configuration
+% before dry-run validation and before the run is saved.
+if isempty(parallel) && isempty(numWorkers)
+    return
+end
+if backend~="swsynth"
+    error("simrunner:ParallelUnsupportedBackend", ...
+        "Parallel and NumWorkers overrides are supported only for swsynth.");
+end
+if ~isempty(parallel) && (~islogical(parallel) || ~isscalar(parallel))
+    error("simrunner:InvalidParallelOption", ...
+        "Parallel must be a logical scalar.");
+end
+if ~isempty(numWorkers) && ...
+        (~isnumeric(numWorkers) || ~isscalar(numWorkers) || ...
+        ~isreal(numWorkers) || ~isfinite(numWorkers) || ...
+        numWorkers<1 || numWorkers~=fix(numWorkers))
+    error("simrunner:InvalidWorkerCount", ...
+        "NumWorkers must be a positive integer.");
+end
+if ~isfield(config,"execution")
+    config.execution=struct();
+end
+if ~isempty(parallel)
+    config.execution.parallel=parallel;
+elseif ~isfield(config.execution,"parallel")
+    config.execution.parallel=true;
+end
+if ~isempty(numWorkers)
+    config.execution.num_workers=numWorkers;
+end
 end
 
 function outcome = validateOnly(configFile,config,backend,outputRoot)
