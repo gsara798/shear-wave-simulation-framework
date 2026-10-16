@@ -151,6 +151,22 @@ end
 % Algebraic spatial phasor sign matches existing REQ synthetic backends.
 theta=2*pi*freq*T+phase0;
 scalarField=amplitude*exp(1i*theta);
+if isfield(request,"attenuation_np_m")
+    alpha=double(request.attenuation_np_m);
+    if ~isscalar(alpha)||~isfinite(alpha)||alpha<0
+        error("swsynth:InvalidAttenuation","attenuation_np_m must be nonnegative.");
+    end
+    % Path length measured from the first wavefront touching the FOV.
+    if geometry=="volumetric3d"
+        [ZZ,YY,XX]=ndgrid(z,y,x);
+        path=XX*d(1)+YY*d(2)+ZZ*d(3);
+    else
+        [ZZ,XX]=ndgrid(z,x);
+        path=XX*d(1)+ZZ*d(3);
+    end
+    path=path-min(path(:));
+    scalarField=scalarField.*exp(-alpha*path);
+end
 % MATLAB can collapse a zero-amplitude complex phasor to real zeros.
 % Keep the harmonic-field contract complex even for the zero field.
 scalarField=complex(real(scalarField),imag(scalarField));
