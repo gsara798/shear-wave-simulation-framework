@@ -20,7 +20,7 @@ for field=["geometry","domain","medium","harmonic","propagation"]
     end
 end
 allowedScenario=["geometry","domain","medium","harmonic", ...
-    "propagation","sources","incidence"];
+    "propagation","sources","incidence","execution"];
 unknownScenario=setdiff(string(fieldnames(scenario)),allowedScenario);
 if ~isempty(unknownScenario)
     error("swsynth:UnsupportedSynthesisField", ...
@@ -119,6 +119,36 @@ if (method=="analytical" || method=="homogeneous_analytic") && ~uniform
         "Analytical travel time requires a homogeneous medium; use supported Eikonal for heterogeneous plane waves.");
 end
 
+% parfor(...,0) runs serially, without starting a worker pool.
+workerLimit=0;
+if isfield(scenario,"execution")
+    opts=scenario.execution;
+    validFields=["parallel","num_workers"];
+    if ~isstruct(opts) || ~isscalar(opts) || ...
+            ~isempty(setdiff(string(fieldnames(opts)),validFields)) || ...
+            ~isfield(opts,"parallel") || ~islogical(opts.parallel) || ...
+            ~isscalar(opts.parallel)
+        error("swsynth:InvalidExecution", ...
+            "execution.parallel must be a logical scalar.");
+    end
+    w=4;
+    if isfield(opts,"num_workers")
+        w=double(opts.num_workers);
+        if ~isnumeric(opts.num_workers) || ~isscalar(w) || ...
+                ~isfinite(w) || w~=fix(w) || w<1
+            error("swsynth:InvalidExecution", ...
+                "execution.num_workers must be a positive integer.");
+        end
+    end
+    if opts.parallel
+        if exist("parpool","file")~=2
+            error("swsynth:ParallelToolboxRequired", ...
+                "Parallel execution requires Parallel Computing Toolbox.");
+        end
+        workerLimit=w;
+    end
+end
+
 components={};
 sourceBundle=[];
 incidence=[];
@@ -142,7 +172,21 @@ switch model
         incidence=validateIncidence(scenario.incidence);
         count=size(incidence.direction_xyz,1);
         components=cell(count,1);
-        for i=1:count
+        % Draw random polarizations on the client, in a stable order,
+        % before dispatching independent wave contributions to workers.
+        sampledP=[];
+        if string(incidence.polarization.policy)=="transverse_random"
+            sampledP=zeros(count,3);
+            for j=1:count
+                polReq=incidence.polarization;
+                polReq.model="plane_wave";
+                polReq.geometry=geometry;
+                polReq.direction_xyz=incidence.direction_xyz(j,:);
+                polResult=swsynth.polarization.compute(polReq);
+                sampledP(j,:)=polResult.vector_xyz;
+            end
+        end
+        parfor (i=1:count,workerLimit)
             phaseRequest=struct("method",method, ...
                 "reference_cs_m_s",background, ...
                 "x_m",grid.x_m,"z_m",grid.z_m);
@@ -156,7 +200,10 @@ switch model
                 phaseRequest.solver_options=prop.solver_options;
             end
             pol=incidence.polarization;
-            if string(pol.policy)=="transverse_explicit"
+            if ~isempty(sampledP)
+                pol=struct("policy","transverse_explicit", ...
+                    "explicit_polarization_xyz",sampledP(i,:));
+            elseif string(pol.policy)=="transverse_explicit"
                 explicit=double(pol.explicit_polarization_xyz);
                 if size(explicit,1)==1
                     pol.explicit_polarization_xyz=explicit;
@@ -219,7 +266,7 @@ switch model
         if isfield(prop,"geometric_decay_exponent")
             exponent=prop.geometric_decay_exponent;
         end
-        for i=1:count
+        parfor (i=1:count,workerLimit)
             req=struct("source_bundle",sourceBundle, ...
                 "source_id",i,"frequency_hz",drive.frequency_hz, ...
                 "phase",struct("method",method, ...
