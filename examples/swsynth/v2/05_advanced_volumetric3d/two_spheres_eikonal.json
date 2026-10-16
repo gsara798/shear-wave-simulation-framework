@@ -1,0 +1,70 @@
+{
+  "schema_version": "2.0",
+  "seed": 53053,
+  "geometry": "volumetric3d",
+  "domain": {
+    "Lx_m": 0.012,
+    "Ly_m": 0.012,
+    "Lz_m": 0.012,
+    "dx_m": 0.0006,
+    "dy_m": 0.0006,
+    "dz_m": 0.0006
+  },
+  "harmonic": {
+    "frequency_hz": 500,
+    "quantity": "relative_motion"
+  },
+  "propagation": {
+    "model": "plane_wave",
+    "phase_method": "eikonal",
+    "normalization": "none"
+  },
+  "incidence": {
+    "direction_xyz": [
+      1,
+      0,
+      0
+    ],
+    "polarization": {
+      "policy": "transverse_explicit",
+      "explicit_polarization_xyz": [
+        0,
+        0,
+        1
+      ]
+    }
+  },
+  "measurement": {
+    "axis_xyz": [
+      0,
+      0,
+      1
+    ]
+  },
+  "scenario": "volume_two_spheres_eikonal",
+  "medium": {
+    "background_cs_m_s": 2,
+    "objects": [
+      {
+        "type": "sphere",
+        "center_xyz_m": [
+          0.004,
+          0.006,
+          0.006
+        ],
+        "radius_m": 0.002,
+        "cs_m_s": 3
+      },
+      {
+        "type": "sphere",
+        "center_xyz_m": [
+          0.009,
+          0.006,
+          0.006
+        ],
+        "radius_m": 0.002,
+        "cs_m_s": 1.5
+      }
+    ]
+  }
+}
