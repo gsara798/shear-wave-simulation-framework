@@ -99,9 +99,9 @@ cancellationRelative=cancellationAbs / cases{2}.metrics.axial_rms;
 report=struct();
 report.schema_version="1.0";
 report.description="Harmonic V2 synthesizer: one directional, two coherent physical sources, partially angular ensemble";
-report.shared_frequency_hz=base.excitation.frequency_hz;
+report.shared_frequency_hz=base.harmonic.frequency_hz;
 report.reference_cs_m_s=base.medium.cs_m_s;
-report.expected_wavelength_m=base.medium.cs_m_s/base.excitation.frequency_hz;
+report.expected_wavelength_m=base.medium.cs_m_s/base.harmonic.frequency_hz;
 report.phase_sign=1;
 report.random_phase_seed=53053;
 report.cases=cases;
@@ -140,7 +140,7 @@ scenario.geometry="2d";
 scenario.domain=struct("x_m",(0:119)*.0002, ...
     "z_m",(0:119)*.0002,"observation_y_m",0);
 scenario.medium=struct("cs_m_s",2);
-scenario.excitation=struct("frequency_hz",500, ...
+scenario.harmonic=struct("frequency_hz",500, ...
     "quantity","relative_motion");
 end
 
