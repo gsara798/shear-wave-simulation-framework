@@ -1,0 +1,58 @@
+{
+  "schema_version": "2.0",
+  "scenario": "single_plane_elastic_reference",
+  "seed": 53053,
+  "geometry": "projected3d",
+  "domain": {
+    "Lx_m": 0.024,
+    "Lz_m": 0.024,
+    "dx_m": 0.0004,
+    "dz_m": 0.0004,
+    "observation_y_m": 0
+  },
+  "medium": {
+    "cs_m_s": 2,
+    "objects": []
+  },
+  "harmonic": {
+    "frequency_hz": 500,
+    "quantity": "relative_motion"
+  },
+  "propagation": {
+    "model": "plane_wave",
+    "phase_method": "analytical",
+    "normalization": "none",
+    "attenuation": {
+      "enabled": true,
+      "constitutive": {
+        "model": "elastic",
+        "density_kg_m3": 1000,
+        "mu_pa": 4000
+      }
+    }
+  },
+  "incidence": {
+    "direction_xyz": [
+      1,
+      0,
+      0
+    ],
+    "relative_amplitude": 1,
+    "phase_rad": 0,
+    "polarization": {
+      "policy": "transverse_explicit",
+      "explicit_polarization_xyz": [
+        0,
+        0,
+        1
+      ]
+    }
+  },
+  "measurement": {
+    "axis_xyz": [
+      0,
+      0,
+      1
+    ]
+  }
+}
