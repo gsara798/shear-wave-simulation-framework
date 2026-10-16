@@ -60,6 +60,24 @@ cfg=rmfield(cfg,"seed");
 verifyError(tc,@()swsynth.io.resolveConfigV2(cfg),"swsynth:V2SeedRequired");
 end
 
+function testThreeDimensionalDiffusePolarizationPolicy(tc)
+root=repoRoot();
+folder=fullfile(root,"examples","swsynth","v2","03_wavefield_regimes");
+names=["limited_aperture_projected3d.json", ...
+    "diffuse_projected3d.json","diffuse_volumetric3d.json"];
+for name=names
+    cfg=jsondecode(fileread(fullfile(folder,name)));
+    verifyEqual(tc,string(cfg.incidence.polarization.policy),"transverse_random");
+    verifyTrue(tc,isfield(cfg,"seed"));
+end
+names2d=["directional_2d.json","counterpropagating_2d.json", ...
+    "limited_aperture_2d.json","diffuse_2d.json"];
+for name=names2d
+    cfg=jsondecode(fileread(fullfile(folder,name)));
+    verifyEqual(tc,string(cfg.incidence.polarization.policy),"in_plane_sv");
+end
+end
+
 function root=repoRoot()
 root=fileparts(fileparts(fileparts(mfilename("fullpath"))));
 end
