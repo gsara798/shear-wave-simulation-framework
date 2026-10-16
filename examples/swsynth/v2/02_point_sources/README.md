@@ -10,6 +10,7 @@ These examples use **physical force sources** (`sources.positions` and `sources.
 | `two_out_of_phase_points_projected3d.json` | Same sources with relative phase pi |
 | `two_force_orientations_projected3d.json` | Same source positions; z and y force directions |
 | `random_excitation_points_projected3d.json` | Eight specified source positions; independently random force orientations, amplitudes and phases, fixed seed |
+| `random_excitation_points_projected3d_parallel.json` | Same eight-source scenario with optional four-worker parallel synthesis |
 | `coherent_line_aperture_projected3d.json` | One parent source expanded into seven coherent, uniformly weighted line elements |
 | `single_point_volumetric3d.json` | One physical force source, full 3D volume rather than a 2D observation plane |
 
@@ -41,3 +42,15 @@ Change the filename to run another case. To isolate the effect of force and obse
 - The `volumetric3d` case exports the full volume; standard 2D image figures display the central x-z slice.
 
 A 3D spherical source should not be interpreted as a uniform circular wave in the measurement plane: projection of vector shear radiation matters. Heterogeneous spherical Eikonal propagation is not implemented (issue #31).
+
+## Many-source parallel campaign
+
+`random_excitation_points_projected3d_parallel.json` sets `execution.parallel=true` and `num_workers=4`. The same eight physical sources and fixed seed are retained. MATLAB Parallel Computing Toolbox is required. The campaign `configs/campaigns/swsynth/examples/many_point_sources_parallel.json` sweeps the drive frequency across 400, 500, and 600 Hz. The campaign runs are sequential; **sources within each run** are evaluated with `parfor`.
+
+```matlab
+setup_simulation_framework
+report=run_campaign("configs/campaigns/swsynth/examples/many_point_sources_parallel.json",DryRun=true);
+report=run_campaign("configs/campaigns/swsynth/examples/many_point_sources_parallel.json");
+```
+
+Avoid nesting this parallel execution inside another parallel campaign executor; use one parallelism level at a time.
