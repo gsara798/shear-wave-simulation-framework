@@ -29,6 +29,8 @@ For 2D, use `method: "uniform_circle"`, `count_in_plane=count`, and `support: "f
 
 Multiwave examples use `incidence.phase_policy: "random_uniform"` and `seed: 53053`. The framework automatically samples one phase per incident wave uniformly in [0, 2π). Repeating a run with the same seed reproduces exactly the same phases; changing the seed gives a different realization. A local random stream leaves MATLAB's global RNG untouched, even during DryRun. For prescribed phases instead, omit `phase_policy` and supply `phase_rad`. A finite number of waves with quasi-uniform directions is only an approximation to an ideal statistical diffuse field; the planar quota adds intended anisotropy.
 
+Polarization: 2D examples use `in_plane_sv`, while the three projected/volumetric 3D multiwave examples use `transverse_random`. The latter samples a random transverse polarization for each incident wave; the run seed ensures repeatable realizations. The observed field remains projected onto z for the projected 3D cases.
+
 All examples: f=500 Hz, cs=2 m/s (λ=4 mm), homogeneous analytical phase, z projection, no attenuation. Projected 2D fields cover 24 × 24 mm at 0.3 mm spacing; the full volume spans 12 × 12 × 12 mm at 0.4 mm spacing.
 
 ## Run
