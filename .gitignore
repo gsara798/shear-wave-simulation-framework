@@ -8,3 +8,6 @@ k-wave-toolbox-version-*/
 # MAT files are not source code and can exceed GitHub's per-file size limit.
 archive/**/*.mat
 **/.DS_Store
+
+# Generated validation artifacts (source and tests remain versioned)
+/results/
