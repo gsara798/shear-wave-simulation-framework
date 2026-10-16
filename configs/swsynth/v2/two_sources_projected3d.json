@@ -19,10 +19,6 @@
     "cs_m_s": 2,
     "objects": []
   },
-  "excitation": {
-    "frequency_hz": 500,
-    "quantity": "relative_motion"
-  },
   "propagation": {
     "model": "spherical_wave",
     "phase_method": "analytical",
@@ -74,5 +70,9 @@
       0,
       1
     ]
+  },
+  "harmonic": {
+    "frequency_hz": 500,
+    "quantity": "relative_motion"
   }
 }
