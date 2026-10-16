@@ -81,6 +81,17 @@ if request.geometry=="planar2d" && abs(c(2)-y)>1e-10
 end
 request.center_xyz_m=c;
 request.radius_range_m=r;
+if isfield(request,"count_in_plane")
+    ni=double(request.count_in_plane);
+    if ~isnumeric(request.count_in_plane) || ~isscalar(ni) || ...
+            ~isfinite(ni) || ni~=fix(ni) || ni<0 || ni>n || ...
+            request.geometry=="planar2d" || request.method~="fibonacci" || ...
+            abs(c(2)-y)>1e-10
+        error("swsynth:InvalidPlanarSourceQuota", ...
+            "count_in_plane requires Fibonacci 3D placement centered on the observation plane and an integer from 0 to count.");
+    end
+    request.count_in_plane=ni;
+end
 
 if ~isfield(request,"support") || isempty(request.support)
     if request.geometry=="planar2d"
