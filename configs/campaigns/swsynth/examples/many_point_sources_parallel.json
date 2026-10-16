@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.1",
+  "backend": "swsynth",
+  "campaign_name": "swsynth_v2_many_point_sources_parallel",
+  "base_config": "examples/swsynth/v2/02_point_sources/random_excitation_points_projected3d_parallel.json",
+  "output": {
+    "directory": "outputs/campaigns"
+  },
+  "sweep": [
+    {
+      "path": "harmonic.frequency_hz",
+      "values": [
+        400,
+        500,
+        600
+      ]
+    }
+  ]
+}
