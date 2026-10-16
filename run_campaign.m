@@ -13,6 +13,8 @@ arguments
     options.DryRun (1,1) logical = false
     options.Resume (1,1) logical = true
     options.ContinueOnError (1,1) logical = true
+    options.ParallelLevel (1,1) string = "sources"
+    options.NumWorkers (1,1) double = 4
     options.PlotFigures (1,1) logical = true
     options.FigureVisible = "off"
 end
@@ -34,7 +36,9 @@ end
 report = simcampaigns.runCampaign( ...
     campaignFile, ...
     Resume=options.Resume, ...
-    ContinueOnError=options.ContinueOnError);
+    ContinueOnError=options.ContinueOnError, ...
+    ParallelLevel=options.ParallelLevel, ...
+    NumWorkers=options.NumWorkers);
 
 if options.PlotFigures
     visibility = simviz.normalizeVisible(options.FigureVisible);
