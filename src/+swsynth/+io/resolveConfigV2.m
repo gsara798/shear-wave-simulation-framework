@@ -138,6 +138,27 @@ if geometry=="projected3d" && model=="plane_wave" && ...
     error("swsynth:V2UnsupportedPlane", ...
         "Projected plane-wave synthesis currently requires observation_y_m=0.");
 end
+if isfield(scenario.propagation,"attenuation")
+    a=scenario.propagation.attenuation;
+    if ~isstruct(a) || ~isscalar(a) || ~isfield(a,"enabled") || ...
+            ~islogical(a.enabled) || ~isscalar(a.enabled) || ...
+            ~isempty(setdiff(string(fieldnames(a)),["enabled","constitutive"]))
+        error("swsynth:InvalidAttenuation","Invalid propagation.attenuation.");
+    end
+    if a.enabled
+        if ~isfield(a,"constitutive") || phaseMethod=="eikonal" || ...
+                false
+            error("swsynth:UnsupportedAttenuation", ...
+                "Stage 1 attenuation requires homogeneous analytical propagation.");
+        end
+        swsynth.medium.viscoelastic.dispersion(a.constitutive,drive.frequency_hz);
+        localCS=maps.cs_map_zx;
+        if geometry=="volumetric3d";localCS=maps.cs_map_zyx;end
+        if any(abs(localCS(:)-maps.background_cs_m_s)>1e-10)
+            error("swsynth:UnsupportedAttenuation","Heterogeneous attenuation is not yet supported.");
+        end
+    end
+end
 if model=="plane_wave"
     if ~isfield(scenario,"incidence") || isfield(scenario,"sources")
         error("swsynth:V2InvalidIncidentWaves", ...
