@@ -42,4 +42,4 @@ run_simulation(fullfile(folder,"diffuse_projected3d.json"),DryRun=true);
 out=run_simulation(fullfile(folder,"diffuse_projected3d.json"),PlotFigures=true);
 ```
 
-Inspect `directions.png`, amplitude, phase and snapshots. The `sws.png` plot is material ground truth, not an estimate from REQ. To verify spectral angular coverage for REQ-ML, use the saved complex `wavefield_sample.mat` and its FFT; the number of configured incident directions alone does not establish diffuse **observed** energy.
+Inspect `directions.png`, amplitude, phase and snapshots. The `sws.png` plot displays the prescribed material shear-wave-speed map. To verify spectral angular coverage, inspect the spatial Fourier spectrum of the complex field in `wavefield_sample.mat`; the number of configured incident directions alone does not establish diffuse **observed** energy.
