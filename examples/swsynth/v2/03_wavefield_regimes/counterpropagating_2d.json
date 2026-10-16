@@ -1,0 +1,46 @@
+{
+  "schema_version": "2.0",
+  "scenario": "regime_counterpropagating_2d",
+  "seed": 53053,
+  "geometry": "2d",
+  "domain": {
+    "Lx_m": 0.024,
+    "Lz_m": 0.024,
+    "dx_m": 0.0003,
+    "dz_m": 0.0003,
+    "observation_y_m": 0
+  },
+  "medium": {
+    "cs_m_s": 2,
+    "objects": []
+  },
+  "harmonic": {
+    "frequency_hz": 500,
+    "quantity": "relative_motion"
+  },
+  "propagation": {
+    "model": "plane_wave",
+    "phase_method": "analytical",
+    "normalization": "sqrt_count"
+  },
+  "incidence": {
+    "sampling": {
+      "count": 2,
+      "count_in_plane": 2,
+      "method": "uniform_circle",
+      "support": "full_circle"
+    },
+    "relative_amplitude": 1,
+    "phase_rad": 0,
+    "polarization": {
+      "policy": "in_plane_sv"
+    }
+  },
+  "measurement": {
+    "axis_xyz": [
+      0,
+      0,
+      1
+    ]
+  }
+}
