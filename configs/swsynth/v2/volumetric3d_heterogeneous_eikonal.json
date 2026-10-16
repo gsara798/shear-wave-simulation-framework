@@ -25,9 +25,6 @@
       }
     ]
   },
-  "excitation": {
-    "frequency_hz": 500
-  },
   "propagation": {
     "model": "plane_wave",
     "phase_method": "eikonal"
@@ -53,5 +50,8 @@
       0,
       1
     ]
+  },
+  "harmonic": {
+    "frequency_hz": 500
   }
 }
