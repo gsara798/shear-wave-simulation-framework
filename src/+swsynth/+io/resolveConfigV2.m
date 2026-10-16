@@ -13,7 +13,7 @@ if ~isfield(config,"schema_version") || ...
 end
 allowed=["schema_version","scenario","seed","measurement", ...
     "geometry","domain","medium","harmonic","propagation", ...
-    "incidence","sources","execution"];
+    "incidence","sources","execution","shear_noise"];
 extra=setdiff(string(fieldnames(config)),allowed);
 if ~isempty(extra)
     error("swsynth:V2ConfigUnexpectedField", ...
@@ -161,6 +161,14 @@ if phaseMethod~="eikonal" && ...
         any(abs(cs(:)-background)>1e-10*max(1,abs(background)))
     error("swsynth:V2AnalyticalRequiresHomogeneous", ...
         "Heterogeneous elastic media require supported plane-wave Eikonal.");
+end
+
+if isfield(config,"shear_noise")
+    swsynth.noise.validateConfig(config.shear_noise);
+    if config.shear_noise.enabled && ~isfield(config.shear_noise,"seed") && ~isfield(config,"seed")
+        error("swsynth:ShearNoiseSeedRequired", ...
+            "Enabled shear noise requires shear_noise.seed or config.seed.");
+    end
 end
 
 meta=struct();
