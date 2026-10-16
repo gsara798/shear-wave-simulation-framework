@@ -29,6 +29,23 @@ for name=["plane_elastic_reference.json","plane_kelvin_voigt.json"]
 end
 end
 
+function testPlaneWaveEnvelopeDecays(tc)
+addpath(fullfile(repoRoot(),"src"));
+folder=fullfile(repoRoot(),"examples","swsynth","v2","08_shear_attenuation");
+elastic=jsondecode(fileread(fullfile(folder,"plane_elastic_reference.json")));
+visco=jsondecode(fileread(fullfile(folder,"plane_kelvin_voigt.json")));
+[se,~]=swsynth.io.resolveConfigV2(elastic);
+[sv,~]=swsynth.io.resolveConfigV2(visco);
+E=swsynth.propagation.synthesize(se);
+V=swsynth.propagation.synthesize(sv);
+uE=swsynth.observation.projectComponent(E.U_xyz,[0,0,1]);
+uV=swsynth.observation.projectComponent(V.U_xyz,[0,0,1]);
+left=mean(abs(uV(:,1)));
+right=mean(abs(uV(:,end)));
+verifyGreaterThan(tc,left,right);
+verifyEqual(tc,mean(abs(uE(:,1))),mean(abs(uE(:,end))),"RelTol",1e-10);
+end
+
 function root=repoRoot()
 root=fileparts(fileparts(fileparts(mfilename("fullpath"))));
 end
