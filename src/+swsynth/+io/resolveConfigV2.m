@@ -291,6 +291,10 @@ end
 end
 
 function scenario=normalizeJsonXYZVectors(scenario)
+if isfield(scenario,"domain") && isstruct(scenario.domain) && isscalar(scenario.domain) && ...
+        isfield(scenario.domain,"origin_xyz_m")
+    scenario.domain.origin_xyz_m=asXYZRowIfVector(scenario.domain.origin_xyz_m);
+end
 % Only convert single 3-element XYZ JSON arrays to MATLAB [1,3].
 % Leave valid N-by-3 multiwave/multisource arrays intact.
 if isfield(scenario,"incidence") && isstruct(scenario.incidence) && ...
