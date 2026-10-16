@@ -5,7 +5,7 @@ end
 function testCampaignExpansionsAndDryRuns(tc)
 root=repoRoot();
 addpath(fullfile(root,"src"));
-folder=fullfile(root,"configs","campaigns","swsynth","parameter_studies");
+folder=fullfile(root,"examples","swsynth","v2","06_parameter_studies");
 names=["frequency_sweep.json","material_speed_sweep.json", ...
     "incident_wave_count_sweep.json","random_realizations.json"];
 expected=[5,4,5,5];
@@ -19,7 +19,7 @@ end
 
 function testSourceCountsAndSeeds(tc)
 root=repoRoot();
-folder=fullfile(root,"configs","campaigns","swsynth","parameter_studies");
+folder=fullfile(root,"examples","swsynth","v2","06_parameter_studies");
 [runs,~]=simcampaigns.expandCampaign(fullfile(folder,"incident_wave_count_sweep.json"));
 verifyEqual(tc,arrayfun(@(r)double(r.config.incidence.sampling.count),runs), ...
     [4;8;16;32;64]);
