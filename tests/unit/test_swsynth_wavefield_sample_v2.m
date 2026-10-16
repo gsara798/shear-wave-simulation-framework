@@ -120,7 +120,7 @@ end
 
 function testDeclaredVelocityDoesNotPretendCalibratedAmplitude(testCase)
 s=planeScenario();
-s.excitation.quantity="velocity";
+s.harmonic.quantity="velocity";
 result=swsynth.propagation.synthesize(s);
 sample=swsynth.io.buildWavefieldSampleV2(result,s);
 verifyEqual(testCase,sample.wavefield.quantity,"velocity");
@@ -151,7 +151,7 @@ end
 function testRejectScenarioFrequencyMismatch(testCase)
 s=planeScenario();
 r=swsynth.propagation.synthesize(s);
-s.excitation.frequency_hz=400;
+s.harmonic.frequency_hz=400;
 verifyError(testCase, ...
     @() swsynth.io.buildWavefieldSampleV2(r,s), ...
     "swsynth:V2SampleScenarioMismatch");
@@ -199,7 +199,7 @@ s.geometry="2d";
 s.domain=struct("x_m",[.01 .02 .03], ...
     "z_m",[.01 .02 .03],"observation_y_m",0);
 s.medium=struct("cs_m_s",2);
-s.excitation=struct("frequency_hz",500);
+s.harmonic=struct("frequency_hz",500);
 s.propagation=struct("model","plane_wave", ...
     "phase_method","analytical");
 s.incidence=struct("direction_xyz",[1 0 0], ...
