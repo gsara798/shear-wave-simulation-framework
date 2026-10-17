@@ -101,3 +101,27 @@ gradient. Uniform-speed, uniform-loss fields use exact `alpha*r` in the
 extended solver. The internal 2D source path uses a different integrator.
 Neither interface transmission/reflection nor heterogeneous loss integration
 is validated by the spatial-order benchmarks.
+
+### Exact planar-interface optical depth (projected3d external sources)
+
+For a **single sharp bilayer** in a projected3d spherical-source Eikonal
+simulation, synthesis now forwards the material geometry to the extended
+solver automatically. The coefficients on each side come from the same
+local constitutive law used for the velocity and loss maps. Each numerical
+ray segment is partitioned geometrically at the known plane, giving
+`alpha_negative*L_negative + alpha_positive*L_positive` without
+interpolating across the discontinuity. At constant speed, the full straight
+ray is evaluated exactly. If speed changes, Eikonal characteristic tracing
+remains approximate, but each segment's attenuation integral is exact for
+its piecewise-constant materials.
+
+**Scope:** external/off-plane sources that enter the extended 3D solver;
+a single unblurred bilayer, overlay composition. Other geometries and
+internal-source 2D integration retain their previous methods. This is
+intrinsic absorption only: it does not add interface transmission or
+reflected fields. It does not modify the 3D Eikonal solver itself.
+
+```matlab
+r=runtests('tests/physics/swsynth/propagation/test_planar_interface_attenuation.m');
+disp(table(r)); assertSuccess(r)
+```
