@@ -25,4 +25,9 @@ verifyTrue(tc,meta.valid);
 out=swsynth.propagation.synthesize(scenario);
 verifyTrue(tc,all(isfinite(out.U_xyz(:))));
 verifyGreaterThan(tc,max(abs(out.U_xyz(:))),0);
+% Exact source is a grid node: the unresolved far-field core is masked.
+sourcePixel=out.U_xyz(41,21,:);
+verifyEqual(tc,sourcePixel,complex(zeros(size(sourcePixel))),"AbsTol",1e-12);
+% The emitted field must remain nonzero away from that core.
+verifyGreaterThan(tc,max(abs(out.U_xyz(:,end,:)),[],"all"),0);
 end
