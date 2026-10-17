@@ -57,8 +57,8 @@ The diagnostic prints `E3_all` (error at all solver volume nodes), `E3_far` (awa
 
 ### Optional second-order fast sweeping (experimental)
 
-The 3D Eikonal kernel supports `SpatialOrder=1` (unchanged default) or
-`SpatialOrder=2` (causality-limited one-sided second-order differences,
+The 3D Eikonal kernel supports `SpatialOrder=1` (explicit legacy option) or
+`SpatialOrder=2` (current default; causality-limited one-sided second-order differences,
 with first-order fallback at boundaries or non-monotone stencils). The
 extended point-source solver forwards this option from
 `propagation.solver_options` in the example JSON.
@@ -73,9 +73,9 @@ assertSuccess(r)
 ```
 
 The benchmark reports the relative L2 timing error and runtime for both
-orders. Order 2 is experimental: neither improved accuracy nor convergence
-has been established until this comparison is run. Do not change the
-default based only on solver convergence.
+orders. Order 2 was selected as the default after homogeneous source-alignment and
+normal-incidence bilayer comparisons in October 2026. General oblique
+refraction and heterogeneous attenuation still require validation.
 
 ### Source alignment and bilayer checks before adopting second order
 
@@ -90,3 +90,14 @@ disp(table(r2)); assertSuccess(r2)
 The alignment diagnostic compares orders 1 and 2 at four grid spacings and prints actual source-to-grid offsets. Offsets matter: the extended solver constructs uniform axes using `linspace`, so the requested `GridSpacingM` is a target upper bound, not necessarily the realized spacing. This diagnostic does not assert a convergence order.
 
 The bilayer benchmark uses a normal-incidence axial first-arrival reference for a two-speed material; it also checks time monotonicity along this line and a bound against an everywhere-fast reference. This is a **limited physical sanity check**, not a general proof of interface refraction, Snell's law, or correct transmitted/reflected amplitudes. In particular, first-arrival Eikonal does not synthesize reflected waves. If a test fails, inspect the solver and geometry assumptions rather than loosening tolerances automatically.
+
+### Attenuation scope
+
+The Kelvin-Voigt constitutive law produces both phase velocity and intrinsic
+attenuation (Np/m) from the same complex wavenumber. The 3D fast-sweeping
+spatial order controls travel-time solution only; heterogeneous optical depth
+is integrated separately along characteristics estimated from the travel-time
+gradient. Uniform-speed, uniform-loss fields use exact `alpha*r` in the
+extended solver. The internal 2D source path uses a different integrator.
+Neither interface transmission/reflection nor heterogeneous loss integration
+is validated by the spatial-order benchmarks.
