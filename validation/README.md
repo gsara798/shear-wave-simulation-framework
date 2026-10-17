@@ -286,3 +286,25 @@ Validation:
 r=runtests('tests/physics/swsynth/propagation/test_sh_synthesis_interface_optin.m');
 disp(table(r)); assertSuccess(r)
 ```
+
+### Elastic P-SV mode conversion (isolated coefficients)
+
+`swsynth.propagation.interface.psvElasticCoefficients` solves four
+continuity equations (x/z displacement and normal/shear traction)
+for **SV incidence on a welded x-normal plane** in isotropic elastic
+half-spaces. It returns reflected/transmitted **P and SV displacement
+amplitudes**, boundary residual, and normal energy-flux fractions.
+Inputs include both P and S velocities, densities, frequency and incidence
+angle. Complex normal wavenumbers allow evanescent converted P branches.
+
+This model must **not** be inferred from shear velocity or Kelvin-Voigt
+shear modulus alone: P-wave properties (bulk response) are also needed.
+The implementation is deliberately *not* integrated into the generic
+synthesis pipeline, which remains SH-only for active interface amplitudes.
+It does not simulate finite sources, P/SV vector fields, curved surfaces,
+or viscoelastic P-SV interactions.
+
+```matlab
+r=runtests('tests/physics/swsynth/propagation/test_psv_elastic_interface_coefficients.m');
+disp(table(r)); assertSuccess(r)
+```
