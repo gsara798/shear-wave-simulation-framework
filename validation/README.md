@@ -167,3 +167,32 @@ disp(table(r)); assertSuccess(r)
 These regressions include an inclined plane with a truly off-plane source,
 an analytically exact optical-depth case, and a refracted-ray Fermat
 reference (diagnostic errors printed; no arbitrary error threshold yet).
+
+### Elastic SH reflection/transmission at a welded planar interface
+
+The independent function
+`swsynth.propagation.interface.shCoefficients(request)` computes
+complex displacement reflection/transmission coefficients for a
+**monochromatic elastic SH plane wave** incident on a welded plane separating
+two homogeneous isotropic elastic half-spaces. The boundary conditions are
+continuous tangential displacement and continuous tangential traction.
+Tangential wavenumber is conserved (Snell refraction). The outgoing normal
+wavenumber is chosen with nonnegative imaginary part, allowing an evanescent
+transmitted wave above the critical angle.
+
+Input properties are `frequency_hz`, `incidence_angle_rad`,
+`mu1_pa`, `rho1_kg_m3`, `mu2_pa`, and `rho2_kg_m3`.
+Reported fractions of incident *normal energy flux* satisfy
+`reflection_energy_fraction + transmission_energy_fraction = 1`
+for lossless elastic media, including total internal reflection.
+
+This first-stage component is **not yet wired into spherical-source synthesis
+or 3D polarization**, and does not simulate reflected wavefields.
+It does **not** model SV/P conversion, Kelvin-Voigt complex viscoelastic
+interface impedance, imperfect bonding, or arbitrary curved interfaces.
+Existing Eikonal/attenuation wavefield behavior is unchanged.
+
+```matlab
+r=runtests('tests/physics/swsynth/propagation/test_sh_interface_coefficients.m');
+disp(table(r)); assertSuccess(r)
+```
