@@ -63,6 +63,7 @@ solverOpts=struct();
 if isfield(options,"MaximumIterations");solverOpts.MaximumIterations=options.MaximumIterations;end
 if isfield(options,"ToleranceS");solverOpts.ToleranceS=options.ToleranceS;end
 if isfield(options,"Verbose");solverOpts.Verbose=options.Verbose;end
+if isfield(options,"SpatialOrder");solverOpts.SpatialOrder=options.SpatialOrder;end
 [T,d]=swsynth.numerics.eikonal.solveFastSweeping3D( ...
     1./c,mean(diff(xx)),mean(diff(yy)),mean(diff(zz)),initial,fixed,solverOpts);
 if ~d.converged,error("swsynth:PointSource3DEikonalDidNotConverge","Extended Eikonal failed to converge.");end
