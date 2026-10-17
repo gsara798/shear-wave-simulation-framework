@@ -46,6 +46,19 @@ verifyGreaterThan(tc,left,right);
 verifyEqual(tc,mean(abs(uE(:,1))),mean(abs(uE(:,end))),"RelTol",1e-10);
 end
 
+function testDispersiveSpeedDiffersFromElasticReference(tc)
+addpath(fullfile(repoRoot(),"src"));
+file=fullfile(repoRoot(),"examples","swsynth","v2", ...
+    "08_shear_attenuation","plane_kelvin_voigt.json");
+cfg=jsondecode(fileread(file));
+[scenario,~]=swsynth.io.resolveConfigV2(cfg);
+materialSpeed=double(scenario.medium.cs_m_s);
+result=swsynth.propagation.synthesize(scenario);
+phaseSpeed=result.propagation.material_dispersion.phase_speed_m_s;
+verifyNotEqual(tc,phaseSpeed,materialSpeed);
+verifyGreaterThan(tc,result.propagation.material_dispersion.attenuation_np_m,0);
+end
+
 function root=repoRoot()
 root=fileparts(fileparts(fileparts(mfilename("fullpath"))));
 end
