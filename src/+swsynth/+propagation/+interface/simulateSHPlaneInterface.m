@@ -31,8 +31,8 @@ if isfield(request,"interface_enabled")
     enabled=request.interface_enabled;
 end
 % 'off' retains the incident wave throughout as a no-interface reference.
-p=rmfield(request,intersect(fieldnames(request), ...
-    {"x_m","z_m","interface_x_m","interface_enabled"}));
+excluded={"x_m","z_m","interface_x_m","interface_enabled"};
+p=rmfield(request,intersect(fieldnames(request),excluded));
 coeff=swsynth.propagation.interface.shViscoelasticCoefficients(p);
 [Z,X]=ndgrid(z,x);
 d=X-xi;
