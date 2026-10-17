@@ -157,7 +157,7 @@ for j=1:nodeCount
         "source_xyz_m",nodes(j,:), ...
         "target_xyz_m",targetXYZ);
     if method=="eikonal"
-        if geometry~="projected3d" || nodeCount~=1 || abs(nodes(j,2))>1e-12 || ...
+        if geometry~="projected3d" || nodeCount~=1 || ...
                 ~isfield(request,"phase_speed_map_zx") || ...
                 ~isfield(request,"attenuation_map_np_m")
             error("swsynth:UnsupportedPointSourceEikonal", ...
@@ -165,8 +165,18 @@ for j=1:nodeCount
         end
         opts=struct();
         if isfield(request,"solver_options");opts=request.solver_options;end
-        [timeZX,~]=swsynth.phase.eikonal.projected3d.computePointSourceTravelTime( ...
-            request.phase_speed_map_zx,x(:).',z(:),nodes(j,:),opts);
+        useExtended=nodes(j,1)<x(1) || nodes(j,1)>x(end) || ...
+            nodes(j,3)<z(1) || nodes(j,3)>z(end) || ...
+            abs(nodes(j,2)-observationY)>1e-12;
+        if useExtended
+            [timeZX,opticalZX,extendedDiagnostics]= ...
+                swsynth.propagation.spherical.point_source.eikonal.solveExtended( ...
+                request.phase_speed_map_zx,request.attenuation_map_np_m, ...
+                x(:).',z(:),nodes(j,:),observationY,opts);
+        else
+            [timeZX,~]=swsynth.phase.eikonal.projected3d.computePointSourceTravelTime( ...
+                request.phase_speed_map_zx,x(:).',z(:),nodes(j,:),opts);
+        end
         tau=timeZX(:);
     else
         phaseResult=swsynth.phase.compute(phaseForNode);
@@ -205,8 +215,12 @@ for j=1:nodeCount
         spreading=spreading.*exp(-alpha*distance);
     end
     if method=="eikonal"
-        optical=swsynth.propagation.attenuation.integratePointSource2D( ...
-            timeZX,request.attenuation_map_np_m,x(:).',z(:),nodes(j,:));
+        if useExtended
+            optical=opticalZX;
+        else
+            optical=swsynth.propagation.attenuation.integratePointSource2D( ...
+                timeZX,request.attenuation_map_np_m,x(:).',z(:),nodes(j,:));
+        end
         spreading=spreading.*exp(-optical(:));
     end
     scalar=amplitude*weights(j).*spreading.* ...
@@ -227,6 +241,10 @@ contribution.phase_sign=1;
 contribution.phase_solver="homogeneous_spherical_distance";
 if method=="eikonal"
     contribution.phase_solver="internal_point_source_eikonal_2d";
+    if useExtended
+        contribution.phase_solver="extended_point_source_eikonal_3d";
+        contribution.phase_diagnostics=extendedDiagnostics;
+    end
 end
 contribution.source_id=sourceID;
 contribution.source_xyz_m=sourcePosition;
