@@ -196,3 +196,28 @@ Existing Eikonal/attenuation wavefield behavior is unchanged.
 r=runtests('tests/physics/swsynth/propagation/test_sh_interface_coefficients.m');
 disp(table(r)); assertSuccess(r)
 ```
+
+### Kelvin-Voigt SH interface coefficients (isolated analytical module)
+
+`swsynth.propagation.interface.shViscoelasticCoefficients` computes
+complex displacement reflection/transmission for welded, isotropic,
+homogeneous Kelvin-Voigt half-spaces and a plane SH wave. It uses the
+`exp(i*(k.r-omega*t))` convention, so the dynamic modulus in traction
+is `mu - i*omega*eta`, conjugate to the commonly written
+`mu + i*omega*eta` for a `exp(+i*omega*t)` time convention.
+Its complex wavenumbers decay along outgoing propagation directions.
+
+For oblique lossy incidence, the tangential wavenumber is complex and
+continuous across the plane. The input real incidence angle defines a
+homogeneous complex incident plane wave. In attenuating media, there is
+no general `R_energy + T_energy = 1` identity for separately interpreted
+incident/reflected normal energy fluxes, so this function deliberately
+does not report energy fractions. Its checks instead enforce complex
+displacement and traction continuity. The elastic limit must match
+`shCoefficients`, including an evanescent transmitted field above
+critical incidence. Not integrated with spherical-source synthesis.
+
+```matlab
+r=runtests('tests/physics/swsynth/propagation/test_sh_viscoelastic_interface_coefficients.m');
+disp(table(r)); assertSuccess(r)
+```
