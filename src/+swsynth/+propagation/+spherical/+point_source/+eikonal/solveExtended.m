@@ -73,10 +73,18 @@ if ~d.converged,error("swsynth:PointSource3DEikonalDidNotConverge","Extended Eik
 [Zo,Xo]=ndgrid(z,x);
 uniformC=max(abs(c(:)-c(1)))<=1e-10*max(1,c(1));
 uniformAlpha=max(abs(alpha(:)-alpha(1)))<=1e-10*max(1,alpha(1));
-if uniformC && uniformAlpha
+hasPlane=isfield(options,"AttenuationPlane") && ~isempty(options.AttenuationPlane);
+if uniformC && (uniformAlpha || hasPlane)
     rr=sqrt((Xo-source(1)).^2+(obsY-source(2)).^2+ ...
         (Zo-source(3)).^2);
-    Aobs=alpha(1)*rr;
+    if hasPlane
+        sourcePoints=repmat(source,numel(Xo),1);
+        targets=[Xo(:),obsY*ones(numel(Xo),1),Zo(:)];
+        Aobs=reshape(swsynth.propagation.attenuation.integratePlanarSegment( ...
+            sourcePoints,targets,options.AttenuationPlane),size(Zo));
+    else
+        Aobs=alpha(1)*rr;
+    end
 else
     [dTy,dTz,dTx]=gradient(T,mean(diff(yy)),mean(diff(zz)),mean(diff(xx)));
     xo=Xo(:);yo=obsY*ones(numel(Xo),1);zo=Zo(:);
@@ -102,7 +110,14 @@ else
         if any(~isfinite(a1))
             error("swsynth:ExtendedRayExited","Ray left the extended propagation domain.");
         end
-        amp(idx)=amp(idx)+step*.5.*(a0+a1);
+        if hasPlane
+            ray0=[qx,qy,qz];ray1=[nx,ny,nz];
+            amp(idx)=amp(idx)+ ...
+                swsynth.propagation.attenuation.integratePlanarSegment( ...
+                ray0,ray1,options.AttenuationPlane);
+        else
+            amp(idx)=amp(idx)+step*.5.*(a0+a1);
+        end
         xo(idx)=nx;yo(idx)=ny;zo(idx)=nz;
         active(idx)=vecnorm([nx-source(1),ny-source(2),nz-source(3)],2,2)>near;
     end
@@ -113,7 +128,12 @@ else
     remaining=sqrt((xo-source(1)).^2+(yo-source(2)).^2+ ...
         (zo-source(3)).^2);
     sourceLoss=alpha(iz,iy,ix);
-    amp=amp+sourceLoss*remaining;
+    if hasPlane
+        amp=amp+swsynth.propagation.attenuation.integratePlanarSegment( ...
+            [xo,yo,zo],repmat(source,numel(xo),1),options.AttenuationPlane);
+    else
+        amp=amp+sourceLoss*remaining;
+    end
     Aobs=reshape(amp,size(Zo));
 end
 Tobs=reshape(interpn(zz,yy,xx,T,Zo,obsY*ones(size(Zo)),Xo,"linear"),size(Zo));
