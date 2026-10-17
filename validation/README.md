@@ -54,3 +54,25 @@ disp(table(r)); assertSuccess(r)
 ```
 
 The diagnostic prints `E3_all` (error at all solver volume nodes), `E3_far` (away from source), `E_slice_numeric` (numerical slice versus the **interpolated exact field**), `E_slice_interp` (interpolation of exact volume data onto observation pixels), and `E_obs` (total observed time error). They are L2-relative metrics and are **not additive**. To avoid large artifacts, the optional `ReturnVolumeDiagnostics=true` in `solveExtended` provides raw axes and travel times only when explicitly requested; the normal synthesis return remains unchanged. No target accuracy is claimed until MATLAB results are inspected.
+
+### Optional second-order fast sweeping (experimental)
+
+The 3D Eikonal kernel supports `SpatialOrder=1` (unchanged default) or
+`SpatialOrder=2` (causality-limited one-sided second-order differences,
+with first-order fallback at boundaries or non-monotone stencils). The
+extended point-source solver forwards this option from
+`propagation.solver_options` in the example JSON.
+
+Compare homogeneous external/off-plane sources against the same reference:
+
+```matlab
+r=runtests('tests/unit/test_eikonal_fast_sweeping_3d.m');
+assertSuccess(r)
+r=runtests('tests/physics/swsynth/propagation/test_eikonal_spatial_order_comparison.m');
+assertSuccess(r)
+```
+
+The benchmark reports the relative L2 timing error and runtime for both
+orders. Order 2 is experimental: neither improved accuracy nor convergence
+has been established until this comparison is run. Do not change the
+default based only on solver convergence.
