@@ -124,7 +124,7 @@ materialLoss=[];
 propagationSpeed=background;
 if isfield(prop,"attenuation") && isfield(prop.attenuation,"enabled") && prop.attenuation.enabled
     a=prop.attenuation;
-    if ~isfield(a,"constitutive")
+    if method~="eikonal" && ~isfield(a,"constitutive")
         error("swsynth:InvalidAttenuation","attenuation.constitutive required.");
     end
     if method=="eikonal"
