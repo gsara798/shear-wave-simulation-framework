@@ -75,7 +75,7 @@ if ~isscalar(method) || ...
     error("swsynth:UnsupportedSynthesisPhase", ...
         "Supported phase methods are analytical and directional eikonal.");
 end
-if model=="spherical_wave" && method=="eikonal"
+if model=="spherical_wave" && method=="eikonal" && geometry~="projected3d"
     error("swsynth:UnsupportedSynthesisPhase", ...
         "Spherical source Eikonal is not implemented.");
 end
@@ -98,7 +98,7 @@ if model=="plane_wave"
             "Geometric decay is a spherical-source option.");
     end
 else
-    if isfield(prop,"solver_options")
+    if isfield(prop,"solver_options") && method~="eikonal"
         error("swsynth:UnsupportedSynthesisOption", ...
             "Spherical analytical phase does not use solver_options.");
     end
@@ -128,7 +128,7 @@ if isfield(prop,"attenuation") && isfield(prop.attenuation,"enabled") && prop.at
         error("swsynth:InvalidAttenuation","attenuation.constitutive required.");
     end
     if method=="eikonal"
-        if geometry~="projected3d" || model~="plane_wave"
+        if geometry~="projected3d"
             error("swsynth:UnsupportedAttenuation", ...
                 "Heterogeneous attenuation currently supports projected3d plane-wave Eikonal.");
         end
@@ -333,7 +333,15 @@ switch model
                 req.observation_y_m=grid.observation_y_m;
             end
             if ~isempty(materialLoss)
-                req.attenuation_np_m=materialLoss.attenuation_np_m;
+                if method=="eikonal"
+                    req.phase_speed_map_zx=materialLoss.phase_speed;
+                    req.attenuation_map_np_m=materialLoss.attenuation_np_m;
+                    if isfield(prop,"solver_options")
+                        req.solver_options=prop.solver_options;
+                    end
+                else
+                    req.attenuation_np_m=materialLoss.attenuation_np_m;
+                end
             end
             components{i}=swsynth.propagation.spherical.point_source.computeContribution(req);
         end
