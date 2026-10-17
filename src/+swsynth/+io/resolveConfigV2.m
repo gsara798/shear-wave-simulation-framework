@@ -146,18 +146,31 @@ if isfield(scenario.propagation,"attenuation")
         error("swsynth:InvalidAttenuation","Invalid propagation.attenuation.");
     end
     if a.enabled
-        if ~isfield(a,"constitutive") || phaseMethod=="eikonal"
-            error("swsynth:UnsupportedAttenuation", ...
-                "Stage 1 attenuation requires homogeneous analytical propagation.");
-        end
-        swsynth.medium.viscoelastic.dispersion(a.constitutive,drive.frequency_hz);
-        if geometry=="volumetric3d"
-            localCS=maps.cs_map_zyx;
+        if phaseMethod=="eikonal"
+            if geometry~="projected3d" || model~="plane_wave"
+                error("swsynth:UnsupportedAttenuation", ...
+                    "Heterogeneous attenuation supports projected3d plane-wave Eikonal only.");
+            end
+            if ~isfield(scenario.medium,"viscoelastic")
+                error("swsynth:InvalidViscoelasticMedium", ...
+                    "medium.viscoelastic is required for heterogeneous attenuation.");
+            end
+            swsynth.medium.viscoelastic.buildMaps( ...
+                swsynth.medium.validate(scenario.medium,geometry),maps,drive.frequency_hz);
         else
-            localCS=maps.cs_map_zx;
-        end
-        if any(abs(localCS(:)-maps.background_cs_m_s)>1e-10)
-            error("swsynth:UnsupportedAttenuation","Heterogeneous attenuation is not yet supported.");
+            if ~isfield(a,"constitutive")
+                error("swsynth:InvalidAttenuation","attenuation.constitutive is required.");
+            end
+            swsynth.medium.viscoelastic.dispersion(a.constitutive,drive.frequency_hz);
+            if geometry=="volumetric3d"
+                localCS=maps.cs_map_zyx;
+            else
+                localCS=maps.cs_map_zx;
+            end
+            if any(abs(localCS(:)-maps.background_cs_m_s)>1e-10)
+                error("swsynth:UnsupportedAttenuation", ...
+                    "Heterogeneous attenuation requires Eikonal phase.");
+            end
         end
     end
 end
