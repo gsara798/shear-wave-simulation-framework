@@ -14,6 +14,8 @@ validateInputs(slownessZYX, dxM, dyM, dzM, initialTimeZYX, fixedMaskZYX);
 maximumIterations = getOption(options, "MaximumIterations", 200);
 toleranceS = getOption(options, "ToleranceS", 1e-10);
 verbose = logical(getOption(options, "Verbose", false));
+spatialOrder = getOption(options, "SpatialOrder", 1);
+validateattributes(spatialOrder,{'numeric'},{'scalar','integer','>=',1,'<=',2});
 
 validateattributes(maximumIterations, {'numeric'}, ...
     {'scalar','integer','positive','finite'});
@@ -47,16 +49,30 @@ for iteration = 1:maximumIterations
                             end
 
                             ax = Inf; ay = Inf; az = Inf;
+                            hx = dxM; hy = dyM; hz = dzM;
                             if ix > 1, ax = min(ax, travelTimeZYX(iz,iy,ix-1)); end
                             if ix < Nx, ax = min(ax, travelTimeZYX(iz,iy,ix+1)); end
                             if iy > 1, ay = min(ay, travelTimeZYX(iz,iy-1,ix)); end
                             if iy < Ny, ay = min(ay, travelTimeZYX(iz,iy+1,ix)); end
                             if iz > 1, az = min(az, travelTimeZYX(iz-1,iy,ix)); end
                             if iz < Nz, az = min(az, travelTimeZYX(iz+1,iy,ix)); end
-
-                            candidate = localUpwindUpdate3D( ...
+                            firstOrderCandidate = localUpwindUpdate3D( ...
                                 [ax ay az], [dxM dyM dzM], ...
                                 slownessZYX(iz,iy,ix));
+                            candidate=firstOrderCandidate;
+                            if spatialOrder==2
+                                [bx,hx]=secondOrderNeighbor( ...
+                                    squeeze(travelTimeZYX(iz,iy,:)),ix,dxM);
+                                [by,hy]=secondOrderNeighbor( ...
+                                    squeeze(travelTimeZYX(iz,:,ix)),iy,dyM);
+                                [bz,hz]=secondOrderNeighbor( ...
+                                    travelTimeZYX(:,iy,ix),iz,dzM);
+                                higher=localUpwindUpdate3D( ...
+                                    [bx by bz],[hx hy hz],slownessZYX(iz,iy,ix));
+                                if isfinite(higher) && higher>=min([ax ay az])-1e-12
+                                    candidate=higher;
+                                end
+                            end
                             if candidate < travelTimeZYX(iz,iy,ix)
                                 travelTimeZYX(iz,iy,ix) = candidate;
                             end
@@ -94,6 +110,7 @@ diagnostics.maximum_iterations = maximumIterations;
 diagnostics.tolerance_s = toleranceS;
 diagnostics.finite_fraction = nnz(isfinite(travelTimeZYX)) / numel(travelTimeZYX);
 diagnostics.grid_size_zyx = [Nz Ny Nx];
+diagnostics.spatial_order = spatialOrder;
 
 end
 
@@ -164,4 +181,29 @@ if isfield(options, name) && ~isempty(options.(name))
 else
     value = defaultValue;
 end
+end
+
+function [upwindValue,effectiveSpacing]=secondOrderNeighbor(line,index,h)
+% Causality-limited one-sided second-order upwind derivative.
+n=numel(line);
+left=Inf;right=Inf;
+if index>1,left=line(index-1);end
+if index<n,right=line(index+1);end
+[upwindValue,side]=min([left right]);
+effectiveSpacing=h;
+if ~isfinite(upwindValue),return,end
+if side==1
+    far=index-2;
+else
+    far=index+2;
+end
+if far<1 || far>n,return,end
+farTime=line(far);
+if ~isfinite(farTime) || farTime>upwindValue
+    return
+end
+% (3*T_i-4*T_near+T_far)/(2*h) =
+% (T_i-(4*T_near-T_far)/3)/(2*h/3).
+upwindValue=(4*upwindValue-farTime)/3;
+effectiveSpacing=2*h/3;
 end
