@@ -168,6 +168,13 @@ for j=1:nodeCount
         if isfield(request,"attenuation_interface")
             opts.AttenuationPlane=request.attenuation_interface;
         end
+        if isfield(request,"speed_interface")
+            useNearest=isfield(opts,"SpeedSampling") && ...
+                string(opts.SpeedSampling)=="nearest_map";
+            if ~useNearest
+                opts.SpeedInterfacePlane=request.speed_interface;
+            end
+        end
         useExtended=nodes(j,1)<x(1) || nodes(j,1)>x(end) || ...
             nodes(j,3)<z(1) || nodes(j,3)>z(end) || ...
             abs(nodes(j,2)-observationY)>1e-12;
