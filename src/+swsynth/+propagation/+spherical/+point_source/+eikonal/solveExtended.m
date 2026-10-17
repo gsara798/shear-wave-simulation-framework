@@ -40,13 +40,25 @@ cx=min(max(XX,x(1)),x(end));
 cz=min(max(ZZ,z(1)),z(end));
 c=interp2(x,z,speedZX,cx,cz,"nearest");
 alpha=interp2(x,z,lossZX,cx,cz,"nearest");
+% Seed a local neighborhood with exact homogeneous-source travel times.
+% This limits the point-source staircasing error of a single fixed node.
 [~,ix]=min(abs(xx-source(1)));
 [~,iy]=min(abs(yy-source(2)));
 [~,iz]=min(abs(zz-source(3)));
 initial=inf(size(c));
 fixed=false(size(c));
+[ZZs,YYs,XXs]=ndgrid(zz,yy,xx);
+sourceDistance=sqrt((XXs-source(1)).^2+(YYs-source(2)).^2+ ...
+    (ZZs-source(3)).^2);
+seedRadius=2*max([mean(diff(xx)),mean(diff(yy)),mean(diff(zz))]);
+fixed=sourceDistance<=seedRadius;
+if ~any(fixed(:));fixed(iz,iy,ix)=true;end
+% The local source-cell speed gives a first-order near-source solution.
+% Do not seed across an interface: use only the source material.
+sourceSpeed=c(iz,iy,ix);
+fixed=fixed & abs(c-sourceSpeed)<=1e-8*max(1,sourceSpeed);
 fixed(iz,iy,ix)=true;
-initial(iz,iy,ix)=norm([xx(ix),yy(iy),zz(iz)]-source)/c(iz,iy,ix);
+initial(fixed)=sourceDistance(fixed)/sourceSpeed;
 solverOpts=struct();
 if isfield(options,"MaximumIterations");solverOpts.MaximumIterations=options.MaximumIterations;end
 if isfield(options,"ToleranceS");solverOpts.ToleranceS=options.ToleranceS;end
@@ -54,37 +66,55 @@ if isfield(options,"Verbose");solverOpts.Verbose=options.Verbose;end
 [T,d]=swsynth.numerics.eikonal.solveFastSweeping3D( ...
     1./c,mean(diff(xx)),mean(diff(yy)),mean(diff(zz)),initial,fixed,solverOpts);
 if ~d.converged,error("swsynth:PointSource3DEikonalDidNotConverge","Extended Eikonal failed to converge.");end
-% Accumulate loss along first-arrival rays by backward characteristics.
-[dTy,dTz,dTx]=gradient(T,mean(diff(yy)),mean(diff(zz)),mean(diff(xx)));
+% Trace first-arrival characteristics backward. In homogeneous media,
+% use the exact straight-ray integral as a stable reference (also avoids
+% spurious gradient errors near the discretized source).
 [Zo,Xo]=ndgrid(z,x);
-xo=Xo(:);yo=obsY*ones(numel(Xo),1);zo=Zo(:);
-amp=zeros(numel(xo),1);
-near=1.5*hypot(h,h);
-active=vecnorm([xo-source(1),yo-source(2),zo-source(3)],2,2)>near;
-step=.5*h;
-maxSteps=ceil(5*norm([range(xx),range(yy),range(zz)])/step);
-for iter=1:maxSteps
-    if ~any(active),break,end
-    idx=find(active);
-    qx=xo(idx);qy=yo(idx);qz=zo(idx);
-    gx=interpn(zz,yy,xx,dTx,qz,qy,qx,"linear",0);
-    gy=interpn(zz,yy,xx,dTy,qz,qy,qx,"linear",0);
-    gz=interpn(zz,yy,xx,dTz,qz,qy,qx,"linear",0);
-    g=hypot(hypot(gx,gy),gz);
-    if any(g<=1e-14)
-        error("swsynth:ExtendedRayStalled","Ray gradient vanished away from source.");
+uniformC=max(abs(c(:)-c(1)))<=1e-10*max(1,c(1));
+uniformAlpha=max(abs(alpha(:)-alpha(1)))<=1e-10*max(1,alpha(1));
+if uniformC && uniformAlpha
+    rr=sqrt((Xo-source(1)).^2+(obsY-source(2)).^2+ ...
+        (Zo-source(3)).^2);
+    Aobs=alpha(1)*rr;
+else
+    [dTy,dTz,dTx]=gradient(T,mean(diff(yy)),mean(diff(zz)),mean(diff(xx)));
+    xo=Xo(:);yo=obsY*ones(numel(Xo),1);zo=Zo(:);
+    amp=zeros(numel(xo),1);
+    near=1.5*max([mean(diff(xx)),mean(diff(yy)),mean(diff(zz))]);
+    active=vecnorm([xo-source(1),yo-source(2),zo-source(3)],2,2)>near;
+    step=.5*min([mean(diff(xx)),mean(diff(yy)),mean(diff(zz))]);
+    maxSteps=ceil(5*norm([range(xx),range(yy),range(zz)])/step);
+    for iter=1:maxSteps
+        if ~any(active),break,end
+        idx=find(active);
+        qx=xo(idx);qy=yo(idx);qz=zo(idx);
+        gx=interpn(zz,yy,xx,dTx,qz,qy,qx,"linear",0);
+        gy=interpn(zz,yy,xx,dTy,qz,qy,qx,"linear",0);
+        gz=interpn(zz,yy,xx,dTz,qz,qy,qx,"linear",0);
+        g=sqrt(gx.^2+gy.^2+gz.^2);
+        if any(g<=1e-14)
+            error("swsynth:ExtendedRayStalled","Ray gradient vanished away from source.");
+        end
+        nx=qx-step*gx./g;ny=qy-step*gy./g;nz=qz-step*gz./g;
+        a0=interpn(zz,yy,xx,alpha,qz,qy,qx,"linear");
+        a1=interpn(zz,yy,xx,alpha,nz,ny,nx,"linear",NaN);
+        if any(~isfinite(a1))
+            error("swsynth:ExtendedRayExited","Ray left the extended propagation domain.");
+        end
+        amp(idx)=amp(idx)+step*.5.*(a0+a1);
+        xo(idx)=nx;yo(idx)=ny;zo(idx)=nz;
+        active(idx)=vecnorm([nx-source(1),ny-source(2),nz-source(3)],2,2)>near;
     end
-    nx=qx-step*gx./g;ny=qy-step*gy./g;nz=qz-step*gz./g;
-    a0=interpn(zz,yy,xx,alpha,qz,qy,qx,"linear");
-    a1=interpn(zz,yy,xx,alpha,nz,ny,nx,"linear",NaN);
-    if any(~isfinite(a1))
-        error("swsynth:ExtendedRayExited","Ray left the extended propagation domain.");
+    if any(active)
+        error("swsynth:ExtendedRayNotTerminated","Backtracing did not reach source.");
     end
-    amp(idx)=amp(idx)+step*.5.*(a0+a1);
-    xo(idx)=nx;yo(idx)=ny;zo(idx)=nz;
-    active(idx)=vecnorm([nx-source(1),ny-source(2),nz-source(3)],2,2)>near;
+    % Recover missing source-core contribution using local source loss.
+    remaining=sqrt((xo-source(1)).^2+(yo-source(2)).^2+ ...
+        (zo-source(3)).^2);
+    sourceLoss=alpha(iz,iy,ix);
+    amp=amp+sourceLoss*remaining;
+    Aobs=reshape(amp,size(Zo));
 end
-if any(active),error("swsynth:ExtendedRayNotTerminated","Backtracing did not reach source.");end
 Tobs=reshape(interpn(zz,yy,xx,T,Zo,obsY*ones(size(Zo)),Xo,"linear"),size(Zo));
 Aobs=reshape(amp,size(Zo));
 diag=struct("model","extended_3d_first_arrival", ...
