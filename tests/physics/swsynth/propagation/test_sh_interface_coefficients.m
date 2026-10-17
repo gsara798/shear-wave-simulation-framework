@@ -3,7 +3,7 @@ tests=functiontests(localfunctions);
 end
 
 function testMatchedMaterials(tc)
-setup();
+addSourcePath();
 p=base(); p.incidence_angle_rad=pi/5;
 r=swsynth.propagation.interface.shCoefficients(p);
 verifyEqual(tc,r.reflection_displacement,0,"AbsTol",1e-12);
@@ -12,7 +12,7 @@ verifyEqual(tc,r.reflection_energy_fraction+r.transmission_energy_fraction,1,"Ab
 end
 
 function testNormalIncidenceImpedance(tc)
-setup();
+addSourcePath();
 p=base();p.mu2_pa=9000;
 r=swsynth.propagation.interface.shCoefficients(p);
 z1=sqrt(p.mu1_pa*p.rho1_kg_m3);
@@ -23,7 +23,7 @@ checkBoundaryAndEnergy(tc,r);
 end
 
 function testObliqueSnellAndEnergy(tc)
-setup();
+addSourcePath();
 p=base();p.mu2_pa=9000;p.incidence_angle_rad=pi/6;
 r=swsynth.propagation.interface.shCoefficients(p);
 theta2=asin(r.phase_speed_2_m_s/r.phase_speed_1_m_s*sin(p.incidence_angle_rad));
@@ -35,7 +35,7 @@ verifyGreaterThan(tc,r.transmission_energy_fraction,0);
 end
 
 function testTotalInternalReflection(tc)
-setup();
+addSourcePath();
 p=base();p.mu1_pa=9000;p.mu2_pa=4000;
 p.incidence_angle_rad=pi/3;
 r=swsynth.propagation.interface.shCoefficients(p);
@@ -46,7 +46,7 @@ checkBoundaryAndEnergy(tc,r);
 end
 
 function testInvalidInputRejected(tc)
-setup();
+addSourcePath();
 p=base();p.mu1_pa=-1;
 verifyError(tc,@()swsynth.propagation.interface.shCoefficients(p), ...
     "swsynth:SHInterfaceInvalidParameter");
@@ -65,7 +65,7 @@ p=struct("frequency_hz",500,"incidence_angle_rad",0, ...
     "mu2_pa",4000,"rho2_kg_m3",1000);
 end
 
-function setup()
+function addSourcePath()
 root=fileparts(fileparts(fileparts(fileparts(fileparts(mfilename("fullpath"))))));
 addpath(fullfile(root,"src"));
 end
