@@ -20,7 +20,7 @@ if isfield(spec,"model")
     end
 end
 allowed=["model","cs_m_s","background_cs_m_s", ...
-    "combine_mode","objects","density_kg_m3"];
+    "combine_mode","objects","density_kg_m3","viscoelastic"];
 unknown=setdiff(string(fieldnames(spec)),allowed);
 if ~isempty(unknown)
     error("swsynth:UnsupportedMediumProperty", ...
@@ -148,6 +148,9 @@ for i=1:numel(objects)
 end
 medium=struct("background_cs_m_s",cs,"combine_mode",mode, ...
     "objects",{objects},"geometry",geometry);
+if isfield(spec,"viscoelastic")
+    medium.viscoelastic=spec.viscoelastic;
+end
 if isfield(spec,"density_kg_m3")
     rho=spec.density_kg_m3;
     if ~isValidPositive(rho)
