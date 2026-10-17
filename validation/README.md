@@ -76,3 +76,17 @@ The benchmark reports the relative L2 timing error and runtime for both
 orders. Order 2 is experimental: neither improved accuracy nor convergence
 has been established until this comparison is run. Do not change the
 default based only on solver convergence.
+
+### Source alignment and bilayer checks before adopting second order
+
+```matlab
+setup_simulation_framework
+r1=runtests('tests/physics/swsynth/propagation/test_eikonal_second_order_source_alignment.m');
+disp(table(r1)); assertSuccess(r1)
+r2=runtests('tests/physics/swsynth/propagation/test_eikonal_second_order_bilayer.m');
+disp(table(r2)); assertSuccess(r2)
+```
+
+The alignment diagnostic compares orders 1 and 2 at four grid spacings and prints actual source-to-grid offsets. Offsets matter: the extended solver constructs uniform axes using `linspace`, so the requested `GridSpacingM` is a target upper bound, not necessarily the realized spacing. This diagnostic does not assert a convergence order.
+
+The bilayer benchmark uses a normal-incidence axial first-arrival reference for a two-speed material; it also checks time monotonicity along this line and a bound against an everywhere-fast reference. This is a **limited physical sanity check**, not a general proof of interface refraction, Snell's law, or correct transmitted/reflected amplitudes. In particular, first-arrival Eikonal does not synthesize reflected waves. If a test fails, inspect the solver and geometry assumptions rather than loosening tolerances automatically.
