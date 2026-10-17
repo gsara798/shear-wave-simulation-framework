@@ -14,7 +14,7 @@ The plane-wave contribution uses phase speed from the constitutive law and multi
 
 The spherical point-force contribution uses `exp(-alpha*r)`, where `r` is distance to each aperture node, in addition to the already-existing `geometric_decay_exponent` spreading factor. The current geometric spreading exponent preserves existing legacy behavior; the standalone `+propagation/+spreading/factor.m` function provides a regularized reference-distance implementation for future explicit normalization, but has **not** replaced the existing spherical calculation.
 
-This implementation supports **only homogeneous media and analytical propagation**, and rejects heterogeneous/Eikonal attenuation. It does not model interface transmission, multiple scattering, shear-to-compressional mode conversion or ultrasound noise.
+The initial homogeneous stage supports analytical propagation; the heterogeneous projected-Eikonal extension is documented below. Neither mode implements interface transmission, multiple scattering, shear-to-compressional mode conversion or ultrasound noise.
 
 ## Config
 
@@ -46,7 +46,7 @@ elastic=run_simulation("examples/swsynth/v2/08_shear_attenuation/plane_elastic_r
 kv=run_simulation("examples/swsynth/v2/08_shear_attenuation/plane_kelvin_voigt.json",PlotFigures=true);
 ```
 
-The next planned stages are integration of locally varying attenuation along Eikonal trajectories, followed by separate empirical-shadow and impedance-transmission approximations for interfaces. Reflections are **not** implemented by an amplitude-only transmission approximation.
+The next planned stages are extending local attenuation to oblique/volumetric rays, followed by separate empirical-shadow and impedance-transmission approximations for interfaces. Reflections are **not** implemented by an amplitude-only transmission approximation.
 
 ## Stage 2 — Heterogeneous intrinsic loss (projected x-z Eikonal)
 
