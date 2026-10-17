@@ -14,7 +14,7 @@ validateInputs(slownessZYX, dxM, dyM, dzM, initialTimeZYX, fixedMaskZYX);
 maximumIterations = getOption(options, "MaximumIterations", 200);
 toleranceS = getOption(options, "ToleranceS", 1e-10);
 verbose = logical(getOption(options, "Verbose", false));
-spatialOrder = getOption(options, "SpatialOrder", 1);
+spatialOrder = getOption(options, "SpatialOrder", 2);
 validateattributes(spatialOrder,{'numeric'},{'scalar','integer','>=',1,'<=',2});
 
 validateattributes(maximumIterations, {'numeric'}, ...
