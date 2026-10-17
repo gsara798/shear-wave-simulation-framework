@@ -1,6 +1,6 @@
 function out=shViscoelasticCoefficients(request)
 %SHVISCOELASTICCOEFFICIENTS Welded planar SH Kelvin-Voigt interface.
-% Convention exp(i*(k.r-omega*t)); G*=mu+i*omega*eta and Im(k)>=0.
+% Convention exp(i*(k.r-omega*t)); dynamic G=mu-i*omega*eta.\n% This is conjugate to the +i*omega*eta convention for exp(+i*omega*t).
 % A complex tangential wavenumber kt=k1*sin(theta) is conserved: theta is
 % the real launch angle of a homogeneous complex incident plane wave.
 % Boundary equations are 1+R=T and G1*kn1*(1-R)=G2*kn2*T.
@@ -32,11 +32,11 @@ if f<=0||theta<0||theta>=pi/2||any([mu1 rho1 mu2 rho2]<=0)|| ...
         "Positive frequency, stiffness, density; nonnegative viscosity; angle in [0,pi/2).");
 end
 omega=2*pi*f;
-G1=complex(mu1,omega*eta1);
-G2=complex(mu2,omega*eta2);
+G1=complex(mu1,-omega*eta1);
+G2=complex(mu2,-omega*eta2);
 % Select attenuating forward wave branch for the stated harmonic convention.
-k1=conj(omega*sqrt(rho1/G1));
-k2=conj(omega*sqrt(rho2/G2));
+k1=omega*sqrt(rho1/G1);
+k2=omega*sqrt(rho2/G2);
 kt=k1*sin(theta);
 kn1=k1*cos(theta);
 kn2=sqrt(k2^2-kt^2);
