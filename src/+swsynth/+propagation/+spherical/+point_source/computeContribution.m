@@ -172,10 +172,21 @@ for j=1:nodeCount
         phaseResult=swsynth.phase.compute(phaseForNode);
         tau=double(phaseResult.travel_time_s(:));
     end
+    % The far-field point-force radiation tensor is undefined at its own
+    % source. For internal Eikonal sources, exclude a grid-scale near-source
+    % region rather than evaluating a singular or invented polarization.
+    coreMask=false(size(tau));
+    radiationTargets=targetXYZ;
+    if method=="eikonal"
+        coreRadius=1.5*hypot(mean(diff(x)),mean(diff(z)));
+        coreMask=vecnorm(targetXYZ-nodes(j,:),2,2)<=coreRadius;
+        radiationTargets(coreMask,:)=repmat( ...
+            nodes(j,:)+[coreRadius,0,0],nnz(coreMask),1);
+    end
     radiationRequest=struct("model","point_force_shear_far_field", ...
         "geometry",geometry, ...
         "source_xyz_m",nodes(j,:), ...
-        "observation_xyz_m",targetXYZ, ...
+        "observation_xyz_m",radiationTargets, ...
         "force_direction_xyz",force);
     if geometry=="2d"
         radiationRequest.observation_y_m=observationY;
@@ -200,7 +211,9 @@ for j=1:nodeCount
     end
     scalar=amplitude*weights(j).*spreading.* ...
         exp(1i*(2*pi*frequency*tau+initialPhase));
-    fieldXYZ=fieldXYZ+scalar.*double(pol.vector_xyz);
+    nodeField=scalar.*double(pol.vector_xyz);
+    nodeField(coreMask,:)=0; % Near-source physics is deliberately unresolved.
+    fieldXYZ=fieldXYZ+nodeField;
 end
 U=reshape(fieldXYZ,[spatialSize,3]);
 U=complex(real(U),imag(U));
