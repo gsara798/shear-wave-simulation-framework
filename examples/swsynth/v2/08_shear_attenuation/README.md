@@ -47,3 +47,23 @@ kv=run_simulation("examples/swsynth/v2/08_shear_attenuation/plane_kelvin_voigt.j
 ```
 
 The next planned stages are integration of locally varying attenuation along Eikonal trajectories, followed by separate empirical-shadow and impedance-transmission approximations for interfaces. Reflections are **not** implemented by an amplitude-only transmission approximation.
+
+## Stage 2 — Heterogeneous intrinsic loss (projected x-z Eikonal)
+
+New examples in this same directory:
+- `bilayer_kelvin_voigt_projected3d.json` — straight interface separating two Kelvin–Voigt materials.
+- `inclusion_kelvin_voigt_projected3d.json` — circular inclusion, with local phase speed and attenuation.
+
+Use `medium.viscoelastic` for the background and `medium.objects[i].viscoelastic` for each inclusion. Each constitutive specification provides `model` (`elastic` or `kelvin_voigt`), `density_kg_m3`, `mu_pa`, and Kelvin–Voigt `eta_pa_s`. For this heterogeneous mode use `propagation.phase_method="eikonal"` and `propagation.attenuation={"enabled":true}` (without a global `constitutive` field).
+
+At each frequency the code constructs spatial phase-speed and attenuation maps from local constitutive parameters, solves Eikonal with the **phase speed**, backtraces the in-plane phase-gradient characteristic for each pixel, and multiplies each individual plane-wave contribution by `exp(-integral(alpha ds))` **before coherent accumulation**. The baseline speed maps in `medium.cs_m_s` and object `cs_m_s` remain required for legacy configuration compatibility but are not the physical phase-speed maps of the Kelvin–Voigt run.
+
+**Current limitations:** only `projected3d`, plane waves with **direction_y=0**, and sharp overlay boundaries are supported for heterogeneous intrinsic loss. The ray approximation computes direct-phase amplitude loss, **not** reflection/transmission coefficients, ray-tube focusing, mode conversion, multiple scattering or full-wave behavior. It uses a numerical backtracking step of half the grid spacing and stops at the computation domain boundary. This is not yet an experimentally validated attenuation model.
+
+```matlab
+setup_simulation_framework
+results=runtests('tests/unit/test_swsynth_heterogeneous_attenuation_v2.m');
+assertSuccess(results)
+b=run_simulation("examples/swsynth/v2/08_shear_attenuation/bilayer_kelvin_voigt_projected3d.json",PlotFigures=true);
+i=run_simulation("examples/swsynth/v2/08_shear_attenuation/inclusion_kelvin_voigt_projected3d.json",PlotFigures=true);
+```
