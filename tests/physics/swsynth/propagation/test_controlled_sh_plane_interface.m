@@ -26,6 +26,26 @@ verifyLessThan(tc,abs(coeff.traction_continuity_residual), ...
 verifyTrue(tc,any(abs(uLeft-uRight)<1e-10));
 verifyTrue(tc,xi>min(p.x_m)&&xi<max(p.x_m));
 end
+function testReferenceAmplitudeAtLaunch(tc)
+addSourcePath();p=base();p.interface_enabled=true;
+p.reference_x_m=-.008;p.reference_z_m=.002;
+p.reference_amplitude=.4;
+r=swsynth.propagation.interface.simulateSHPlaneInterface(p);
+k=r.coefficients;
+d=p.reference_x_m-p.interface_x_m;
+% Evaluate the analytic incident wave at its own reference point.
+launch=.4*exp(-1i*(k.wavenumber_normal_1_rad_m*d+ ...
+    k.wavenumber_tangential_rad_m*p.reference_z_m));
+u=launch*exp(1i*(k.wavenumber_normal_1_rad_m*d+ ...
+    k.wavenumber_tangential_rad_m*p.reference_z_m));
+verifyEqual(tc,abs(u),.4,"AbsTol",1e-12);
+verifyEqual(tc,r.reference_amplitude,.4);
+end
+function testReferenceOnWrongSideRejected(tc)
+addSourcePath();p=base();p.reference_x_m=.002;
+verifyError(tc,@()swsynth.propagation.interface.simulateSHPlaneInterface(p), ...
+    "swsynth:SHSimulationInvalidReference");
+end
 function p=base()
 p=struct("x_m",-.01:.00025:.01,"z_m",(-.01:.00025:.01).', ...
     "interface_x_m",0,"frequency_hz",500,"incidence_angle_rad",pi/8, ...
