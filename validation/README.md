@@ -142,3 +142,28 @@ amplitude coefficient or reflected wave is included.
 r=runtests('tests/physics/swsynth/propagation/test_eikonal_oblique_snell_attenuation.m');
 disp(table(r)); assertSuccess(r)
 ```
+
+### Geometric speed sampling for explicit bilayers
+
+In projected3d spherical-source Eikonal synthesis with enabled viscoelastic
+attenuation, a **single sharp bilayer** now automatically forwards its
+normal, offset and both constitutive phase speeds to the extended 3D
+solver. Extended-grid nodes are classified directly by that plane rather
+than resampling the observation grid's material labels. General map-based
+and other geometries remain on nearest-neighbor sampling.
+
+For comparison, set `propagation.solver_options.SpeedSampling` to
+`"nearest_map"` to opt out of geometric sampling for this case. Direct
+calls to `solveExtended` can pass `SpeedInterfacePlane` to opt in.
+Neither method analytically enforces interface jump conditions inside
+Fast Sweeping; both still approximate first-arrival Eikonal on a grid.
+
+Tests (MATLAB):
+```matlab
+r=runtests('tests/physics/swsynth/propagation/test_eikonal_geometric_bilayer_orientation.m');
+disp(table(r)); assertSuccess(r)
+```
+
+These regressions include an inclined plane with a truly off-plane source,
+an analytically exact optical-depth case, and a refracted-ray Fermat
+reference (diagnostic errors printed; no arbitrary error threshold yet).
