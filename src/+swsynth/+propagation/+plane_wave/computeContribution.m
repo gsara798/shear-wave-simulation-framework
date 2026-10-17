@@ -151,6 +151,16 @@ end
 % Algebraic spatial phasor sign matches existing REQ synthetic backends.
 theta=2*pi*freq*T+phase0;
 scalarField=amplitude*exp(1i*theta);
+if isfield(request,"attenuation_map_np_m")
+    if geometry~="projected3d" || string(phaseRequest.method)~="eikonal"
+        error("swsynth:UnsupportedAttenuation", ...
+            "Spatially varying attenuation requires projected3d Eikonal.");
+    end
+    alphaMap=double(request.attenuation_map_np_m);
+    optical=swsynth.propagation.attenuation.integrateEikonal2D( ...
+        T,alphaMap,x(:).',z(:));
+    scalarField=scalarField.*exp(-optical);
+end
 if isfield(request,"attenuation_np_m")
     alpha=double(request.attenuation_np_m);
     if ~isscalar(alpha)||~isfinite(alpha)||alpha<0
