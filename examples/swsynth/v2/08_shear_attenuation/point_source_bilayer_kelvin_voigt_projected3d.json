@@ -1,0 +1,79 @@
+{
+  "schema_version": "2.0",
+  "scenario": "point_source_bilayer_kelvin_voigt_projected3d",
+  "seed": 53053,
+  "geometry": "projected3d",
+  "domain": {
+    "Lx_m": 0.024,
+    "Lz_m": 0.024,
+    "dx_m": 0.0003,
+    "dz_m": 0.0003,
+    "observation_y_m": 0
+  },
+  "medium": {
+    "background_cs_m_s": 2,
+    "viscoelastic": {
+      "model": "kelvin_voigt",
+      "density_kg_m3": 1000,
+      "mu_pa": 4000,
+      "eta_pa_s": 0.12
+    },
+    "objects": [
+      {
+        "type": "bilayer",
+        "normal_angle_rad": 0,
+        "offset_m": 0.012,
+        "cs_m_s": 3,
+        "viscoelastic": {
+          "model": "kelvin_voigt",
+          "density_kg_m3": 1000,
+          "mu_pa": 9000,
+          "eta_pa_s": 0.35
+        }
+      }
+    ]
+  },
+  "harmonic": {
+    "frequency_hz": 500,
+    "quantity": "relative_motion"
+  },
+  "propagation": {
+    "model": "spherical_wave",
+    "phase_method": "eikonal",
+    "geometric_decay_exponent": 0,
+    "normalization": "sqrt_count",
+    "attenuation": {
+      "enabled": true
+    }
+  },
+  "sources": {
+    "count": 1,
+    "positions": {
+      "method": "explicit",
+      "position_xyz_m": [
+        0.006,
+        0,
+        0.012
+      ]
+    },
+    "excitation": {
+      "force_policy": "fixed",
+      "force_direction_xyz": [
+        0,
+        0,
+        1
+      ],
+      "amplitude_policy": "fixed",
+      "relative_amplitude": 1,
+      "phase_policy": "fixed",
+      "phase_rad": 0
+    }
+  },
+  "measurement": {
+    "axis_xyz": [
+      0,
+      0,
+      1
+    ]
+  }
+}
