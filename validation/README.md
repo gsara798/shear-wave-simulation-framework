@@ -221,3 +221,31 @@ critical incidence. Not integrated with spherical-source synthesis.
 r=runtests('tests/physics/swsynth/propagation/test_sh_viscoelastic_interface_coefficients.m');
 disp(table(r)); assertSuccess(r)
 ```
+
+### Controlled SH Kelvin-Voigt incident/reflected/transmitted fields
+
+Standalone demonstrator:
+`swsynth.propagation.interface.simulateSHPlaneInterface(request)`.
+For a plane interface `x=interface_x_m`, it returns complex harmonic SH
+displacement maps `incident_uy_zx`, `reflected_uy_zx`,
+`transmitted_uy_zx`, and `total_uy_zx`, each on `z_m` by `x_m`.
+With `interface_enabled=true`, the incident and reflected contributions
+exist on the incident side and the transmitted contribution on the other
+side. With `interface_enabled=false` (default), the incident medium-1
+wave continues through the entire grid without any interface: this is a
+**no-interface reference**, not a model of physical transmission through
+material 2 with the reflection suppressed.
+
+This is an independently callable *plane SH* example, not a new field
+inside the general scenario JSON schema. Existing simulation scenarios
+retain their prior behavior and do not automatically emit reflected waves.
+Attenuating plane-wave amplitudes are referenced at the interface and
+should not be read as a finite-distance point-source excitation.
+See:
+`examples/swsynth/v2/08_shear_attenuation/demo_controlled_sh_interface.m`.
+
+```matlab
+r=runtests('tests/physics/swsynth/propagation/test_controlled_sh_plane_interface.m');
+disp(table(r)); assertSuccess(r)
+run('examples/swsynth/v2/08_shear_attenuation/demo_controlled_sh_interface.m')
+```
