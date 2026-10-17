@@ -211,6 +211,17 @@ switch model
             else
                 phaseRequest.cs_map_zx=maps.cs_map_zx;
             end
+            % The material speed map remains the nondispersive reference.
+            % The homogeneous Kelvin-Voigt phase speed is frequency-dependent.
+            % The medium's spatial homogeneity was already checked above.
+            if ~isempty(materialLoss)
+                if isfield(phaseRequest,"cs_map_zx")
+                    phaseRequest=rmfield(phaseRequest,"cs_map_zx");
+                end
+                if isfield(phaseRequest,"cs_map_zyx")
+                    phaseRequest=rmfield(phaseRequest,"cs_map_zyx");
+                end
+            end
             if method=="eikonal" && isfield(prop,"solver_options")
                 phaseRequest.solver_options=prop.solver_options;
             end
