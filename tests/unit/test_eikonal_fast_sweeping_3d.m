@@ -53,3 +53,32 @@ verifyError(testCase, @() swsynth.numerics.eikonal.solveFastSweeping3D( ...
     slowness,1,1,1,initial,fixed), ...
     "swsynth:Eikonal3DMissingBoundaryCondition");
 end
+
+function testSecondOrderPlaneAndDiagnostics(testCase)
+Nz=5;Ny=5;Nx=12;
+dx=.001;cs=2;
+slowness=ones(Nz,Ny,Nx)/cs;
+initial=inf(Nz,Ny,Nx);fixed=false(Nz,Ny,Nx);
+fixed(:,:,1)=true;initial(:,:,1)=0;
+[T,d]=swsynth.numerics.eikonal.solveFastSweeping3D( ...
+    slowness,dx,dx,dx,initial,fixed, ...
+    struct("SpatialOrder",2,"MaximumIterations",200));
+[~,~,X]=ndgrid(1:Nz,1:Ny,0:Nx-1);
+expected=X*dx/cs;
+verifyTrue(testCase,d.converged);
+verifyEqual(testCase,d.spatial_order,2);
+verifyEqual(testCase,T,expected,"AbsTol",1e-10);
+end
+
+function testSecondOrderPointSourceFinite(testCase)
+n=13;h=.001;
+slowness=ones(n,n,n)/2;
+fixed=false(n,n,n);fixed(7,7,7)=true;
+initial=inf(n,n,n);initial(7,7,7)=0;
+[T,d]=swsynth.numerics.eikonal.solveFastSweeping3D( ...
+    slowness,h,h,h,initial,fixed,struct("SpatialOrder",2));
+verifyTrue(testCase,d.converged);
+verifyTrue(testCase,all(isfinite(T(:))));
+verifyEqual(testCase,T(7,7,7),0);
+verifyGreaterThan(testCase,T(7,7,10),0);
+end
