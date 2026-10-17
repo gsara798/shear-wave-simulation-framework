@@ -43,3 +43,14 @@ The test prints relative L2 errors in travel time and attenuation optical depth 
 2. Complete documented examples and freeze implementation scope.
 3. Run physics benchmarks including convergence and independent reference comparisons.
 4. Record measured tolerance and scope for each numerical model; only then promote a diagnostic into a regression acceptance test.
+
+### Diagnose 3D Eikonal error sources
+
+Run this after the baseline external/off-plane homogeneous benchmark:
+
+```matlab
+r = runtests('tests/physics/swsynth/propagation/test_extended_point_source_eikonal_error_decomposition.m');
+disp(table(r)); assertSuccess(r)
+```
+
+The diagnostic prints `E3_all` (error at all solver volume nodes), `E3_far` (away from source), `E_slice_numeric` (numerical slice versus the **interpolated exact field**), `E_slice_interp` (interpolation of exact volume data onto observation pixels), and `E_obs` (total observed time error). They are L2-relative metrics and are **not additive**. To avoid large artifacts, the optional `ReturnVolumeDiagnostics=true` in `solveExtended` provides raw axes and travel times only when explicitly requested; the normal synthesis return remains unchanged. No target accuracy is claimed until MATLAB results are inspected.
