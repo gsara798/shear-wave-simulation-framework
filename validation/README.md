@@ -249,3 +249,40 @@ r=runtests('tests/physics/swsynth/propagation/test_controlled_sh_plane_interface
 disp(table(r)); assertSuccess(r)
 run('examples/swsynth/v2/08_shear_attenuation/demo_controlled_sh_interface.m')
 ```
+
+### Opt-in SH plane interface in V2 synthesis
+
+The main `swsynth.propagation.synthesize` now accepts
+`propagation.interface.enabled=true` for a **single projected3d plane
+SH wave**, positive x incidence, explicit [0,1,0] polarization,
+a single sharp x-normal bilayer, and Kelvin-Voigt constituents with
+their `mu_pa`, `eta_pa_s`, `density_kg_m3` specified. A dedicated
+controlled analytical route produces the full vector `U_xyz`, and
+`result.interface_components` contains incident, reflected, transmitted
+and total complex scalar SH maps. Unsupported geometries and
+polarizations are rejected rather than processed with SH coefficients.
+
+Omitting `propagation.interface`, or setting
+`propagation.interface.enabled=false`, preserves the **existing
+general synthesis route**. In that route, a heterogeneous Eikonal
+simulation can refract and attenuate, but does not generate reflected
+waves or apply SH boundary transmission factors. Switching to false
+does NOT implicitly convert a heterogeneous scenario into a uniform
+no-interface reference; that reference is available separately in
+`simulateSHPlaneInterface`.
+
+When enabled, `propagation.interface.reference_x_m` and
+`reference_z_m` are optional. `reference_x_m` must be upstream of
+the interface. The incident amplitude is referenced there, with
+`incidence.relative_amplitude` as the magnitude; default reference
+is at the interface. The phasor phase is then shifted by
+`incidence.phase_rad`. This is a plane-wave reference, not a finite
+aperture or point-source radiation model.
+
+Example:
+`examples/swsynth/v2/08_shear_attenuation/plane_sh_kelvin_voigt_interface_optin.json`.
+Validation:
+```matlab
+r=runtests('tests/physics/swsynth/propagation/test_sh_synthesis_interface_optin.m');
+disp(table(r)); assertSuccess(r)
+```
