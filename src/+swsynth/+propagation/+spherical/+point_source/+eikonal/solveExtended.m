@@ -116,10 +116,20 @@ else
     Aobs=reshape(amp,size(Zo));
 end
 Tobs=reshape(interpn(zz,yy,xx,T,Zo,obsY*ones(size(Zo)),Xo,"linear"),size(Zo));
+% Optional diagnostics are only retained when explicitly requested.
+if isfield(options,"ReturnVolumeDiagnostics") && ...
+        logical(options.ReturnVolumeDiagnostics)
+    diagVolume=struct("x_m",xx,"y_m",yy,"z_m",zz, ...
+        "travel_time_zyx",T,"source_xyz_m",source, ...
+        "observation_y_m",obsY);
+end
 diag=struct("model","extended_3d_first_arrival", ...
     "outside_fov_medium","nearest_edge_constant_y_invariant", ...
     "grid_size_zyx",size(c),"grid_spacing_m",h, ...
     "solver",d,"source_xyz_m",source);
+if exist("diagVolume","var")
+    diag.volume=diagVolume;
+end
 end
 
 function a=axisWithPoint(lo,hi,h)
