@@ -308,3 +308,23 @@ or viscoelastic P-SV interactions.
 r=runtests('tests/physics/swsynth/propagation/test_psv_elastic_interface_coefficients.m');
 disp(table(r)); assertSuccess(r)
 ```
+
+### Soft-tissue P-SV benchmark with near-incompressible elastic P speeds
+
+Run `examples/swsynth/v2/08_shear_attenuation/demo_soft_tissue_psv_interface.m`.
+This standalone demonstration uses `cp1=1540`, `cp2=1560` m/s,
+`cs1=2`, `cs2=3` m/s at 500 Hz and 20-degree SV incidence.
+The very long bulk P wavelength does not imply that *converted*
+oblique P waves propagate through the observation domain: conserved
+tangential wavenumber makes both outgoing P branches evanescent in
+this configuration. The demo displays separate mode contributions,
+their vector-displacement magnitudes at t=0, and log-scale P phasor
+envelopes. It prints decay distances, boundary residual and energy
+fractions. The field assumes homogeneous lossless elastic half-spaces;
+it is not a Kelvin-Voigt coupled P/S model.
+
+```matlab
+r=runtests('tests/physics/swsynth/propagation/test_psv_soft_tissue_evanescent.m');
+disp(table(r)); assertSuccess(r)
+run('examples/swsynth/v2/08_shear_attenuation/demo_soft_tissue_psv_interface.m')
+```
