@@ -40,6 +40,31 @@ cx=min(max(XX,x(1)),x(end));
 cz=min(max(ZZ,z(1)),z(end));
 c=interp2(x,z,speedZX,cx,cz,"nearest");
 alpha=interp2(x,z,lossZX,cx,cz,"nearest");
+% Opt-in A/B diagnostic: sample the known planar interface directly on
+% extended-grid nodes. Keep nearest-map sampling as the default.
+speedSampling="nearest_map";
+if isfield(options,"SpeedInterfacePlane") && ...
+        ~isempty(options.SpeedInterfacePlane)
+    p=options.SpeedInterfacePlane;
+    mandatory=["normal_xyz","offset_m", ...
+        "speed_negative_m_s","speed_positive_m_s"];
+    if ~all(isfield(p,cellstr(mandatory)))
+        error("swsynth:InvalidSpeedInterfacePlane", ...
+            "Incomplete planar speed interface specification.");
+    end
+    n=double(p.normal_xyz(:).');
+    vals=[n,double(p.offset_m), ...
+        double(p.speed_negative_m_s),double(p.speed_positive_m_s)];
+    if numel(n)~=3 || any(~isfinite(vals)) || ...
+            abs(norm(n)-1)>1e-8 || any(vals(end-1:end)<=0)
+        error("swsynth:InvalidSpeedInterfacePlane", ...
+            "Invalid planar speed interface normal, offset or speeds.");
+    end
+    signed=XX*n(1)+YY*n(2)+ZZ*n(3)-double(p.offset_m);
+    c=double(p.speed_negative_m_s)*ones(size(XX));
+    c(signed>0)=double(p.speed_positive_m_s);
+    speedSampling="exact_planar_geometry_nodes";
+end
 % Seed a local neighborhood with exact homogeneous-source travel times.
 % This limits the point-source staircasing error of a single fixed node.
 [~,ix]=min(abs(xx-source(1)));
@@ -147,6 +172,7 @@ end
 diag=struct("model","extended_3d_first_arrival", ...
     "outside_fov_medium","nearest_edge_constant_y_invariant", ...
     "grid_size_zyx",size(c),"grid_spacing_m",h, ...
+    "speed_sampling",speedSampling, ...
     "solver",d,"source_xyz_m",source);
 if exist("diagVolume","var")
     diag.volume=diagVolume;
