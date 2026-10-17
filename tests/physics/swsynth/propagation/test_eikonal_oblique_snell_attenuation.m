@@ -18,8 +18,11 @@ plane=struct("normal_xyz",[1 0 0],"offset_m",xi, ...
 % Off-axis receiver points, all beyond interface; source and receivers y=0.
 targets=[.012 0 .010;.014 0 .013;.016 0 .003;.018 0 .016];
 hValues=[.002 .0015 .001];
-[~,ix]=min(abs(x-targets(:,1).'));
-[~,iz]=min(abs(z-targets(:,3).'));
+ix=zeros(size(targets,1),1); iz=ix;
+for j=1:size(targets,1)
+    [~,ix(j)]=min(abs(x-targets(j,1)));
+    [~,iz(j)]=min(abs(z-targets(j,3)));
+end
 for h=hValues
     opts=struct("SpatialOrder",2,"GridSpacingM",h, ...
         "MaxGridCells",400000,"MaximumIterations",200, ...
