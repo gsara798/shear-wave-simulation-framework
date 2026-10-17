@@ -125,3 +125,20 @@ reflected fields. It does not modify the 3D Eikonal solver itself.
 r=runtests('tests/physics/swsynth/propagation/test_planar_interface_attenuation.m');
 disp(table(r)); assertSuccess(r)
 ```
+
+### Oblique Snell refraction and attenuation (diagnostic)
+
+Run `tests/physics/swsynth/propagation/test_eikonal_oblique_snell_attenuation.m`
+for external-source `projected3d` rays crossing a sharp interface obliquely.
+The independent reference minimizes the two-segment travel time over the
+interface crossing coordinate with `fminbnd`; Snell's relation is checked
+on that reference. Eikonal observation arrival times and geometrically
+integrated attenuation are then compared with the optimal Fermat path at
+multiple grid spacings. Outputs are diagnostic until numerical error
+thresholds have been chosen based on observed behavior. No transmitted
+amplitude coefficient or reflected wave is included.
+
+```matlab
+r=runtests('tests/physics/swsynth/propagation/test_eikonal_oblique_snell_attenuation.m');
+disp(table(r)); assertSuccess(r)
+```
