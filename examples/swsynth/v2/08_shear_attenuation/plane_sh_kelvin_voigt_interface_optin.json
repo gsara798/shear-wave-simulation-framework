@@ -1,0 +1,67 @@
+{
+  "schema_version": "2.0",
+  "scenario": "plane_sh_kelvin_voigt_interface_optin",
+  "seed": 53053,
+  "geometry": "projected3d",
+  "domain": {
+    "Lx_m": 0.024,
+    "Lz_m": 0.024,
+    "dx_m": 0.0003,
+    "dz_m": 0.0003,
+    "observation_y_m": 0
+  },
+  "medium": {
+    "background_cs_m_s": 2,
+    "viscoelastic": {
+      "model": "kelvin_voigt",
+      "density_kg_m3": 1000,
+      "mu_pa": 4000,
+      "eta_pa_s": 0.12
+    },
+    "objects": [
+      {
+        "type": "bilayer",
+        "normal_angle_rad": 0,
+        "offset_m": 0.012,
+        "cs_m_s": 3,
+        "viscoelastic": {
+          "model": "kelvin_voigt",
+          "density_kg_m3": 1000,
+          "mu_pa": 9000,
+          "eta_pa_s": 0.35
+        }
+      }
+    ]
+  },
+  "harmonic": {
+    "frequency_hz": 500,
+    "quantity": "relative_motion"
+  },
+  "propagation": {
+    "model": "plane_wave",
+    "phase_method": "eikonal",
+    "normalization": "none",
+    "interface": {
+      "enabled": true,
+      "reference_x_m": 0,
+      "reference_z_m": 0
+    }
+  },
+  "incidence": {
+    "direction_xyz": [
+      0.8660254037844386,
+      0,
+      0.5
+    ],
+    "relative_amplitude": 1,
+    "phase_rad": 0,
+    "polarization": {
+      "policy": "transverse_explicit",
+      "explicit_polarization_xyz": [
+        0,
+        1,
+        0
+      ]
+    }
+  }
+}
