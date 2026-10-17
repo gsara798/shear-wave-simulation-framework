@@ -129,7 +129,8 @@ if ~isscalar(phaseMethod) || ~ismember(phaseMethod, ...
     error("swsynth:V2InvalidPropagation", ...
         "Unsupported phase method.");
 end
-if phaseMethod=="eikonal" && (model=="spherical_wave" || geometry=="2d")
+if phaseMethod=="eikonal" && (geometry=="2d" || ...
+        (model=="spherical_wave" && geometry~="projected3d"))
     error("swsynth:V2UnsupportedPhase", ...
         "Eikonal is supported only for incident plane waves in projected3d/volumetric3d.");
 end
@@ -147,7 +148,7 @@ if isfield(scenario.propagation,"attenuation")
     end
     if a.enabled
         if phaseMethod=="eikonal"
-            if geometry~="projected3d" || model~="plane_wave"
+            if geometry~="projected3d"
                 error("swsynth:UnsupportedAttenuation", ...
                     "Heterogeneous attenuation supports projected3d plane-wave Eikonal only.");
             end
