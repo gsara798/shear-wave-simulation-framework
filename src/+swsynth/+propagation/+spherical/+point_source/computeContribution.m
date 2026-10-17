@@ -74,7 +74,7 @@ if ~isstruct(phaseRequest) || ~isscalar(phaseRequest) || ...
 end
 method=string(phaseRequest.method);
 if ~isscalar(method) || ~ismember(method, ...
-        ["analytical","homogeneous_analytic"])
+        ["analytical","homogeneous_analytic","eikonal"])
     error("swsynth:UnsupportedSphericalPhaseMethod", ...
         "V2 point-source contribution currently supports homogeneous analytical phase only.");
 end
@@ -156,8 +156,22 @@ for j=1:nodeCount
         "reference_cs_m_s",cs, ...
         "source_xyz_m",nodes(j,:), ...
         "target_xyz_m",targetXYZ);
-    phaseResult=swsynth.phase.compute(phaseForNode);
-    tau=double(phaseResult.travel_time_s(:));
+    if method=="eikonal"
+        if geometry~="projected3d" || nodeCount~=1 || abs(nodes(j,2))>1e-12 || ...
+                ~isfield(request,"phase_speed_map_zx") || ...
+                ~isfield(request,"attenuation_map_np_m")
+            error("swsynth:UnsupportedPointSourceEikonal", ...
+                "Heterogeneous source Eikonal needs an internal on-plane point source.");
+        end
+        opts=struct();
+        if isfield(request,"solver_options");opts=request.solver_options;end
+        [timeZX,~]=swsynth.phase.eikonal.projected3d.computePointSourceTravelTime( ...
+            request.phase_speed_map_zx,x(:).',z(:),nodes(j,:),opts);
+        tau=timeZX(:);
+    else
+        phaseResult=swsynth.phase.compute(phaseForNode);
+        tau=double(phaseResult.travel_time_s(:));
+    end
     radiationRequest=struct("model","point_force_shear_far_field", ...
         "geometry",geometry, ...
         "source_xyz_m",nodes(j,:), ...
@@ -179,6 +193,11 @@ for j=1:nodeCount
         end
         spreading=spreading.*exp(-alpha*distance);
     end
+    if method=="eikonal"
+        optical=swsynth.propagation.attenuation.integratePointSource2D( ...
+            timeZX,request.attenuation_map_np_m,x(:).',z(:),nodes(j,:));
+        spreading=spreading.*exp(-optical(:));
+    end
     scalar=amplitude*weights(j).*spreading.* ...
         exp(1i*(2*pi*frequency*tau+initialPhase));
     fieldXYZ=fieldXYZ+scalar.*double(pol.vector_xyz);
@@ -193,6 +212,9 @@ contribution.geometry=geometry;
 contribution.frequency_hz=frequency;
 contribution.phase_sign=1;
 contribution.phase_solver="homogeneous_spherical_distance";
+if method=="eikonal"
+    contribution.phase_solver="internal_point_source_eikonal_2d";
+end
 contribution.source_id=sourceID;
 contribution.source_xyz_m=sourcePosition;
 contribution.force_direction_xyz=force;
