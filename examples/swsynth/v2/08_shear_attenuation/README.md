@@ -67,3 +67,16 @@ assertSuccess(results)
 b=run_simulation("examples/swsynth/v2/08_shear_attenuation/bilayer_kelvin_voigt_projected3d.json",PlotFigures=true);
 i=run_simulation("examples/swsynth/v2/08_shear_attenuation/inclusion_kelvin_voigt_projected3d.json",PlotFigures=true);
 ```
+
+## Stage 2b — Internal physical point source in a heterogeneous medium
+
+`point_source_bilayer_kelvin_voigt_projected3d.json` uses a physical point force at (6, 0, 12) mm, **inside** the 24 × 24 mm x-z computational FOV. The point source is on the measurement plane. Each local Kelvin–Voigt constituent provides phase speed and attenuation. A first-arrival Eikonal field is initialized at the source's closest grid node; phase-gradient ray backtracking accumulates intrinsic attenuation towards a finite source neighborhood.
+
+```matlab
+setup_simulation_framework
+results=runtests('tests/unit/test_swsynth_point_source_heterogeneous_attenuation_v2.m');
+assertSuccess(results)
+out=run_simulation("examples/swsynth/v2/08_shear_attenuation/point_source_bilayer_kelvin_voigt_projected3d.json",PlotFigures=true);
+```
+
+**Scope:** first-arrival 2D ray approximation only, for physical point sources inside the FOV and at y=0. Off-plane or external sources, coherent multi-node apertures and volumetric3d source Eikonal are not supported yet. The exact mathematical source singularity is not resolved: the Eikonal source is discretized to the nearest grid node and the loss integral stops in a neighborhood of radius ~1.5 grid diagonals. This introduces discretization errors near the source. The example sets `geometric_decay_exponent=0` to isolate intrinsic attenuation; enabling the legacy `r^-1` factor is an empirical homogeneous spreading approximation, **not** a heterogeneous ray-tube transport calculation. No reflected wavefield, refracted-mode conversion, or interface transmission coefficients are synthesized.
