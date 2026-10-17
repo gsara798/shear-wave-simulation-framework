@@ -56,10 +56,17 @@ function [t,a,theta1,theta2]=fermatTwoLayer(src,q,xi,c1,c2,a1,a2)
 % Two isotropic half-spaces with planar interface x=xi, same y coordinate.
 % A crossing at [xi,0,zeta] minimizes L1/c1+L2/c2 (Fermat).
 assert(abs(src(2)-q(2))<1e-12 && src(1)<xi && q(1)>xi)
-fun=@(zc) hypot(xi-src(1),zc-src(3))/c1+ ...
-          hypot(q(1)-xi,q(3)-zc)/c2;
+% Solve the stationarity condition directly. Unlike minimizing a nearly
+% flat travel-time curve, this gives a well-conditioned Snell residual.
+d1=xi-src(1); d2=q(1)-xi;
+stationarity=@(zc) (zc-src(3))./(c1*hypot(d1,zc-src(3))) + ...
+    (zc-q(3))./(c2*hypot(d2,q(3)-zc));
 lo=min(src(3),q(3));hi=max(src(3),q(3));
-zc=fminbnd(fun,lo,hi,optimset("TolX",1e-13));
+if hi==lo
+    zc=lo;
+else
+    zc=fzero(stationarity,[lo hi],optimset("TolX",1e-13));
+end
 l1=hypot(xi-src(1),zc-src(3));
 l2=hypot(q(1)-xi,q(3)-zc);
 t=l1/c1+l2/c2;
