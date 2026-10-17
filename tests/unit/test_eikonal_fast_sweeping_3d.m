@@ -82,3 +82,21 @@ verifyTrue(testCase,all(isfinite(T(:))));
 verifyEqual(testCase,T(7,7,7),0);
 verifyGreaterThan(testCase,T(7,7,10),0);
 end
+
+function testDefaultIsSecondOrderAndExplicitFirstOrderPreserved(testCase)
+n=9;h=.001;
+slow=ones(n,n,n)/2;
+initial=inf(n,n,n);fixed=false(n,n,n);
+fixed(:,:,1)=true;initial(:,:,1)=0;
+[Tdefault,ddefault]=swsynth.numerics.eikonal.solveFastSweeping3D( ...
+    slow,h,h,h,initial,fixed);
+[Tsecond,dsecond]=swsynth.numerics.eikonal.solveFastSweeping3D( ...
+    slow,h,h,h,initial,fixed,struct("SpatialOrder",2));
+[Tfirst,dfirst]=swsynth.numerics.eikonal.solveFastSweeping3D( ...
+    slow,h,h,h,initial,fixed,struct("SpatialOrder",1));
+verifyEqual(testCase,ddefault.spatial_order,2);
+verifyEqual(testCase,dsecond.spatial_order,2);
+verifyEqual(testCase,dfirst.spatial_order,1);
+verifyEqual(testCase,Tdefault,Tsecond,"AbsTol",1e-12);
+verifyTrue(testCase,all(isfinite(Tfirst(:))));
+end
