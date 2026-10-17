@@ -55,7 +55,7 @@ if isfield(options,"Verbose");solverOpts.Verbose=options.Verbose;end
     1./c,mean(diff(xx)),mean(diff(yy)),mean(diff(zz)),initial,fixed,solverOpts);
 if ~d.converged,error("swsynth:PointSource3DEikonalDidNotConverge","Extended Eikonal failed to converge.");end
 % Accumulate loss along first-arrival rays by backward characteristics.
-[dTz,dTy,dTx]=gradient(T,mean(diff(zz)),mean(diff(yy)),mean(diff(xx)));
+[dTy,dTz,dTx]=gradient(T,mean(diff(yy)),mean(diff(zz)),mean(diff(xx)));
 [Zo,Xo]=ndgrid(z,x);
 xo=Xo(:);yo=obsY*ones(numel(Xo),1);zo=Zo(:);
 amp=zeros(numel(xo),1);
