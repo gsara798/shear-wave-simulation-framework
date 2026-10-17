@@ -80,3 +80,24 @@ out=run_simulation("examples/swsynth/v2/08_shear_attenuation/point_source_bilaye
 ```
 
 **Scope:** first-arrival 2D ray approximation only, for physical point sources inside the FOV and at y=0. Off-plane or external sources, coherent multi-node apertures and volumetric3d source Eikonal are not supported yet. The exact mathematical source singularity is not resolved: the Eikonal source is discretized to the nearest grid node and the loss integral stops in a neighborhood of radius ~1.5 grid diagonals. This introduces discretization errors near the source. In the internal-source Eikonal branch, cells within this unresolved near-source radius are explicitly set to zero in the synthesized far-field shear contribution; zero here means **masked/unresolved**, not a physical prediction of zero displacement. The global wavefield sample currently does not include a separate near-source validity mask, so analyses must exclude these cells explicitly. The example sets `geometric_decay_exponent=0` to isolate intrinsic attenuation; enabling the legacy `r^-1` factor is an empirical homogeneous spreading approximation, **not** a heterogeneous ray-tube transport calculation. No reflected wavefield, refracted-mode conversion, or interface transmission coefficients are synthesized.
+
+## Stage 2c — External and out-of-plane point sources
+
+Two more examples in this existing set:
+
+- `point_source_external_bilayer_kelvin_voigt_projected3d.json`: source (-6,0,12) mm, outside the observed 24 mm square
+- `point_source_offplane_bilayer_kelvin_voigt_projected3d.json`: source (-5,8,12) mm, external and 8 mm away from the x-z observation plane
+
+Both examples use `propagation.phase_method="eikonal"`, `propagation.attenuation.enabled=true`, and explicit numerical options `GridSpacingM=0.0012` and `MaxGridCells=200000` to limit the expense of the **3D** Eikonal solver.
+
+The internal on-plane source path remains unchanged. External or out-of-plane sources instead use a 3D computational domain including both the source and the observed x-z region; the solver computes first-arrival times and integrates local intrinsic attenuation along 3D phase-gradient paths, then resamples on the observation plane. The assumed mechanical property maps are **constant in y**, with values outside the observed x-z rectangle equal to the **nearest boundary material**. This extrapolation is explicit but not a measured material description; source-to-FOV travel times and attenuation depend on this assumption.
+
+The local 3D Eikonal model does not calculate reflected waves, mode conversion, diffraction, coherent multipathing or ray-tube geometrical focusing. `geometric_decay_exponent=1` retains the existing straight-line `1/r` amplitude model as an approximation. These numerical results require validation in MATLAB; a denser extended grid improves resolution but substantially increases computation.
+
+```matlab
+setup_simulation_framework
+results=runtests('tests/unit/test_swsynth_external_offplane_source_v2.m');
+assertSuccess(results)
+ext=run_simulation("examples/swsynth/v2/08_shear_attenuation/point_source_external_bilayer_kelvin_voigt_projected3d.json",PlotFigures=true);
+off=run_simulation("examples/swsynth/v2/08_shear_attenuation/point_source_offplane_bilayer_kelvin_voigt_projected3d.json",PlotFigures=true);
+```
