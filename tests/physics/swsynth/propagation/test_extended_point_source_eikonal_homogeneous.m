@@ -33,6 +33,8 @@ for is=1:size(sources,1)
     fprintf("source=%s; h=%s; relative time errors=%s; relative optical-depth errors=%s\n", ...
         mat2str(src),mat2str(hs),mat2str(errorsT,4),mat2str(errorsA,4));
     verifyTrue(tc,all(isfinite(errorsT))&&all(isfinite(errorsA)));
+    verifyLessThan(tc,max(errorsA),1e-11, ...
+        "Homogeneous optical depth must equal alpha*r.");
 end
 end
 
