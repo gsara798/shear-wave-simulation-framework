@@ -165,6 +165,9 @@ for j=1:nodeCount
         end
         opts=struct();
         if isfield(request,"solver_options");opts=request.solver_options;end
+        if isfield(request,"attenuation_interface")
+            opts.AttenuationPlane=request.attenuation_interface;
+        end
         useExtended=nodes(j,1)<x(1) || nodes(j,1)>x(end) || ...
             nodes(j,3)<z(1) || nodes(j,3)>z(end) || ...
             abs(nodes(j,2)-observationY)>1e-12;
