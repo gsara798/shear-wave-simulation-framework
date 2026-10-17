@@ -127,12 +127,26 @@ if isfield(prop,"attenuation") && isfield(prop.attenuation,"enabled") && prop.at
     if ~isfield(a,"constitutive")
         error("swsynth:InvalidAttenuation","attenuation.constitutive required.");
     end
-    if ~uniform || method=="eikonal"
-        error("swsynth:UnsupportedAttenuation", ...
-            "Constitutive attenuation stage 1 supports homogeneous analytical propagation only.");
+    if method=="eikonal"
+        if geometry~="projected3d" || model~="plane_wave"
+            error("swsynth:UnsupportedAttenuation", ...
+                "Heterogeneous attenuation currently supports projected3d plane-wave Eikonal.");
+        end
+        if ~isfield(scenario.medium,"viscoelastic")
+            error("swsynth:InvalidViscoelasticMedium", ...
+                "Heterogeneous Eikonal requires medium.viscoelastic.");
+        end
+        materialLoss=swsynth.medium.viscoelastic.buildMaps( ...
+            swsynth.medium.validate(scenario.medium,geometry),maps,drive.frequency_hz);
+        propagationSpeed=materialLoss.reference_phase_speed_m_s;
+    else
+        if ~uniform
+            error("swsynth:UnsupportedAttenuation", ...
+                "Heterogeneous attenuation requires Eikonal phase.");
+        end
+        materialLoss=swsynth.medium.viscoelastic.dispersion(a.constitutive,drive.frequency_hz);
+        propagationSpeed=materialLoss.phase_speed_m_s;
     end
-    materialLoss=swsynth.medium.viscoelastic.dispersion(a.constitutive,drive.frequency_hz);
-    propagationSpeed=materialLoss.phase_speed_m_s;
 end
 % parfor(...,0) runs serially, without starting a worker pool.
 workerLimit=0;
@@ -214,13 +228,20 @@ switch model
             % The material speed map remains the nondispersive reference.
             % The homogeneous Kelvin-Voigt phase speed is frequency-dependent.
             % The medium's spatial homogeneity was already checked above.
-            if ~isempty(materialLoss)
+            if ~isempty(materialLoss) && method~="eikonal"
                 if isfield(phaseRequest,"cs_map_zx")
                     phaseRequest=rmfield(phaseRequest,"cs_map_zx");
                 end
                 if isfield(phaseRequest,"cs_map_zyx")
                     phaseRequest=rmfield(phaseRequest,"cs_map_zyx");
                 end
+            end
+            if ~isempty(materialLoss) && method=="eikonal"
+                if abs(incidence.direction_xyz(i,2))>1e-10
+                    error("swsynth:UnsupportedAttenuationDirection", ...
+                        "Heterogeneous 2D ray tracing requires in-plane incidence.");
+                end
+                phaseRequest.cs_map_zx=materialLoss.phase_speed;
             end
             if method=="eikonal" && isfield(prop,"solver_options")
                 phaseRequest.solver_options=prop.solver_options;
@@ -244,7 +265,11 @@ switch model
                 "phase_rad",incidence.phase_rad(i), ...
                 "phase",phaseRequest,"polarization",pol);
             if ~isempty(materialLoss)
-                req.attenuation_np_m=materialLoss.attenuation_np_m;
+                if method=="eikonal"
+                    req.attenuation_map_np_m=materialLoss.attenuation_np_m;
+                else
+                    req.attenuation_np_m=materialLoss.attenuation_np_m;
+                end
             end
             components{i}=swsynth.propagation.plane_wave.computeContribution(req);
         end
