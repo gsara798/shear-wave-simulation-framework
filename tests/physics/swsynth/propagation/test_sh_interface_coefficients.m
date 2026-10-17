@@ -36,7 +36,7 @@ end
 
 function testTotalInternalReflection(tc)
 addSourcePath();
-p=base();p.mu1_pa=9000;p.mu2_pa=4000;
+p=base();p.mu1_pa=4000;p.mu2_pa=9000;
 p.incidence_angle_rad=pi/3;
 r=swsynth.propagation.interface.shCoefficients(p);
 verifyTrue(tc,r.is_evanescent);
