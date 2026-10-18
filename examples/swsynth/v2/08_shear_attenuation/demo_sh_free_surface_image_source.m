@@ -1,6 +1,6 @@
 % Exact 2D SH line-source reflection at a stress-free planar boundary.
 % The x=0 boundary is traction-free; the image source lies outside x<=0.
-root=fileparts(fileparts(fileparts(fileparts(mfilename("fullpath"))))));
+root=fileparts(fileparts(fileparts(fileparts(fileparts(mfilename("fullpath"))))));
 addpath(fullfile(root,"src"));
 p=struct("x_m",-.012:.00015:0,"z_m",(-.010:.00015:.010).', ...
     "source_xz_m",[-.006 .00013],"interface_x_m",0, ...
