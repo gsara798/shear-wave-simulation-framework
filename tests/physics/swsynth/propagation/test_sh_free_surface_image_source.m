@@ -11,7 +11,8 @@ verifyEqual(tc,a.total_uy_zx,a.incident_uy_zx+a.reflected_uy_zx,"AbsTol",1e-12);
 verifyEqual(tc,a.image_source_xz_m,[.006 .00013],"AbsTol",1e-12);
 % Exact traction-free Neumann boundary: even image symmetry at x=0.
 z=p.z_m(:);h=1e-5;
-p.x_m=[-h 0];c=swsynth.propagation.interface.pointSHFreeSurface(p);
+p.x_m=[-h 0];p.reflection_enabled=true;
+c=swsynth.propagation.interface.pointSHFreeSurface(p);
 % At the boundary, source and mirror distances agree exactly.
 verifyEqual(tc,c.incident_uy_zx(:,2),c.reflected_uy_zx(:,2),"AbsTol",1e-12);
 verifyTrue(tc,all(isfinite(a.total_uy_zx(:))));
