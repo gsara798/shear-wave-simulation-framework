@@ -33,6 +33,27 @@ verifyEqual(tc,a.total_uy_zx,a.incident_uy_zx,"AbsTol",0);
 verifyEqual(tc,max(abs(a.reflected_uy_zx(:))),0);
 verifyEqual(tc,max(abs(a.transmitted_uy_zx(:))),0);
 end
+function testSourceOutsideFoVLargeWindow(tc)
+addSourcePath();
+p=base();
+p.x_m=-.025:.0005:.025;
+p.z_m=(-.025:.0005:.025).';
+p.source_xz_m=[-.035 .00013];
+p.spectral_count=3500;
+p.spectral_step_rad_m=2;
+on=swsynth.propagation.interface.lineSHWeldedInterface(p);
+p.interface_enabled=false;
+off=swsynth.propagation.interface.lineSHWeldedInterface(p);
+verifyLessThan(tc,p.source_xz_m(1),min(p.x_m));
+verifyTrue(tc,all(isfinite(on.incident_uy_zx(:))));
+verifyTrue(tc,all(isfinite(on.reflected_uy_zx(:))));
+verifyTrue(tc,all(isfinite(on.transmitted_uy_zx(:))));
+verifyTrue(tc,all(isfinite(on.total_uy_zx(:))));
+verifyEqual(tc,off.total_uy_zx,off.incident_uy_zx,"AbsTol",0);
+verifyGreaterThan(tc,max(abs(on.reflected_uy_zx(:))),0);
+verifyGreaterThan(tc,max(abs(on.transmitted_uy_zx(:))),0);
+end
+
 function p=base()
 p=struct("x_m",-.008:.0005:.008,"z_m",(-.008:.0005:.008).', ...
     "source_xz_m",[-.004 .00013],"interface_x_m",0, ...
