@@ -8,12 +8,11 @@ p.reflection_enabled=false;b=swsynth.propagation.interface.pointSHFreeSurface(p)
 verifyEqual(tc,b.total_uy_zx,b.incident_uy_zx,"AbsTol",0);
 verifyEqual(tc,b.reflected_uy_zx,complex(zeros(size(b.incident_uy_zx))),"AbsTol",0);
 verifyEqual(tc,a.total_uy_zx,a.incident_uy_zx+a.reflected_uy_zx,"AbsTol",1e-12);
-verifyEqual(tc,a.image_source_xz_m,[.006 0],"AbsTol",1e-12);
+verifyEqual(tc,a.image_source_xz_m,[.006 .00013],"AbsTol",1e-12);
 % Exact traction-free Neumann boundary: even image symmetry at x=0.
 z=p.z_m(:);h=1e-5;
 p.x_m=[-h 0];c=swsynth.propagation.interface.pointSHFreeSurface(p);
-p.x_m=[0 h]; % right of interface is intentionally invalid; use
-% derivative analytically by equality of equal-distance Green terms.
+% At the boundary, source and mirror distances agree exactly.
 verifyEqual(tc,c.incident_uy_zx(:,2),c.reflected_uy_zx(:,2),"AbsTol",1e-12);
 verifyTrue(tc,all(isfinite(a.total_uy_zx(:))));
 end
@@ -28,7 +27,7 @@ verifyLessThan(tc,max(abs(derivative)),.03);
 end
 function p=base()
 p=struct("x_m",-.012:.0002:0,"z_m",(-.010:.0002:.010).', ...
-    "source_xz_m",[-.006 0],"interface_x_m",0, ...
+    "source_xz_m",[-.006 .00013],"interface_x_m",0, ...
     "frequency_hz",300,"cs_m_s",2,"reflection_enabled",true);
 end
 function addSourcePath()
