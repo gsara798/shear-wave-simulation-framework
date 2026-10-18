@@ -328,3 +328,25 @@ r=runtests('tests/physics/swsynth/propagation/test_psv_soft_tissue_evanescent.m'
 disp(table(r)); assertSuccess(r)
 run('examples/swsynth/v2/08_shear_attenuation/demo_soft_tissue_psv_interface.m')
 ```
+
+### Free-surface image-source benchmark for antiplane SH
+
+`swsynth.propagation.interface.pointSHFreeSurface` is an exact
+**2D antiplane SH line-source** Green-function benchmark for an isotropic,
+elastic half-space bounded by a stress-free plane `x=interface_x_m`.
+The outgoing field is `(i/4) H_0^{(1)}(k r)`; free-surface Neumann
+conditions are satisfied by a **same-sign image line source**.
+It returns incident, reflected, and total complex displacement phasors,
+and `reflection_enabled=false` gives the incident-only reference.
+Its source singularity must not lie at a sampled observation point.
+
+This is intentionally NOT a 3D spherical point-force Green tensor and
+NOT a welded two-solid interface. It is a controlled exact reflection
+benchmark before tackling angle-spectrum integrals and 3D polarization.
+It is also not yet connected to general scenario synthesis.
+
+```matlab
+r=runtests('tests/physics/swsynth/propagation/test_sh_free_surface_image_source.m');
+disp(table(r)); assertSuccess(r)
+run('examples/swsynth/v2/08_shear_attenuation/demo_sh_free_surface_image_source.m')
+```
