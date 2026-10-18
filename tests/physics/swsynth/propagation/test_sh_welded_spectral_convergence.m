@@ -38,8 +38,6 @@ uR=A.total_uy_zx(:,3);
 displacementError=norm(uL-uR)/max(norm(uR),eps);
 mu1=p.rho1_kg_m3*p.cs1_m_s^2;
 mu2=p.rho2_kg_m3*p.cs2_m_s^2;
-dL=(3*A.total_uy_zx(:,2)-4*A.total_uy_zx(:,1)+ ...
-    A.total_uy_zx(:,1)); %#ok<NASGU>
 % Second-order left derivative at x=0 from left values requires x=0.
 % Obtain the left limit by extrapolating derivative samples from x<0.
 dLeft=(A.total_uy_zx(:,2)-A.total_uy_zx(:,1))/h;
