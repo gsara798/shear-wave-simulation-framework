@@ -350,3 +350,30 @@ r=runtests('tests/physics/swsynth/propagation/test_sh_free_surface_image_source.
 disp(table(r)); assertSuccess(r)
 run('examples/swsynth/v2/08_shear_attenuation/demo_sh_free_surface_image_source.m')
 ```
+
+### Two elastic welded half-spaces: SH line-source angular spectrum
+
+`swsynth.propagation.interface.lineSHWeldedInterface` handles a
+2D antiplane SH line source in the left elastic half-space. The incident
+field is evaluated with the outgoing Hankel Green function. Reflected and
+transmitted fields use the Weyl spectral integral over tangential
+wavenumber, applying angle-dependent welded SH displacement coefficients
+and outgoing/evanescent square-root branches independently to each
+component. A finite grid of `spectral_count` and
+`spectral_step_rad_m` controls angular-spectrum truncation and quadrature.
+`interface_enabled=false` returns the uninterrupted incident medium-1
+reference. No Kelvin-Voigt loss, SV/P conversion or 3D spherical point
+force is represented in this module.
+
+The first tests are **diagnostic** (finite fields, identical-material
+no-reflection, comparison with Hankel and refinement sensitivity). Strong
+numerical claims require inspecting the printed errors, explicitly
+checking boundary displacement/traction residuals and establishing
+quadrature convergence. Do not interpret test pass as a validated
+quantitative error bound.
+
+```matlab
+r=runtests('tests/physics/swsynth/propagation/test_sh_welded_line_interface.m');
+disp(table(r)); assertSuccess(r)
+run('examples/swsynth/v2/08_shear_attenuation/demo_sh_welded_line_interface.m')
+```
