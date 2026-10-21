@@ -41,7 +41,16 @@ if base>0
     if ~isempty(positive)
         reference=median(positive);
     end
-    sigma=base.*max(a,floorFrac*reference);
+    scaling=string(getstring(cfg,"spatial_scaling","relative_local"));
+    switch scaling
+        case "relative_local"
+            sigma=base.*max(a,floorFrac*reference);
+        case "uniform_global_rms"
+            % Constant spatial noise SD, referenced to global clean RMS.
+            sigma=base.*sqrt(mean(abs(Uclean(:)).^2)).*ones(size(a));
+        otherwise
+            error("swsynth:InvalidShearNoise","Unsupported spatial_scaling: %s.",scaling);
+    end
     U=U+sigma.*complex(R,I)./sqrt(2);
 end
 difference=U-Uclean;
@@ -52,6 +61,7 @@ D.snr_db=20*log10(norm(Uclean(:))/max(norm(difference(:)),eps));
 D.source_amplitude_jitter_std=ampStd;
 D.source_phase_jitter_cycles_std=phaseStd;
 D.propagation_relative_std=base;
+D.spatial_scaling=string(getstring(cfg,"spatial_scaling","relative_local"));
 D.correlation_m=getf(cfg,"correlation_m",0);
 end
 
@@ -71,4 +81,8 @@ end
 
 function v=getf(s,key,default)
 if isfield(s,key),v=double(s.(key));else,v=default;end
+end
+
+function v=getstring(s,key,default)
+if isfield(s,key),v=string(s.(key));else,v=string(default);end
 end
