@@ -5,7 +5,7 @@ arguments
 end
 allowed=["enabled","source_amplitude_jitter_std", ...
     "source_phase_jitter_cycles_std","propagation_relative_std", ...
-    "correlation_m","amplitude_floor_fraction","seed"];
+    "correlation_m","amplitude_floor_fraction","seed","spatial_scaling"];
 unknown=setdiff(string(fieldnames(cfg)),allowed);
 if ~isempty(unknown)
     error("swsynth:InvalidShearNoise","Unsupported shear_noise field %s.",unknown(1));
