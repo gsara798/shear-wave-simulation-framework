@@ -23,6 +23,18 @@ for field=fields
         end
     end
 end
+if isfield(cfg,"spatial_scaling")
+    mode=cfg.spatial_scaling;
+    if ~(ischar(mode) || (isstring(mode) && isscalar(mode)))
+        error("swsynth:InvalidShearNoise", ...
+            "spatial_scaling must be a scalar string or character vector.");
+    end
+    mode=string(mode);
+    if ~ismember(mode,["relative_local","uniform_global_rms"])
+        error("swsynth:InvalidShearNoise", ...
+            "Unsupported spatial_scaling: %s.",mode);
+    end
+end
 if isfield(cfg,"seed")
     v=cfg.seed;
     if ~isnumeric(v) || ~isscalar(v) || ~isfinite(v) || v<0 || v~=fix(v) || v>2^32-1
