@@ -153,8 +153,12 @@ try
     end
     if ~isempty(cleanShear)
         totalDifference=wavefield_sample.wavefield.(fieldName)-cleanShear;
-        summary.total_noise_snr_db=20*log10( ...
-            norm(cleanShear(:))/max(norm(totalDifference(:)),eps));
+        if all(totalDifference(:)==0)
+            summary.total_noise_snr_db=Inf;
+        else
+            summary.total_noise_snr_db=20*log10( ...
+                norm(cleanShear(:))/max(norm(totalDifference(:)),eps));
+        end
     end
     if meta.model=="plane_wave"
         summary.direction_count=count;
