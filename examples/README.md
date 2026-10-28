@@ -27,6 +27,13 @@ report = run_campaign( ...
 
 The **simulation** JSON must specify `"schema_version": "2.0"`; campaign JSONs use their independent campaign schema.
 
+## V2 displacement readout noise example
+
+`examples/swsynth/v2/09_displacement_readout_noise/` contains a single
+off-plane point source with an x-directed force, z-axis displacement readout,
+and a paired six-level Boukraa-like temporal-noise campaign. It preserves
+the standard figure generator and export order; see the folder README.
+
 ## k-Wave examples (unchanged)
 
 Public k-Wave examples remain under `examples/kwave/2d/` and `examples/kwave/3d/`.

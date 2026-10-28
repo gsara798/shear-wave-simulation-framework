@@ -13,7 +13,7 @@ if ~isfield(config,"schema_version") || ...
 end
 allowed=["schema_version","scenario","seed","measurement", ...
     "geometry","domain","medium","harmonic","propagation", ...
-    "incidence","sources","execution","shear_noise"];
+    "incidence","sources","execution","shear_noise","readout_noise"];
 extra=setdiff(string(fieldnames(config)),allowed);
 if ~isempty(extra)
     error("swsynth:V2ConfigUnexpectedField", ...
@@ -26,7 +26,7 @@ for f=required
     end
 end
 scenario=rmfield(config,intersect(string(fieldnames(config)), ...
-    ["schema_version","scenario","seed","measurement"]));
+    ["schema_version","scenario","seed","measurement","readout_noise"]));
 % jsondecode may return a flat JSON XYZ array as a 3-by-1 column.
 % Normalize only known XYZ vector fields here; don't transpose N-by-3
 % matrices or mutate the general MATLAB synthesis API.
@@ -205,6 +205,23 @@ if isfield(config,"shear_noise")
     if config.shear_noise.enabled && ~isfield(config.shear_noise,"seed") && ~isfield(config,"seed")
         error("swsynth:ShearNoiseSeedRequired", ...
             "Enabled shear noise requires shear_noise.seed or config.seed.");
+    end
+end
+if isfield(config,"readout_noise")
+    swsynth.observation.readout.validateConfig(config.readout_noise);
+    if config.readout_noise.enabled
+        if ~isfield(config.readout_noise,"seed") && ~isfield(config,"seed")
+            error("swsynth:ReadoutNoiseSeedRequired", ...
+                "Enabled readout noise requires readout_noise.seed or config.seed.");
+        end
+        prf=4000;
+        if isfield(config.readout_noise,"prf_hz")
+            prf=double(config.readout_noise.prf_hz);
+        end
+        if prf<=2*drive.frequency_hz
+            error("swsynth:InvalidReadoutNoise", ...
+                "readout_noise.prf_hz must exceed twice harmonic.frequency_hz.");
+        end
     end
 end
 

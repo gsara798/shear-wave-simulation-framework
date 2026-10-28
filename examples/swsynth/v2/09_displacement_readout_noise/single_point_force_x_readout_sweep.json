@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.1",
+  "backend": "swsynth",
+  "campaign_name": "swsynth_v2_point_force_x_displacement_readout_sweep",
+  "base_config": "examples/swsynth/v2/09_displacement_readout_noise/single_point_force_x_readout_base.json",
+  "output": {
+    "directory": "outputs/campaigns"
+  },
+  "sweep": [
+    {
+      "path": "readout_noise.strength",
+      "values": [
+        0,
+        0.25,
+        0.5,
+        1,
+        2,
+        4
+      ]
+    }
+  ]
+}
