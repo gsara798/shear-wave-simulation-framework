@@ -59,15 +59,18 @@ src.ux(owner_rows==1,:)=repmat(single(left_wave),nnz(owner_rows==1),1);
 src.ux(owner_rows==2,:)=repmat(single(right_wave),nnz(owner_rows==2),1);
 src.uy=zeros(size(src.ux),"single");
 src.uz=zeros(size(src.ux),"single");
-src.u_mode="dirichlet";
+src.u_mode='dirichlet';
 medium=struct();
 medium.sound_speed_compression=single(cp)*ones(Nx,Ny,Nz,"single");
 medium.sound_speed_shear=single(C.cs_m_s)*ones(Nx,Ny,Nz,"single");
 medium.density=single(C.density_kg_m3)*ones(Nx,Ny,Nz,"single");
 sensor=struct();
 sensor.mask=false(Nx,Ny,Nz);
-sensor.mask(:,cy,:)=true; % central x-z acquisition plane only
-sensor.record={"u_split_field"};
+% Record only the observed x-z FOV, not the full central plane.
+% This preserves the scientific observation and substantially reduces the
+% four large split-field time-series allocations.
+sensor.mask(roi_ix,cy,roi_iz)=true;
+sensor.record={'u_split_field'};
 recNt=min(numel(t),ceil(C.analysis_cycles/f/kgrid.dt)+1);
 recStart=numel(t)-recNt+1;
 sensor.record_start_index=recStart;
@@ -76,10 +79,16 @@ if ~isfolder(outdir),mkdir(outdir);end
 runfile=fullfile(outdir,"run.mat");
 assert(~isfile(runfile)||C.overwrite, ...
  "Result already exists; change output_dir or enable overwrite.");
+recordedPoints=nnz(sensor.mask);
+recordSamples=numel(t)-recStart+1;
+recordGiB=double(recordedPoints)*double(recordSamples)*4*4/1024^3;
 fprintf("Running pstdElastic3D, dt=%.3g s, steps=%d, sensor points=%d\n", ...
- kgrid.dt,numel(t),nnz(sensor.mask));
-args={"PMLInside",false,"PMLSize",double(C.pml_size_points(:).'), ...
- "PlotSim",false,"DataCast","single"};
+ kgrid.dt,numel(t),recordedPoints);
+fprintf("Estimated minimum four recorded single-precision P/S fields: %.2f GiB (not solver peak RAM).\n",recordGiB);
+% k-Wave 1.4.1 optional arguments expect character vectors, not
+% MATLAB string scalars. (In particular DataCast must be char.)
+args={'PMLInside',false,'PMLSize',double(C.pml_size_points(:).'), ...
+ 'PlotSim',false,'DataCast','single'};
 tic
 raw=pstdElastic3D(kgrid,medium,src,sensor,args{:});
 elapsed=toc;
@@ -89,14 +98,15 @@ for name=required
  assert(isfield(raw,name),"Missing k-Wave component: "+name);
 end
 % 3D solver records [sensor point,time], in find(mask) ordering.
-% plane mask uses all x,z and fixed y, so reshape rows as [Nx,Nz].
+% plane mask uses only FOV x,z indices and fixed y; reshape [NroiX,NroiZ].
 H=struct();
 for name=required
  v=raw.(name);
- assert(isequal(size(v),[Nx*Nz,numel(tt)]),"Unexpected sensor layout.");
+ assert(isequal(size(v),[numel(roi_ix)*numel(roi_iz),numel(tt)]), ...
+  "Unexpected sensor layout.");
  h=kwsim.three_d.extractHarmonicSensorData(v,tt,f,Method="least_squares");
- a=reshape(h,Nx,Nz).';
- H.(name)=a(roi_iz,roi_ix)/(1i*2*pi*f);
+ a=reshape(h,numel(roi_ix),numel(roi_iz)).';
+ H.(name)=a/(1i*2*pi*f);
 end
 H.uz_total=H.uz_split_s+H.uz_split_p;
 H.ux_total=H.ux_split_s+H.ux_split_p;
