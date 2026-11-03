@@ -52,18 +52,18 @@ assumed laptop-safe. Run one resource-checked control before any sweep.
 
 ## Controlled z-bilayer with IDENTICAL disks (REQ-ML study)
 
-The feature branch \`feature/reqml-bilayer-opposed-disks-20261103\` adds
-\`build_opposed_disk_material.m\`, which switches **only** the elastic
+The feature branch `feature/reqml-bilayer-opposed-disks-20261103` adds
+`build_opposed_disk_material.m`, which switches **only** the elastic
 material map when a JSON config uses
-\`experiment="opposed_x_disks_bilayer_3d"\` and
-\`bilayer={enabled:true,interface_z_m:0,negative_z_cs_m_s:1.8,
-positive_z_cs_m_s:3.0}\`. The original source-mask construction,
+`experiment="opposed_x_disks_bilayer_3d"` and
+`bilayer={enabled:true,interface_z_m:0,negative_z_cs_m_s:1.8,
+positive_z_cs_m_s:3.0}`. The original source-mask construction,
 velocity direction/amplitude/phase, ramp, sensor geometry and solver
 are shared with the homogeneous run. The initial interface is a
 provisional centered control, not a confirmed experimental location.
 
-\`tests/unit/test_opposed_x_disks_bilayer_medium.m\` checks homogeneous
+`tests/unit/test_opposed_x_disks_bilayer_medium.m` checks homogeneous
 parity, z-layer orientation, the per-pixel shear-speed truth map and
 rejection of interfaces outside the ROI, without invoking k-Wave.
 The corresponding config builder and run guards live in
-\`shear-wave-estimation-evaluation/studies/reqml_frequency_bias_kwave\`.
+`shear-wave-estimation-evaluation/studies/reqml_frequency_bias_kwave`.
