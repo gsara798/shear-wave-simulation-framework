@@ -36,6 +36,27 @@ else
     kWavePath = string(getenv("KWSIM_KWAVE_PATH"));
 end
 
+% Make configured k-Wave MATLAB functions callable in this session.
+% The original setup only registered KWSIM_KWAVE_PATH, leaving MATLAB's
+% function search path unchanged (e.g. pstdElastic3D was not found).
+if strlength(kWavePath)>0
+    if ~isfolder(kWavePath)
+        error("simulation:KWavePathNotFound", ...
+            "Configured k-Wave folder does not exist: %s",kWavePath);
+    end
+    addpath(kWavePath);
+    % Supported layouts: toolbox root OR parent containing "k-Wave".
+    if isempty(which("pstdElastic3D")) && ...
+            isfolder(fullfile(kWavePath,"k-Wave"))
+        addpath(fullfile(kWavePath,"k-Wave"));
+    end
+    if isempty(which("pstdElastic3D"))
+        warning("simulation:KWaveSolverNotFound", ...
+            ["The configured k-Wave directory was added to MATLAB's path, " + ...
+             "but pstdElastic3D.m was not found. Verify the toolbox location."]);
+    end
+end
+
 environment = struct();
 environment.repository_root = repositoryRoot;
 environment.src = sourceDirectory;
