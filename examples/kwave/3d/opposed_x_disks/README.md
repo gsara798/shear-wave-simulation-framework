@@ -26,3 +26,25 @@ Outputs: `run.mat`, `resolved_input.json`, `central_xz_plane.png`. Inspect field
 
 ## Important distinction
 In the analytical Step 1, we previously studied transverse z polarization with x propagation. This pilot is a **different physical excitation** (x polarization on x-normal disk). A lower-amplitude zone in Uz may arise from geometric projection, weak mode conversion, or wave interference; it does not itself prove shear attenuation.
+
+## k-Wave 1.4.1 input compatibility and RAM (2026-11-03)
+
+`pstdElastic3D` expects legacy MATLAB **character vectors** for optional
+inputs such as `'DataCast','single'`; passing MATLAB string scalars
+(`"single"`) fails the input checking before propagation. The runner now
+uses character vectors for all k-Wave optional names/values and for
+`src.u_mode` and `sensor.record`.
+
+It also records only the **actual requested central x-z observation FOV**
+(ROI x/z indices at central y), rather than recording the entire
+central x-z plane and discarding its exterior. The physical 3D grid,
+excitation, propagation, and reported observation FOV remain unchanged.
+The P/S fields are now reshaped from the ROI sensor index order. A
+lower-bound estimate for the four retained P/S `single` time series is
+printed before the solver executes; this is **not** the solver peak RAM.
+
+If the caller uses `setup_simulation_framework(KWavePath="...")` on
+`develop/v2`, that setup now also adds the configured toolbox to the MATLAB
+function path and verifies that `pstdElastic3D` can be found. The default
+harness remains a very large 3D simulation at 0.2 mm and should not be
+assumed laptop-safe. Run one resource-checked control before any sweep.
