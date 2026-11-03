@@ -33,13 +33,20 @@ assert(min(roi_ix)>left_ix && max(roi_ix)<right_ix, ...
  "Sources must lie outside experimental-size FOV.");
 fprintf("3D grid [%d %d %d], %.3f mm; FOV [%d %d] pixels\n", ...
  Nx,Ny,Nz,dx*1e3,numel(roi_ix),numel(roi_iz));
-fprintf("Disks: %d and %d nodes; nominal cs=%g m/s\n", ...
- left.node_count,right.node_count,C.cs_m_s);
-cp=C.cs_m_s*C.compressional_speed_factor;
+fprintf("Disks: %d and %d nodes; source masks and drive unchanged\n", ...
+ left.node_count,right.node_count);
+[medium,materialTruth,cpMaximum]=build_opposed_disk_material(C,N,z,roi_ix,roi_iz);
+if isfield(materialTruth,"interface_z_m")
+ mediumLabel=sprintf("bilayer cs=%.2f/%.2f m/s, zif=%.1f mm", ...
+  materialTruth.negative_z_cs_m_s,materialTruth.positive_z_cs_m_s, ...
+  materialTruth.interface_z_m*1e3);
+else
+ mediumLabel=sprintf("cs=%.2f m/s",C.cs_m_s);
+end
 kgrid=kWaveGrid(Nx,dx,Ny,dx,Nz,dx);
 f=C.frequency_hz;
 T=(C.settling_cycles+C.analysis_cycles)/f;
-kgrid.makeTime(cp,C.cfl,T);
+kgrid.makeTime(cpMaximum,C.cfl,T);
 t=double(kgrid.t_array(:).');
 drive=double(C.source_velocity_amplitude_m_s);
 ramp_duration=3/f;
@@ -60,10 +67,6 @@ src.ux(owner_rows==2,:)=repmat(single(right_wave),nnz(owner_rows==2),1);
 src.uy=zeros(size(src.ux),"single");
 src.uz=zeros(size(src.ux),"single");
 src.u_mode='dirichlet';
-medium=struct();
-medium.sound_speed_compression=single(cp)*ones(Nx,Ny,Nz,"single");
-medium.sound_speed_shear=single(C.cs_m_s)*ones(Nx,Ny,Nz,"single");
-medium.density=single(C.density_kg_m3)*ones(Nx,Ny,Nz,"single");
 sensor=struct();
 sensor.mask=false(Nx,Ny,Nz);
 % Record only the observed x-z FOV, not the full central plane.
@@ -119,7 +122,7 @@ result.fields=struct("axial_shear_displacement_zx",H.uz_split_s, ...
  "axial_total_displacement_zx",H.uz_total, ...
  "lateral_shear_displacement_zx",H.ux_split_s, ...
  "lateral_total_displacement_zx",H.ux_total);
-result.truth=struct("cs_m_s_zx",C.cs_m_s*ones(numel(roi_iz),numel(roi_ix)));
+result.truth=materialTruth;
 result.source=struct("left_center_index_xyz",left.center_index_xyz, ...
  "right_center_index_xyz",right.center_index_xyz, ...
  "left_node_count",left.node_count,"right_node_count",right.node_count, ...
@@ -145,7 +148,7 @@ for j=1:6
  set(ax,"YDir","normal");axis(ax,"image");colorbar(ax);
  xlabel(ax,"x [mm]");ylabel(ax,"z [mm]");title(ax,titles(j));
 end
-title(tl,sprintf("3D opposed x-driven disks | cs=%.2f m/s | f=%g Hz",C.cs_m_s,f));
+title(tl,sprintf("3D opposed x-driven disks | %s | f=%g Hz",mediumLabel,f));
 exportgraphics(fig,fullfile(outdir,"central_xz_plane.png"),"Resolution",200);
 close(fig);
 out=struct("run_file",runfile,"figure_file", ...
