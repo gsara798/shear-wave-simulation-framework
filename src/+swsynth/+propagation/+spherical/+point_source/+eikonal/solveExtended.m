@@ -99,7 +99,11 @@ if ~d.converged,error("swsynth:PointSource3DEikonalDidNotConverge","Extended Eik
 uniformC=max(abs(c(:)-c(1)))<=1e-10*max(1,c(1));
 uniformAlpha=max(abs(alpha(:)-alpha(1)))<=1e-10*max(1,alpha(1));
 hasPlane=isfield(options,"AttenuationPlane") && ~isempty(options.AttenuationPlane);
-if uniformC && (uniformAlpha || hasPlane)
+% For a purely elastic medium there is no ray attenuation to integrate.
+% Avoid expensive gradient backtracing and numerical ray-stall failures.
+if all(alpha(:)==0) && ~hasPlane
+    Aobs=zeros(size(Zo));
+elseif uniformC && (uniformAlpha || hasPlane)
     rr=sqrt((Xo-source(1)).^2+(obsY-source(2)).^2+ ...
         (Zo-source(3)).^2);
     if hasPlane
