@@ -1,0 +1,77 @@
+function tests = test_swsynth_elastic_point_eikonal_v2
+% Tests for new lossless heterogeneous point sources in projected3d.
+tests=functiontests(localfunctions);
+end
+
+function testUniformExtendedTravelTime(tc)
+addFrameworkPath();
+x=0:.001:.012;
+z=(0:.001:.012)';
+cs=2*ones(numel(z),numel(x));
+alpha=zeros(size(cs));
+src=[-.004,-.002,.006];
+opts=struct("GridSpacingM",.001,"MaxGridCells",100000, ...
+    "MaximumIterations",150,"ToleranceS",1e-9);
+[T,A,diag]=swsynth.propagation.spherical.point_source.eikonal.solveExtended( ...
+    cs,alpha,x,z,src,0,opts);
+[Z,X]=ndgrid(z,x);
+truth=sqrt((X-src(1)).^2+src(2)^2+(Z-src(3)).^2)/2;
+verifyTrue(tc,diag.solver.converged);
+verifyLessThan(tc,median(abs(T(:)-truth(:))),7e-4);
+verifyEqual(tc,A,zeros(size(A)),"AbsTol",1e-12);
+end
+
+function testElasticHeterogeneousConfigs(tc)
+root=addFrameworkPath();
+folder=fullfile(root,"examples","swsynth","v2","04_heterogeneous_media");
+names=["point_source_elastic_bilayer_projected3d.json", ...
+    "point_source_elastic_inclusion_projected3d.json"];
+for name=names
+    file=fullfile(folder,name);
+    cfg=jsondecode(fileread(file));
+    verifyFalse(tc,isfield(cfg.propagation,"attenuation"));
+    [scenario,meta]=swsynth.io.resolveConfigV2(cfg);
+    verifyTrue(tc,meta.valid);
+    out=swsynth.propagation.synthesize(scenario);
+    verifyEqual(tc,string(out.propagation.phase_method),"eikonal");
+    verifyTrue(tc,all(isfinite(out.U_xyz(:))));
+    verifyGreaterThan(tc,max(abs(out.U_xyz(:))),1e-8);
+    verifyGreaterThan(tc,numel(unique(out.medium.cs_map_zx)),1);
+    verifyEqual(tc,out.component_count,2);
+    S=swsynth.io.buildWavefieldSampleV2(out,scenario);
+    verifyTrue(tc,S.validation.analysis_ready);
+    verifyEqual(tc,numel(unique(S.truth.material_id_zx)),2);
+end
+end
+
+function testHomogeneousElasticDoesNotRequireViscoelasticMaterial(tc)
+root=addFrameworkPath();
+file=fullfile(root,"examples","swsynth","v2", ...
+    "04_heterogeneous_media","point_source_elastic_bilayer_projected3d.json");
+cfg=jsondecode(fileread(file));
+cfg.medium=struct("cs_m_s",2,"objects",[]);
+cfg.sources.count=1;
+cfg.sources.positions.position_xyz_m=[-.004,0,.006];
+cfg.sources.excitation.force_direction_xyz=[0,0,1];
+cfg.sources.excitation.relative_amplitude=1;
+cfg.sources.excitation.phase_rad=0;
+[scenario,~]=swsynth.io.resolveConfigV2(cfg);
+out=swsynth.propagation.synthesize(scenario);
+verifyTrue(tc,all(isfinite(out.U_xyz(:))));
+verifyGreaterThan(tc,max(abs(out.U_xyz(:))),0);
+end
+
+function testAnalyticalStillRejectsHeterogeneousPointMedia(tc)
+root=addFrameworkPath();
+cfg=jsondecode(fileread(fullfile(root,"examples","swsynth","v2", ...
+    "04_heterogeneous_media","point_source_elastic_bilayer_projected3d.json")));
+cfg.propagation.phase_method="analytical";
+[scenario,~]=swsynth.io.resolveConfigV2(cfg);
+verifyError(tc,@()swsynth.propagation.synthesize(scenario), ...
+    "swsynth:SynthesisAnalyticalRequiresHomogeneousMedium");
+end
+
+function root=addFrameworkPath()
+root=fileparts(fileparts(fileparts(mfilename("fullpath"))));
+addpath(fullfile(root,"src"));
+end
