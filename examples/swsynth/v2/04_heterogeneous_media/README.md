@@ -12,7 +12,7 @@ Seven examples of shear-speed heterogeneity: five existing **plane-wave Eikonal*
 | `point_source_elastic_bilayer_projected3d.json` | projected3d | Two opposed coherent sources outside a 2/3 m/s x-normal bilayer |
 | `point_source_elastic_inclusion_projected3d.json` | projected3d | Two external, off-plane coherent sources; 3 m/s circle in 2 m/s background |
 
-Original plane-wave projected observations cover 24 × 24 mm with 0.3 mm spacing. New point-source examples use 12 × 12 mm, 0.4 mm sampling, and an Eikonal calculation grid of 1 mm to keep the three-dimensional solve bounded. The volumetric case covers a 12 mm cube at 0.6 mm spacing. The speed values define the **material truth**, not a wave-speed estimate.
+Original plane-wave projected observations cover 24 × 24 mm with 0.3 mm spacing. Updated point-source examples use **24 × 24 mm** with **0.2 mm** observation sampling, an independent **0.5 mm** Eikonal calculation grid, and a 250,000-cell safety limit for the extended 3D solve. The bilayer interface is at x = 12 mm; the inclusion has **10 mm diameter** centered at (12, 12) mm. Both sources are outside the observed x-domain (x = -6 and 30 mm); the inclusion example also places them at y = -3 and +3 mm. The volumetric case covers a 12 mm cube at 0.6 mm spacing. The speed values define the **material truth**, not a wave-speed estimate.
 
 ## Run
 
@@ -34,8 +34,7 @@ out=run_simulation(file,PlotFigures=true,Parallel=false);
 ```
 
 Change `file` to `point_source_elastic_inclusion_projected3d.json` for
-the off-plane case. These are deliberately small examples; do not extrapolate
-their run times to the full REQ-ML campaign without a memory/time pilot.
+the off-plane case. **These updated examples will be slower and use more RAM** than the 12-mm / 1-mm-grid prototypes. First run one example serially to measure execution time, then run the second. A `DryRun` validates the configuration but does not establish time/memory feasibility or Eikonal convergence. Do not extrapolate their runtimes to 20-source RSWE without a separate benchmark.
 
 Use another filename from the table to select the other scenarios. Output includes `data/wavefield_sample.mat`, the material map, source incidence direction and harmonic-field visualizations.
 
@@ -68,3 +67,15 @@ Use another filename from the table to select the other scenarios. Output includ
 - The bilayer boundary is a plane normal to x; the `normal_angle_rad=0` definition is intentional.
 
 Check `sws.png` for the material map and `wavefield_phase.png` for the phase geometry. Quantitative validation of Eikonal travel-time errors or interface behavior should be performed separately from simple schema checks.
+
+## Resolution/convergence check
+
+The 0.2 mm observation spacing is **not** the same as the 0.5 mm
+Eikonal-grid spacing. Visual smoothness alone does not establish
+convergence. For a controlled comparison, copy one example to a **new**
+JSON file, change only `propagation.solver_options.GridSpacingM` to
+`0.00075` (and keep the observation domain, sources and material identical),
+then compare the resulting complex phase fields away from amplitude nodes.
+This is a **coarser comparison**, not proof of convergence; a finer grid
+and quantitative travel-time/phase differences are needed before using
+these examples to calibrate a training campaign.
