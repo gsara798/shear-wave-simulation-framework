@@ -228,6 +228,9 @@ for j=1:nodeCount
     if method=="eikonal"
         if useExtended
             optical=opticalZX;
+        elseif ~any(request.attenuation_map_np_m(:))
+            % Elastic propagation: no attenuation to trace back along rays.
+            optical=zeros(size(timeZX));
         else
             optical=swsynth.propagation.attenuation.integratePointSource2D( ...
                 timeZX,request.attenuation_map_np_m,x(:).',z(:),nodes(j,:));
