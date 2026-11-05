@@ -97,6 +97,49 @@ verifyTrue(tc,all(isfinite(out.U_xyz(:))));
 verifyGreaterThan(tc,max(abs(out.U_xyz(:))),0);
 end
 
+function testSingleSourceExamplesGeometryAndMaterial(tc)
+root=addFrameworkPath();
+folder=fullfile(root,"examples","swsynth","v2","04_heterogeneous_media");
+names=["single_source_elastic_inclusion_x_projected3d.json", ...
+    "single_source_elastic_bilayer_soft_top_x_projected3d.json"];
+for name=names
+    file=fullfile(folder,name);
+    dry=simrunner.runConfig(file,DryRun=true);
+    verifyEqual(tc,string(dry.status),"dry_run_valid");
+    cfg=jsondecode(fileread(file));
+    verifyEqual(tc,cfg.sources.count,1);
+    verifyEqual(tc,cfg.sources.positions.position_xyz_m(1),-.006, ...
+        "AbsTol",1e-12);
+    verifyEqual(tc,cfg.sources.positions.position_xyz_m(2),0, ...
+        "AbsTol",1e-12);
+    verifyEqual(tc,cfg.domain.Lx_m,.024,"AbsTol",1e-12);
+    verifyEqual(tc,cfg.propagation.solver_options.GridSpacingM,.0005, ...
+        "AbsTol",1e-12);
+    [scenario,~]=swsynth.io.resolveConfigV2(cfg);
+    req=scenario.domain;
+    req.geometry=scenario.geometry;
+    grid=swsynth.domain.buildGrid(req);
+    maps=swsynth.medium.buildMaps(grid,scenario.medium);
+    cs=maps.cs_map_zx;
+    verifyEqual(tc,numel(unique(cs)),2);
+    if contains(name,"bilayer")
+        % Plot z increases upward: soft (2 m/s) above 12 mm,
+        % hard (3 m/s) below, and source 2 mm above interface.
+        verifyEqual(tc,cs(1,:),3*ones(1,size(cs,2)), ...
+            "AbsTol",1e-12);
+        verifyEqual(tc,cs(end,:),2*ones(1,size(cs,2)), ...
+            "AbsTol",1e-12);
+        verifyEqual(tc,cfg.sources.positions.position_xyz_m(3),.014, ...
+            "AbsTol",1e-12);
+        verifyEqual(tc,cfg.medium.objects.offset_m,.012, ...
+            "AbsTol",1e-12);
+    else
+        verifyEqual(tc,cfg.medium.objects.radius_m,.005, ...
+            "AbsTol",1e-12);
+    end
+end
+end
+
 function testAnalyticalStillRejectsHeterogeneousPointMedia(tc)
 root=addFrameworkPath();
 cfg=jsondecode(fileread(fullfile(root,"examples","swsynth","v2", ...
