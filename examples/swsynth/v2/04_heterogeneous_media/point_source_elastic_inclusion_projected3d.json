@@ -4,10 +4,10 @@
   "seed": 61106,
   "geometry": "projected3d",
   "domain": {
-    "Lx_m": 0.012,
-    "Lz_m": 0.012,
-    "dx_m": 0.0004,
-    "dz_m": 0.0004,
+    "Lx_m": 0.024,
+    "Lz_m": 0.024,
+    "dx_m": 0.0002,
+    "dz_m": 0.0002,
     "observation_y_m": 0
   },
   "medium": {
@@ -16,10 +16,10 @@
       {
         "type": "circle",
         "center_xz_m": [
-          0.006,
-          0.006
+          0.012,
+          0.012
         ],
-        "radius_m": 0.0025,
+        "radius_m": 0.005,
         "cs_m_s": 3,
         "edge_sigma_m": 0
       }
@@ -35,9 +35,9 @@
     "geometric_decay_exponent": 0,
     "normalization": "sqrt_count",
     "solver_options": {
-      "GridSpacingM": 0.001,
-      "MaxGridCells": 100000,
-      "MaximumIterations": 150,
+      "GridSpacingM": 0.0005,
+      "MaxGridCells": 250000,
+      "MaximumIterations": 200,
       "ToleranceS": 1e-9
     }
   },
@@ -47,14 +47,14 @@
       "method": "explicit",
       "position_xyz_m": [
         [
-          -0.004,
+          -0.006,
           -0.003,
-          0.006
+          0.012
         ],
         [
-          0.016,
+          0.03,
           0.003,
-          0.006
+          0.012
         ]
       ]
     },
