@@ -49,6 +49,9 @@ names=["point_source_elastic_bilayer_projected3d.json", ...
 for name=names
     file=fullfile(folder,name);
     cfg=jsondecode(fileread(file));
+    validation=simrunner.runConfig(file,DryRun=true);
+    verifyEqual(tc,string(validation.status),"dry_run_valid");
+    verifyTrue(tc,logical(validation.validation.valid));
     verifyFalse(tc,isfield(cfg.propagation,"attenuation"));
     [scenario,meta]=swsynth.io.resolveConfigV2(cfg);
     verifyTrue(tc,meta.valid);
