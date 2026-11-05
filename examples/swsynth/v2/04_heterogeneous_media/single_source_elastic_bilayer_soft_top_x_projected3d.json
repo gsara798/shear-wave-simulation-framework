@@ -54,9 +54,9 @@
       "force_policy": "fixed",
       "force_direction_xyz": [
         [
+          1,
           0,
-          0,
-          1
+          0
         ]
       ],
       "amplitude_policy": "fixed",
