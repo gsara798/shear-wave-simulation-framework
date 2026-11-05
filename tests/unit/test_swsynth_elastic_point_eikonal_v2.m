@@ -52,6 +52,19 @@ for name=names
     validation=simrunner.runConfig(file,DryRun=true);
     verifyEqual(tc,string(validation.status),"dry_run_valid");
     verifyTrue(tc,logical(validation.validation.valid));
+    verifyEqual(tc,cfg.domain.Lx_m,.024,"AbsTol",1e-12);
+    verifyEqual(tc,cfg.domain.Lz_m,.024,"AbsTol",1e-12);
+    verifyEqual(tc,cfg.domain.dx_m,.0002,"AbsTol",1e-12);
+    verifyEqual(tc,cfg.domain.dz_m,.0002,"AbsTol",1e-12);
+    verifyEqual(tc,cfg.propagation.solver_options.GridSpacingM,.0005, ...
+        "AbsTol",1e-12);
+    verifyTrue(tc,all(cfg.sources.positions.position_xyz_m(:,1)<0 | ...
+        cfg.sources.positions.position_xyz_m(:,1)>.024));
+    if contains(name,"inclusion")
+        verifyEqual(tc,cfg.medium.objects.radius_m,.005,"AbsTol",1e-12);
+    else
+        verifyEqual(tc,cfg.medium.objects.offset_m,.012,"AbsTol",1e-12);
+    end
     verifyFalse(tc,isfield(cfg.propagation,"attenuation"));
     [scenario,meta]=swsynth.io.resolveConfigV2(cfg);
     verifyTrue(tc,meta.valid);
