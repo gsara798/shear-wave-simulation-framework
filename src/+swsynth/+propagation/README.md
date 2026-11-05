@@ -30,3 +30,34 @@ The observation axis projection is separate: `observation.projectComponent`. The
 We must **rerun the updated suite after deleting legacy code**. Tests include `test_swsynth_synthesis_physics_v2.m`, `test_swsynth_excitation_and_synthesize_v2.m`, `test_swsynth_wavefield_sample_v2.m` and `test_simcampaigns_swsynth_v2_integration.m`. Do not interpret those smoke checks as complete physical validation of diffuse fields, wave scattering, RF tracking, attenuation, or the external REQ-ML reader.
 
 See `docs/architecture/HARMONIC_SYNTHESIS_V2.md`, `docs/validation/SYNTHESIZER_V2_PHYSICAL_VALIDATION.md` and `docs/swsynth/README.md`.
+
+
+## Projected3d elastic point-source Eikonal (opt-in)
+
+For `propagation.model="spherical_wave"` and
+`propagation.phase_method="eikonal"`, V2 now supports prescribed **elastic**
+heterogeneous speed maps without a `medium.viscoelastic` block or enabled
+attenuation. The route reuses
+`swsynth.propagation.spherical.point_source.computeContribution` and the
+existing point-source travel-time solvers:
+
+- In-plane sources inside the x-z FOV: 2D point-source fast sweeping.
+- Sources outside the FOV and/or out of observation plane: extended
+  3D fast sweeping on a computational slab, interpolated onto observed x-z.
+- One sharp planar bilayer uses its exact planar speed interface at
+  extended-grid nodes; other heterogeneities use nearest-sampled 2D speed
+  maps (constant in y, nearest-edge extrapolated outside observed FOV).
+- Zero mechanical attenuation yields identically zero optical depth; it
+  is not interpreted as a viscoelastic material.
+- Each source retains its explicit 3D position, fixed force, amplitude and
+  phase. Source-level `parfor` remains the synthesis parallelism.
+
+This is a **first-arrival travel-time model**. The radiation tensor and
+geometric spreading still use direct source-to-target vectors, not
+heterogeneous ray directions or amplitude transport. No interface reflection,
+transmission coefficients, conversion, scattering or diffraction is modeled.
+Physical compatibility with RSWE and convergence under changes of 3D
+Eikonal grid spacing must be validated before dataset generation.
+
+See `examples/swsynth/v2/04_heterogeneous_media/` and
+`tests/unit/test_swsynth_elastic_point_eikonal_v2.m`.
