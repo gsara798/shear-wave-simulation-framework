@@ -1,6 +1,6 @@
 # swsynth V2 — heterogeneous media
 
-Seven examples of shear-speed heterogeneity: five existing **plane-wave Eikonal** controls and two new **elastic point-source Eikonal** demonstrations. All prescribe the shear-wave-speed map rather than estimating it. The original plane-wave cases use 500 Hz and +x incidence; the new point-source cases use two coherent explicit sources at 500 Hz and z-axis readout. No estimator or downstream reconstruction is involved.
+Nine examples of shear-speed heterogeneity: five existing **plane-wave Eikonal** controls, two coherent two-source examples and two **single-source elastic point-source Eikonal** demonstrations. All prescribe the shear-wave-speed map rather than estimating it. The original plane-wave cases use 500 Hz and +x incidence; the new point-source cases use two coherent explicit sources at 500 Hz and z-axis readout. No estimator or downstream reconstruction is involved.
 
 | JSON | Geometry | Material configuration |
 | --- | --- | --- |
@@ -11,6 +11,8 @@ Seven examples of shear-speed heterogeneity: five existing **plane-wave Eikonal*
 | `sphere_volumetric3d.json` | volumetric3d | 3 m/s sphere, radius 3 mm, in a 2 m/s cube |
 | `point_source_elastic_bilayer_projected3d.json` | projected3d | Two opposed coherent sources outside a 2/3 m/s x-normal bilayer |
 | `point_source_elastic_inclusion_projected3d.json` | projected3d | Two external, off-plane coherent sources; 3 m/s circle in 2 m/s background |
+| `single_source_elastic_inclusion_x_projected3d.json` | projected3d | One source at x = −6 mm; +x propagation through a 10-mm-diameter 3 m/s inclusion in 2 m/s background |
+| `single_source_elastic_bilayer_soft_top_x_projected3d.json` | projected3d | One source at x = −6 mm and z = 14 mm; soft 2 m/s above horizontal z = 12 mm interface, hard 3 m/s below |
 
 Original plane-wave projected observations cover 24 × 24 mm with 0.3 mm spacing. Updated point-source examples use **24 × 24 mm** with **0.2 mm** observation sampling, an independent **0.5 mm** Eikonal calculation grid, and a 250,000-cell safety limit for the extended 3D solve. The bilayer interface is at x = 12 mm; the inclusion has **10 mm diameter** centered at (12, 12) mm. Both sources are outside the observed x-domain (x = -6 and 30 mm); the inclusion example also places them at y = -3 and +3 mm. The volumetric case covers a 12 mm cube at 0.6 mm spacing. The speed values define the **material truth**, not a wave-speed estimate.
 
@@ -37,6 +39,45 @@ Change `file` to `point_source_elastic_inclusion_projected3d.json` for
 the off-plane case. **These updated examples will be slower and use more RAM** than the 12-mm / 1-mm-grid prototypes. First run one example serially to measure execution time, then run the second. A `DryRun` validates the configuration but does not establish time/memory feasibility or Eikonal convergence. Do not extrapolate their runtimes to 20-source RSWE without a separate benchmark.
 
 Use another filename from the table to select the other scenarios. Output includes `data/wavefield_sample.mat`, the material map, source incidence direction and harmonic-field visualizations.
+
+## Single-source +x examples matching the requested experiment
+
+To isolate the effect of material heterogeneity without interference between
+two drives, two additional **single physical source** configurations are
+provided. The point force is polarized along z so that the recorded z-motion
+is nonzero; the **principal propagation direction** is +x because the source
+is left of the observation FOV. Force polarization is *not* the same as wave
+propagation direction.
+
+- `single_source_elastic_inclusion_x_projected3d.json`: one point at
+  (−6, 0, 12) mm, circle diameter 10 mm centered at (12, 12) mm.
+- `single_source_elastic_bilayer_soft_top_x_projected3d.json`: one point
+  at (−6, 0, 14) mm, 2 mm above a horizontal interface z = 12 mm.
+  **Upper** (larger z) is soft at 2 m/s; **lower** (smaller z) is hard
+  at 3 m/s. In V2, this uses a +z normal, background hard, and
+  `normal_angle_rad = pi/2`: the material on the *positive* signed-distance
+  side of the interface is soft.
+
+These are independent additional files: the original two-source examples
+remain unchanged for counterpropagating-wave comparisons.
+
+```matlab
+setup_simulation_framework
+folder="examples/swsynth/v2/04_heterogeneous_media";
+names=["single_source_elastic_inclusion_x_projected3d.json", ...
+       "single_source_elastic_bilayer_soft_top_x_projected3d.json"];
+for k=1:numel(names)
+    file=fullfile(folder,names(k));
+    run_simulation(file,DryRun=true);
+    result=run_simulation(file,PlotFigures=true,Parallel=false);
+end
+```
+
+The location 2 mm above the interface is a **proposed example geometry**,
+not a measured actuator offset. The source is a point excitation rather
+than a finite surface actuator. Compare phase fields with the existing
+two-source controls but do not treat first-arrival Eikonal as a model of
+interface reflection or mode conversion.
 
 ## Model scope and cautions
 
