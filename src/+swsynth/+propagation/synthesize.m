@@ -404,6 +404,26 @@ switch model
         if isfield(prop,"geometric_decay_exponent")
             exponent=prop.geometric_decay_exponent;
         end
+        % Optional frequency-independent Eikonal reference. Construct the
+        % canonical material map once on the client, not in each worker.
+        cacheReference=struct();
+        if elasticPointEikonal && isfield(prop,"solver_options") && ...
+                isfield(prop.solver_options,"CacheDirectory")
+            cacheOptions=prop.solver_options;
+            assert(isfield(cacheOptions,"CacheReferenceSpacingM") && ...
+                double(cacheOptions.CacheReferenceSpacingM)>0, ...
+                "swsynth:EikonalCacheSpacing");
+            cacheDomain=domainReq;
+            cacheDomain.dx_m=double(cacheOptions.CacheReferenceSpacingM);
+            cacheDomain.dz_m=double(cacheOptions.CacheReferenceSpacingM);
+            cacheGrid=swsynth.domain.buildGrid(cacheDomain);
+            cacheMaps=swsynth.medium.buildMaps(cacheGrid,scenario.medium);
+            cacheReference=struct("directory", ...
+                string(cacheOptions.CacheDirectory), ...
+                "x_m",double(cacheGrid.x_m(:)'), ...
+                "z_m",double(cacheGrid.z_m(:)), ...
+                "speed_zx",double(cacheMaps.cs_map_zx));
+        end
         parfor (i=1:count,workerLimit)
             req=struct("source_bundle",sourceBundle, ...
                 "source_id",i,"frequency_hz",drive.frequency_hz, ...
@@ -452,6 +472,10 @@ switch model
                 end
             end
             if elasticPointEikonal
+                if ~isempty(fieldnames(cacheReference))
+                    req.travel_time_cache=cacheReference;
+                    req.travel_time_cache.source_id=i;
+                end
                 req.phase_speed_map_zx=maps.cs_map_zx;
                 req.attenuation_map_np_m=zeros(size(maps.cs_map_zx));
                 % Sharp planar material boundary can be sampled directly
