@@ -77,7 +77,7 @@ if ~isscalar(method) || ...
 end
 if model=="spherical_wave" && method=="eikonal" && geometry~="projected3d"
     error("swsynth:UnsupportedSynthesisPhase", ...
-        "Spherical source Eikonal is not implemented.");
+        "Spherical source Eikonal currently supports projected3d only.");
 end
 if model=="plane_wave" && method=="eikonal" && geometry=="2d"
     error("swsynth:UnsupportedSynthesisPhase", ...
@@ -197,7 +197,13 @@ if (method=="analytical" || method=="homogeneous_analytic") && ~uniform
         "Analytical travel time requires a homogeneous medium; use supported Eikonal for heterogeneous plane waves.");
 end
 
-% Homogeneous elastic/Kelvin-Voigt dispersion, opt-in only.
+% Prescribed elastic speed map for first-arrival point-source Eikonal.
+% This path deliberately has zero attenuation and does not claim any
+% interface reflection, amplitude transport or mode conversion.
+elasticPointEikonal=model=="spherical_wave" && method=="eikonal" && ...
+    geometry=="projected3d" && ...
+    ~(isfield(prop,"attenuation") && isfield(prop.attenuation,"enabled") && ...
+      prop.attenuation.enabled);
 materialLoss=[];
 propagationSpeed=background;
 if isfield(prop,"attenuation") && isfield(prop.attenuation,"enabled") && prop.attenuation.enabled
@@ -398,6 +404,26 @@ switch model
         if isfield(prop,"geometric_decay_exponent")
             exponent=prop.geometric_decay_exponent;
         end
+        % Optional frequency-independent Eikonal reference. Construct the
+        % canonical material map once on the client, not in each worker.
+        cacheReference=struct();
+        if elasticPointEikonal && isfield(prop,"solver_options") && ...
+                isfield(prop.solver_options,"CacheDirectory")
+            cacheOptions=prop.solver_options;
+            assert(isfield(cacheOptions,"CacheReferenceSpacingM") && ...
+                double(cacheOptions.CacheReferenceSpacingM)>0, ...
+                "swsynth:EikonalCacheSpacing");
+            cacheDomain=domainReq;
+            cacheDomain.dx_m=double(cacheOptions.CacheReferenceSpacingM);
+            cacheDomain.dz_m=double(cacheOptions.CacheReferenceSpacingM);
+            cacheGrid=swsynth.domain.buildGrid(cacheDomain);
+            cacheMaps=swsynth.medium.buildMaps(cacheGrid,scenario.medium);
+            cacheReference=struct("directory", ...
+                string(cacheOptions.CacheDirectory), ...
+                "x_m",double(cacheGrid.x_m(:)'), ...
+                "z_m",double(cacheGrid.z_m(:)), ...
+                "speed_zx",double(cacheMaps.cs_map_zx));
+        end
         parfor (i=1:count,workerLimit)
             req=struct("source_bundle",sourceBundle, ...
                 "source_id",i,"frequency_hz",drive.frequency_hz, ...
@@ -443,6 +469,32 @@ switch model
                     end
                 else
                     req.attenuation_np_m=materialLoss.attenuation_np_m;
+                end
+            end
+            if elasticPointEikonal
+                if ~isempty(fieldnames(cacheReference))
+                    req.travel_time_cache=cacheReference;
+                    req.travel_time_cache.source_id=i;
+                end
+                req.phase_speed_map_zx=maps.cs_map_zx;
+                req.attenuation_map_np_m=zeros(size(maps.cs_map_zx));
+                % Sharp planar material boundary can be sampled directly
+                % in the extended 3D solver to reduce nearest-grid bias.
+                if isfield(scenario.medium,"objects") && ...
+                        numel(scenario.medium.objects)==1
+                    obj=scenario.medium.objects{1};
+                    if string(obj.type)=="bilayer" && ...
+                            (~isfield(obj,"edge_sigma_m") || obj.edge_sigma_m==0)
+                        angle=double(obj.normal_angle_rad);
+                        req.speed_interface=struct( ...
+                            "normal_xyz",[cos(angle),0,sin(angle)], ...
+                            "offset_m",double(obj.offset_m), ...
+                            "speed_negative_m_s",background, ...
+                            "speed_positive_m_s",double(obj.cs_m_s));
+                    end
+                end
+                if isfield(prop,"solver_options")
+                    req.solver_options=prop.solver_options;
                 end
             end
             components{i}=swsynth.propagation.spherical.point_source.computeContribution(req);
