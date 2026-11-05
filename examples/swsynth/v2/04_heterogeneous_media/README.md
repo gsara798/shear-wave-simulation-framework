@@ -44,9 +44,13 @@ Use another filename from the table to select the other scenarios. Output includ
 
 To isolate the effect of material heterogeneity without interference between
 two drives, two additional **single physical source** configurations are
-provided. The point force is polarized along z so that the recorded z-motion
-is nonzero; the **principal propagation direction** is +x because the source
-is left of the observation FOV. Force polarization is *not* the same as wave
+provided. The single point force **moves along x**, `force_direction_xyz=[1,0,0]`,
+and is placed left of the FOV. The direct waves propagate mainly toward +x.
+Because x-directed force and +x propagation are locally aligned, the
+**transverse shear radiation has a null on the source axis**; off-axis
+observation can still have z displacement. The existing z-axis measurement
+is retained to mimic ultrasound readout, but its amplitude must be inspected
+before any estimator training. Force polarization is not the same as wave
 propagation direction.
 
 - `single_source_elastic_inclusion_x_projected3d.json`: one point at
