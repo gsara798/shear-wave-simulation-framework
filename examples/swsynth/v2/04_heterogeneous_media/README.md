@@ -83,6 +83,62 @@ than a finite surface actuator. Compare phase fields with the existing
 two-source controls but do not treat first-arrival Eikonal as a model of
 interface reflection or mode conversion.
 
+
+## Numerical convergence study: one point source, three Eikonal grids
+
+Run this **before** using heterogeneous point-source Eikonal in the
+REQ-ML training campaign. The comparison keeps the same physical source,
+material map, drive frequency, observation grid and readout direction,
+varying **only** `GridSpacingM`: 0.75, 0.50, 0.25 mm. These are the
+two single-source examples with the horizontal soft-top bilayer and the
+circular inclusion; existing simulation outputs are never overwritten.
+
+```matlab
+setup_simulation_framework
+addpath("examples/swsynth/v2/04_heterogeneous_media")
+
+% Preflight: verifies both examples and projected 3D grid sizes, no files
+P = comparePointEikonalConvergence();
+disp(P.grid_points)
+
+% Execute both cases, writing new metrics/plots in a dedicated folder
+R = comparePointEikonalConvergence(Execute=true);
+disp(R.cases(1).comparisons)
+disp(R.cases(2).comparisons)
+```
+
+Outputs under `outputs/swsynth/v2/point_eikonal_convergence_v1/`:
+per-case `*_metrics.csv` (median, 95th percentile and maximum absolute
+travel-time difference in microseconds; wrapped phase difference in radians;
+unit-phasor RMS difference), `*_runtime.csv`, `*_diagnostics.mat`
+(including full travel-time maps and solver diagnostics), and
+`*_convergence.png` (three travel-time maps and three paired difference
+maps). The output directory is immutable; provide a new
+`OutputDirectory` for another run. When execution fails, existing files
+are kept for investigation, and the next attempt must use a new directory.
+
+**Interpretation:** the 0.25-mm grid is a *numerical reference*, not the
+exact elastic solution. Compare `0.75 vs 0.5` to `0.5 vs 0.25`: a reduction
+in differences supports grid convergence, but there is no blanket
+threshold established for every application. Low axial-radiation regions
+(where the expected z projection is under 5% of the maximum) are excluded
+from phase statistics; time of arrival itself does not depend on the
+radiation projection. The algorithm computes first-arrival travel times
+only; agreement does not validate elastic reflection, mode conversion,
+or the simulated material-boundary amplitudes.
+
+The extended 3D solver first estimates required cell counts and refuses
+a grid exceeding `MaxGridCells=300000`. Do not increase that ceiling
+without reviewing available RAM and measuring the runtime of the
+0.75- and 0.5-mm cases first. This study does **not** call full
+`run_simulation`, because its purpose is to isolate the travel-time
+solver from radiation/amplitude changes.
+
+```matlab
+t = runtests("tests/unit/test_swsynth_point_eikonal_convergence_v2.m");
+assert(all([t.Passed]))
+```
+
 ## Model scope and cautions
 
 - Eikonal changes **phase/travel time** according to the specified local shear speed. It is not a full elastic wave-equation solver.
