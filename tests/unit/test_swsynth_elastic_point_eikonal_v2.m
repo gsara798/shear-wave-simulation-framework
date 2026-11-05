@@ -21,6 +21,26 @@ verifyLessThan(tc,median(abs(T(:)-truth(:))),7e-4);
 verifyEqual(tc,A,zeros(size(A)),"AbsTol",1e-12);
 end
 
+function testBilayerChangesFirstArrival(tc)
+addFrameworkPath();
+x=0:.001:.012;
+z=(0:.001:.012)';
+reference=2*ones(numel(z),numel(x));
+layer=reference;layer(:,x>.006)=3;
+alpha=zeros(size(layer));
+src=[-.003,0,.006];
+options=struct("GridSpacingM",.001,"MaxGridCells",100000, ...
+    "MaximumIterations",150,"ToleranceS",1e-9);
+[T0,A0]=swsynth.propagation.spherical.point_source.eikonal.solveExtended( ...
+    reference,alpha,x,z,src,0,options);
+[T1,A1]=swsynth.propagation.spherical.point_source.eikonal.solveExtended( ...
+    layer,alpha,x,z,src,0,options);
+verifyEqual(tc,A0,zeros(size(A0)),"AbsTol",1e-12);
+verifyEqual(tc,A1,zeros(size(A1)),"AbsTol",1e-12);
+verifyLessThan(tc,T1(7,end),T0(7,end));
+verifyGreaterThan(tc,abs(T1(7,end)-T0(7,end)),1e-4);
+end
+
 function testElasticHeterogeneousConfigs(tc)
 root=addFrameworkPath();
 folder=fullfile(root,"examples","swsynth","v2","04_heterogeneous_media");
