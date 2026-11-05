@@ -55,8 +55,7 @@ else
         assert(mkdir(dir),"swsynth:EikonalCacheDirectory");
     end
     % Write to an independent temporary file, publish only once complete.
-    temp=fullfile(dir,sprintf("source_%03d_incomplete_%s.mat", ...
-        idx,char(java.util.UUID.randomUUID)));
+    temp=string(tempname(dir))+".mat";
     cleanup=onCleanup(@()deleteIfExists(temp));
     T_reference=referenceTime; %#ok<NASGU>
     save(temp,"physics","T_reference","-v7.3");
