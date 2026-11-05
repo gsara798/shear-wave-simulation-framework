@@ -2,7 +2,8 @@ function contribution = computeContribution(request)
 %COMPUTECONTRIBUTION Vector shear far-field from ONE physical source.
 % Uses sources.prepare V2, including an optional coherent line aperture.
 % Geometry: 2d/planar2d, projected3d, volumetric3d.
-% Phase: homogeneous analytical T=distance/c_s, per aperture node.
+% Phase: homogeneous analytical distance/c_s or heterogeneous Eikonal
+% first-arrival travel time (projected3d, one node per source).
 % Radiation: (I-n*n') Fhat. Angular magnitude is preserved.
 %
 % Each aperture node inherits its parent force, amplitude and phase.
@@ -161,7 +162,7 @@ for j=1:nodeCount
                 ~isfield(request,"phase_speed_map_zx") || ...
                 ~isfield(request,"attenuation_map_np_m")
             error("swsynth:UnsupportedPointSourceEikonal", ...
-                "Heterogeneous source Eikonal needs an internal on-plane point source.");
+                "Point-source Eikonal requires projected3d, one aperture node, a phase-speed map, and a nonnegative attenuation map (zero for elastic media).");
         end
         opts=struct();
         if isfield(request,"solver_options");opts=request.solver_options;end
