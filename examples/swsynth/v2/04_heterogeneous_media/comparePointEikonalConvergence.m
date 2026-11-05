@@ -123,8 +123,12 @@ for i=1:2
         phasor_rms_difference);
     stem=erase(names(i),".json");
     writetable(comparisons,fullfile(out,stem+"_metrics.csv"));
-    runtime=table(h(:)*1000,gridPoints(i,:)',elapsed(:), ...
-        "VariableNames",["spacing_mm","grid_points","elapsed_s"]);
+    spacing_mm=reshape(h,[],1)*1000;
+    grid_points=reshape(gridPoints(i,:),[],1);
+    elapsed_s=reshape(elapsed,[],1);
+    assert(numel(spacing_mm)==3 && numel(grid_points)==3 && ...
+        numel(elapsed_s)==3,"swsynth:ConvergenceRuntimeShape");
+    runtime=table(spacing_mm,grid_points,elapsed_s);
     writetable(runtime,fullfile(out,stem+"_runtime.csv"));
     save(fullfile(out,stem+"_diagnostics.mat"), ...
         "T","x","z","valid","diagnostics","runtime","comparisons","-v7.3");
