@@ -89,9 +89,10 @@ root=addFrameworkPath();
 cfg=jsondecode(fileread(fullfile(root,"examples","swsynth","v2", ...
     "04_heterogeneous_media","point_source_elastic_bilayer_projected3d.json")));
 cfg.propagation.phase_method="analytical";
-[scenario,~]=swsynth.io.resolveConfigV2(cfg);
-verifyError(tc,@()swsynth.propagation.synthesize(scenario), ...
-    "swsynth:SynthesisAnalyticalRequiresHomogeneousMedium");
+% Reject at the public V2 configuration-validation boundary, before
+% synthesis. The resolver intentionally blocks analytical heterogeneity.
+verifyError(tc,@()swsynth.io.resolveConfigV2(cfg), ...
+    "swsynth:V2AnalyticalRequiresHomogeneous");
 end
 
 function root=addFrameworkPath()
