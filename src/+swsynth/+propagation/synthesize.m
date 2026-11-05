@@ -77,7 +77,7 @@ if ~isscalar(method) || ...
 end
 if model=="spherical_wave" && method=="eikonal" && geometry~="projected3d"
     error("swsynth:UnsupportedSynthesisPhase", ...
-        "Spherical source Eikonal is not implemented.");
+        "Spherical source Eikonal currently supports projected3d only.");
 end
 if model=="plane_wave" && method=="eikonal" && geometry=="2d"
     error("swsynth:UnsupportedSynthesisPhase", ...
@@ -197,7 +197,13 @@ if (method=="analytical" || method=="homogeneous_analytic") && ~uniform
         "Analytical travel time requires a homogeneous medium; use supported Eikonal for heterogeneous plane waves.");
 end
 
-% Homogeneous elastic/Kelvin-Voigt dispersion, opt-in only.
+% Prescribed elastic speed map for first-arrival point-source Eikonal.
+% This path deliberately has zero attenuation and does not claim any
+% interface reflection, amplitude transport or mode conversion.
+elasticPointEikonal=model=="spherical_wave" && method=="eikonal" && ...
+    geometry=="projected3d" && ...
+    ~(isfield(prop,"attenuation") && isfield(prop.attenuation,"enabled") && ...
+      prop.attenuation.enabled);
 materialLoss=[];
 propagationSpeed=background;
 if isfield(prop,"attenuation") && isfield(prop.attenuation,"enabled") && prop.attenuation.enabled
@@ -443,6 +449,28 @@ switch model
                     end
                 else
                     req.attenuation_np_m=materialLoss.attenuation_np_m;
+                end
+            end
+            if elasticPointEikonal
+                req.phase_speed_map_zx=maps.cs_map_zx;
+                req.attenuation_map_np_m=zeros(size(maps.cs_map_zx));
+                % Sharp planar material boundary can be sampled directly
+                % in the extended 3D solver to reduce nearest-grid bias.
+                if isfield(scenario.medium,"objects") && ...
+                        numel(scenario.medium.objects)==1
+                    obj=scenario.medium.objects{1};
+                    if string(obj.type)=="bilayer" && ...
+                            (~isfield(obj,"edge_sigma_m") || obj.edge_sigma_m==0)
+                        angle=double(obj.normal_angle_rad);
+                        req.speed_interface=struct( ...
+                            "normal_xyz",[cos(angle),0,sin(angle)], ...
+                            "offset_m",double(obj.offset_m), ...
+                            "speed_negative_m_s",background, ...
+                            "speed_positive_m_s",double(obj.cs_m_s));
+                    end
+                end
+                if isfield(prop,"solver_options")
+                    req.solver_options=prop.solver_options;
                 end
             end
             components{i}=swsynth.propagation.spherical.point_source.computeContribution(req);
