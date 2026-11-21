@@ -45,11 +45,15 @@ try
     end
     wavefield_sample=swsynth.io.buildWavefieldSampleV2( ...
         synthesis,scenario,sampleOptions);
-    % Shear-field disturbances are applied to the projected mechanical
-    % phasor, before any future ultrasound readout stage. Preserve clean data.
+    % Separate post-projection observation stages. Propagation is performed
+    % only once; the clean reference is preserved for paired noise studies.
     noiseDiag=struct("enabled",false,"model","none");
+    readoutDiag=struct("enabled",false,"model","none");
     cleanShear=[];
-    if isfield(config,"shear_noise") && config.shear_noise.enabled
+    preReadoutShear=[];
+    hasShear=isfield(config,"shear_noise") && config.shear_noise.enabled;
+    hasReadout=isfield(config,"readout_noise") && config.readout_noise.enabled;
+    if hasShear || hasReadout
         fieldName="data_zx";
         spacing=[synthesis.domain.dz_m,synthesis.domain.dx_m];
         if string(scenario.geometry)=="volumetric3d"
@@ -57,16 +61,40 @@ try
             spacing=[synthesis.domain.dz_m,synthesis.domain.dy_m,synthesis.domain.dx_m];
         end
         cleanShear=wavefield_sample.wavefield.(fieldName);
-        noiseSeed=meta.seed;
-        if isfield(config.shear_noise,"seed")
-            noiseSeed=double(config.shear_noise.seed);
+        preReadoutShear=cleanShear;
+        if hasShear
+            shearSeed=meta.seed;
+            if isfield(config.shear_noise,"seed")
+                shearSeed=double(config.shear_noise.seed);
+            end
+            [preReadoutShear,noiseDiag]=swsynth.noise.applyShearNoise( ...
+                cleanShear,config.shear_noise,spacing,shearSeed);
+            wavefield_sample.provenance.shear_noise=noiseDiag;
         end
-        [noisyShear,noiseDiag]=swsynth.noise.applyShearNoise( ...
-            cleanShear,config.shear_noise,spacing,noiseSeed);
-        wavefield_sample.wavefield.(fieldName)=noisyShear;
-        wavefield_sample.wavefield.is_complex=~isreal(noisyShear);
-        wavefield_sample.measurement.model="signed_vector_projection_with_shear_disturbance";
-        wavefield_sample.provenance.shear_noise=noiseDiag;
+        measuredShear=preReadoutShear;
+        if hasReadout
+            readoutSeed=meta.seed;
+            if isfield(config.readout_noise,"seed")
+                readoutSeed=double(config.readout_noise.seed);
+            end
+            [measuredShear,readoutDiag]= ...
+                swsynth.observation.readout.applyDisplacementNoise( ...
+                preReadoutShear,config.readout_noise,spacing, ...
+                synthesis.domain.z_m,meta.frequency_hz,readoutSeed);
+            wavefield_sample.provenance.readout_noise=readoutDiag;
+        end
+        wavefield_sample.wavefield.(fieldName)=measuredShear;
+        wavefield_sample.wavefield.is_complex=~isreal(measuredShear);
+        if hasShear && hasReadout
+            wavefield_sample.measurement.model= ...
+                "signed_vector_projection_with_shear_and_readout_noise";
+        elseif hasShear
+            wavefield_sample.measurement.model= ...
+                "signed_vector_projection_with_shear_disturbance";
+        else
+            wavefield_sample.measurement.model= ...
+                "signed_vector_projection_with_displacement_readout_noise";
+        end
     end
     [~,runName]=fileparts(runDirectory);
     wavefield_sample.sample_id=string(runName);
@@ -90,7 +118,7 @@ try
     save(samplePath,"wavefield_sample","-v7.3");
     if ~isempty(cleanShear)
         save(fullfile(dataDir,"shear_clean_reference.mat"), ...
-            "cleanShear","noiseDiag","-v7.3");
+            "cleanShear","preReadoutShear","noiseDiag","readoutDiag","-v7.3");
     end
 
     count=double(synthesis.component_count);
@@ -116,6 +144,21 @@ try
     if noiseDiag.enabled
         summary.shear_noise_snr_db=noiseDiag.snr_db;
         summary.shear_noise_relative_perturbation_norm=noiseDiag.relative_perturbation_norm;
+    end
+    summary.readout_noise_enabled=logical(readoutDiag.enabled);
+    if readoutDiag.enabled
+        summary.readout_noise_snr_db=readoutDiag.snr_db;
+        summary.readout_noise_relative_perturbation_norm= ...
+            readoutDiag.relative_perturbation_norm;
+    end
+    if ~isempty(cleanShear)
+        totalDifference=wavefield_sample.wavefield.(fieldName)-cleanShear;
+        if all(totalDifference(:)==0)
+            summary.total_noise_snr_db=Inf;
+        else
+            summary.total_noise_snr_db=20*log10( ...
+                norm(cleanShear(:))/max(norm(totalDifference(:)),eps));
+        end
     end
     if meta.model=="plane_wave"
         summary.direction_count=count;

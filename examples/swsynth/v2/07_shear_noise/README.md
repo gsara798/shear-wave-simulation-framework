@@ -1,6 +1,6 @@
 # swsynth V2 — shear-field noise (first stage)
 
-This set implements a **mechanical shear-field noise** layer, separate from the future ultrasound observation/readout model. The clean shear propagation and scalar mechanical measurement projection are computed first. The optional disturbance is then applied to the complex projected mechanical phasor. Ultrasound tracking noise is **not** included.
+This set implements a **mechanical shear-field noise** layer, separate from the optional displacement observation/readout model. The clean shear propagation and scalar mechanical measurement projection are computed first. The optional disturbance is then applied to the complex projected mechanical phasor. Displacement readout noise is **not** included in these mechanical-only cases; see `../09_displacement_readout_noise/` for an independent temporal readout sweep.
 
 - `shear_noise_disabled_reference.json` — clean control.
 - `shear_noise_correlated_projected3d.json` — reproducible global acquisition amplitude/phase jitter plus spatially correlated complex shear disturbance.
@@ -33,7 +33,7 @@ out=run_simulation(f,PlotFigures=true);
 ## Next stages
 
 - **Shear attenuation** should live under `+swsynth/+propagation/+attenuation`, with distinct mechanisms for bulk viscoelastic attenuation and interface-induced transmission/amplitude loss. The original `simcore-wave` implements a ray-integrated `exp(-integral(alpha ds))`, an empirical interface shadow and a shear-impedance-based transmission-only approximation. Neither interface model generates reflected fields. Adapting these correctly requires compatible material/density maps and per-path geometry and is **not implemented here**.
-- **Ultrasound readout noise** should live under `+swsynth/+observation/+ultrasound` and can eventually support full time-domain Boukraa-like noise and a separately validated faster equivalent-phasor model. This stage is **not implemented here**.
+- **Displacement readout noise** is implemented separately under `+swsynth/+observation/+readout`, using a temporal Boukraa-like additive/multiplicative model with depth weighting. It is not an IQ/RF tracking simulator or acoustic echo model. See `../09_displacement_readout_noise/`.
 
 ## Controlled noise sweep: one plane wave
 
