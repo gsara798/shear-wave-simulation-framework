@@ -68,12 +68,11 @@ if lower(string(cfg.source.amplitude_policy)) ~= "equal_total_rms"
         "Multi-face banks currently require amplitude_policy=equal_total_rms.");
 end
 
-if lower(string(cfg.source.polarization_policy)) ~= ...
-        "project_axial_transverse"
+polarization_policy = lower(string(cfg.source.polarization_policy));
+if ~ismember(polarization_policy, ["project_axial_transverse", "face_normal"])
     error( ...
         "kwsim:Invalid3DSourceBank", ...
-        "Multi-face banks require " + ...
-        "polarization_policy=project_axial_transverse.");
+        "Multi-face polarization_policy must be project_axial_transverse or face_normal.");
 end
 
 grid_size_xyz = [
@@ -177,8 +176,14 @@ for vibrator_index = 1:number_of_vibrators
     direction = ...
         direction / norm(direction);
 
-    polarization = ...
-        transverseAxialPolarization(direction);
+    % The direction remains a geometric center-directed descriptor.
+    % A normal velocity drive need not be transverse to this direction.
+    switch polarization_policy
+        case "project_axial_transverse"
+            polarization = transverseAxialPolarization(direction);
+        case "face_normal"
+            polarization = -contact.face_normal_xyz;
+    end
 
     if isfield(specification, "name") && ...
             strlength(string(specification.name)) > 0
