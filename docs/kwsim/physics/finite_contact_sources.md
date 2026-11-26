@@ -667,3 +667,20 @@ finite spatial footprint
 Together these provide a reproducible way to generate directional and
 multi-source shear-wave fields without claiming a complete actuator-contact
 model.
+
+
+## Multi-face excitation orientation
+
+For multi-face banks resolved from face specifications, set
+`source.polarization_policy` to either:
+
+- `project_axial_transverse` (default): unit axial-projected drive perpendicular to the nominal center-directed propagation vector.
+- `face_normal`: unit prescribed velocity along the inward contact-face normal. It is not a pure shear polarization; both shear and compressional components may be generated.
+
+The latter preserves contact positions, masks, nominal directions, phase policy,
+and equal-total-RMS normalization. The nominal direction remains a geometry
+descriptor rather than a prediction of the actual local wave direction.
+Both `random_uniform` and `all_zero` phases are supported for multi-face banks.
+The legacy single-contact and partial_diffuse_8 policies are unchanged.
+A prescribed velocity is not identical to an analytical point force.
+
